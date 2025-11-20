@@ -117,7 +117,7 @@ re:
 	@$(MAKE) all
 
 test:
-	./tests/clientspersistent.sh
+	./tests/basic_tests.sh
 
 # Aliases
 clear: clean
