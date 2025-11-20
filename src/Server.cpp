@@ -1,4 +1,7 @@
 #include <sys/types.h>
+#include <sys/epoll.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -10,6 +13,7 @@
 #include <stdlib.h>
 #include <cstdio>
 #include <string.h>
+#include <map> 
 
 struct Client {
     int fd;
@@ -47,11 +51,11 @@ int init_socket(const std::string &port_str) {
     }
 
     sockaddr_in sin;
-    std::memset(&sin, 0, sizeof(sin));
+    ::memset(&sin, 0, sizeof(sin));
 
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = htonl(INADDR_ANY);
-    int port = std::stoi(port_str);
+    int port = atoi(port_str.c_str());
   //gerer l'erreur ici 
     sin.sin_port = htons(static_cast<uint16_t>(port));
 
@@ -76,13 +80,13 @@ int init_socket(const std::string &port_str) {
     return listen_fd;
 }
 
-void RunServer(const std::string &port) {
-    int server_fd = init_socket(port);
+void Server::RunServer() {
+    int server_fd = init_socket(this->_port);
+    std::cout << "Now listening on port: " << this->_port << std::endl;
     if (server_fd < 0) exit(EXIT_FAILURE);
-
-    int epfd = epoll_create1(0);
+    int epfd = epoll_create(64);
     if (epfd < 0) {
-      perror("epoll_create1");
+      perror("epoll_create");
       close(server_fd);
       exit(EXIT_FAILURE);
     }
@@ -99,7 +103,7 @@ void RunServer(const std::string &port) {
     }
 
     //Voir comment on stock les clients, un vec de classes ?
-    std::unordered_map<int, Client> clients;
+    std::map<int, Client> clients;
     //faire un define 
     const int MAX_EVENTS = 64;
     //init a tab of events 
@@ -142,17 +146,18 @@ void RunServer(const std::string &port) {
                         close(client_fd);
                         continue;
                     }
-                    //emplace ??
-                    clients.emplace(client_fd, Client{client_fd, "", ""});
-                    std::cout << "New client: " << client_fd << std::endl;
+                    //init client
+                    Client c;
+                    c.fd = client_fd;
+                    c.rbuf = "";
+                    c.wbuf = "";
+                    clients.insert(std::make_pair(client_fd, c));                    std::cout << "New client: " << client_fd << std::endl;
                 }
             } else {
                 //error handling 
                   //EPOLLHUP EPOLLERR ??
                 if (evs & (EPOLLHUP | EPOLLERR)) {
                     std::cerr << "EPOLLERR/HUP on fd " << fd << std::endl;
-                    //doc !
-                    epiolldel:
                     epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
                     close(fd);
                     //class clients a faire ?
@@ -209,33 +214,7 @@ void RunServer(const std::string &port) {
                         continue;
                     }
                 }
-                //EPOLLOUT ? un event qui demande d'ecrire direct ?
-                // if (evs & EPOLLOUT) {
-                //     Client &c = clients[fd];
-                //     while (!c.wbuf.empty()) {
-                //         ssize_t s = send(fd, c.wbuf.data(), c.wbuf.size(), 0);
-                //         if (s > 0) {
-                //             c.wbuf.erase(0, s);
-                //         } else {
-                //             if (errno == EAGAIN || errno == EWOULDBLOCK) break;
-                //             // autre erreur
-                //             perror("send");
-                //             epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
-                //             close(fd);
-                //             clients.erase(fd);
-                //             goto next_event;
-                //         }
-                //     }
-                //     if (c.wbuf.empty()) {
-                //         // retirer EPOLLOUT si plus rien à envoyer
-                //         epoll_event mod;
-                //         mod.events = EPOLLIN | EPOLLRDHUP;
-                //         mod.data.fd = fd;
-                //         epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &mod);
-                //     }
-                // }
             }
-            next_event: ;
         }
     }
 
@@ -246,5 +225,5 @@ void RunServer(const std::string &port) {
 
 Server::~Server() {}
 
-Server::Server(std::string password, std::string port) :  _port(port), _password(password) {}
+Server::Server(std::string port, std::string password) :  _port(port), _password(password) {}
 

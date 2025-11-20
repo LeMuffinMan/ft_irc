@@ -44,7 +44,7 @@ LIBS = \
 #                                        MANIPULATION                                       #
 #                                                                                           #
 #############################################################################################
-SRCS =	\
+SRCS =	src/Server.cpp \
 	$(addprefix $(P_SRC), $(SRC)) 
 
 # List of object files (redirect to P_OBJ)

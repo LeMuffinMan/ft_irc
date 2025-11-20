@@ -77,3 +77,4 @@ compile_commands.json
 **/*.code
 **/*.vscode
 **/*.cache
+ircserv

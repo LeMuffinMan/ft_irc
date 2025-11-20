@@ -15,7 +15,7 @@ class Server {
   public:
     int getPort() const;
     int checkPassword();
-    void Run();
+    void RunServer();
 
     Server(std::string password, std::string port);
     ~Server();
