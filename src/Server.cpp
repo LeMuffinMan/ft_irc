@@ -106,7 +106,7 @@ void Server::RunServer() {
         exit(EXIT_FAILURE);
     }
 
-    //Voir comment on stock les clients, un vec de classes ?
+    //hash map pour associer chaque client a son fd 
     std::map<int, Client> clients;
     //faire un define 
     const int MAX_EVENTS = 64;
