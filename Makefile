@@ -116,6 +116,9 @@ re:
 	@$(MAKE) fclean
 	@$(MAKE) all
 
+test:
+	./tests/clientspersistent.sh
+
 # Aliases
 clear: clean
 fclear: fclean
