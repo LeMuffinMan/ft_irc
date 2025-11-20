@@ -12,11 +12,10 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <cstdio>
+#include <cstring>
 #include <string.h>
 #include <map> 
 #include "Server_utils.h"
-
-
 
 //define ou global ?
 const int MAX_EVENTS = 64;
@@ -27,47 +26,59 @@ struct Client {
     std::string wbuf; 
 };
 
-
-void new_client(int server_fd, int epfd, std::map<int, Client> clients) {
+void new_client(int server_fd, int epfd, std::map<int, Client>& clients) {
     while (true) {
         //while we can register a new client we do so
         int client_fd = accept(server_fd, NULL, NULL);
         if (client_fd < 0) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK) break; // fini pour l'instant
+            //avoid blocking epoll : in case there is no more client to accept
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                break; 
             perror("accept");
             break;
         }
         make_nonblocking(client_fd);
 
         epoll_event cev;
-        //Doc ???
-        cev.events = EPOLLIN | EPOLLRDHUP; // lire + detecter fermeture
+        std::memset(&cev, 0, sizeof(cev));
+        //we set en epoll_event, triggered in case of data to read or
+        //if client close its writing end (fragmented msgs)
+        cev.events = EPOLLIN | EPOLLRDHUP;
+        //we bind this new client event struct, with the client fd
         cev.data.fd = client_fd;
+        //adding our new fd, and the event struct to our epoll, with the events we just set
         if (epoll_ctl(epfd, EPOLL_CTL_ADD, client_fd, &cev) < 0) {
             perror("epoll_ctl add client");
             close(client_fd);
             continue;
         }
-        //init client
+        //Deviendra une classe ? Une struct suffit ici
         Client c;
         c.fd = client_fd;
         c.rbuf = "";
         c.wbuf = "";
+
         //use make pair to use the fd as key and the client struct as data
         clients.insert(std::make_pair(client_fd, c));   
         std::cout << "New client: " << client_fd << std::endl;
     }
 }
 
-void client_quited(int fd, int epfd, std::map<int, Client> clients)
+void client_quited(int fd, int epfd, std::map<int, Client>& clients)
 {
     std::cout << "Remote closed: " << fd << std::endl;
+    //we remove the leaving client fd, and the event struct associated
     epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
     close(fd);
+    //we delete in our map the leaving client
     clients.erase(fd);
 }
 
-int read_client_fd(int fd, int epfd, std::map<int, Client> clients)
+//To fix
+//return 0 : all done
+//return 1 : there is still data to read
+//return -1 : error to handle
+int read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
 {
     bool closed = false;
     while (true) {
@@ -78,6 +89,8 @@ int read_client_fd(int fd, int epfd, std::map<int, Client> clients)
             clients[fd].rbuf.append(buf, buf + r);
             //on cherche a extraire le message, delimite par un \r\n ??
             size_t pos;
+            //\r ET \n ou \r OU \n ?
+            //A casse avec le refacto !
             while ((pos = clients[fd].rbuf.find("\r\n")) != std::string::npos) {
                 std::string line = clients[fd].rbuf.substr(0, pos);
                 clients[fd].rbuf.erase(0, pos + 2);
@@ -87,18 +100,23 @@ int read_client_fd(int fd, int epfd, std::map<int, Client> clients)
         } else if (r == 0) {
             // client closed cleanly
             closed = true;
+            close(fd);
+            clients.erase(fd);
             return 1;
         } else {
-            //Quels sont les autres cas couverts ?
+            // autres cas a couvrir ? EINT ?
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                return 1; // On a fini de parser les events ?
+                return 1; 
             } else {
                 perror("recv");
                 closed = true;
+                close(fd);
+                clients.erase(fd);
                 return 1;
             }
         }
     }
+    //non reachable 
     if (closed) {
         epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
         close(fd);
@@ -117,21 +135,20 @@ void handle_events(int server_fd, int epfd, std::map<int, Client> clients, int n
         if (fd == server_fd) {
             new_client(server_fd, epfd, clients);    
         } else {
-            //error handling 
-                //EPOLLHUP EPOLLERR ??
+            // HUP : fd closed by client : the socket is dead
+            // ERR : Error on fd
             if (evs & (EPOLLHUP | EPOLLERR)) {
                 std::cerr << "EPOLLERR/HUP on fd " << fd << std::endl;
-                epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
-                close(fd);
-                clients.erase(fd);
-                //on continue sans quit ?
-                continue;
-            }
-            if (evs & EPOLLRDHUP) {
                 client_quited(fd, epfd, clients);
                 continue;
             }
-            //its an event to read 
+            //RDHUP :  client closed fd, the socket is still alive  
+            if (evs & EPOLLRDHUP) {
+                std::cout << "EPOLLRDHUP on fd " << fd << std::endl;
+                client_quited(fd, epfd, clients);
+                continue;
+            }
+            //EPOLLIN : There is data to read in the fd associated 
             if (evs & EPOLLIN) {
                 if (read_client_fd(fd, epfd, clients))
                     break;
@@ -160,9 +177,8 @@ void Server::RunServer() {
         exit(EXIT_FAILURE);
     }
 
-    //hash map pour associer chaque client a son fd 
+    //hash map pour associer chaque client a son fd : acceder a chaque client en utilisant son fd comme cle 
     std::map<int, Client> clients;
-    //init a tab of events 
     epoll_event events[MAX_EVENTS];
 
     while (true) {
