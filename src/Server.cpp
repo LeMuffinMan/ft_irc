@@ -15,6 +15,9 @@
 #include <string.h>
 #include <map> 
 
+//define ou global ?
+const int MAX_EVENTS = 64;
+
 struct Client {
     int fd;
     std::string rbuf; 
@@ -84,17 +87,138 @@ int init_socket(const std::string &port_str) {
     return listen_fd;
 }
 
-void Server::RunServer() {
-    int server_fd = init_socket(this->_port);
-    std::cout << "Now listening on port: " << this->_port << std::endl;
-    if (server_fd < 0) exit(EXIT_FAILURE);
+void new_client(int server_fd, int epfd, std::map<int, Client> clients) {
+    while (true) {
+        //while we can register a new client we do so
+        int client_fd = accept(server_fd, NULL, NULL);
+        if (client_fd < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) break; // fini pour l'instant
+            perror("accept");
+            break;
+        }
+        make_nonblocking(client_fd);
+
+        epoll_event cev;
+        //Doc ???
+        cev.events = EPOLLIN | EPOLLRDHUP; // lire + detecter fermeture
+        cev.data.fd = client_fd;
+        if (epoll_ctl(epfd, EPOLL_CTL_ADD, client_fd, &cev) < 0) {
+            perror("epoll_ctl add client");
+            close(client_fd);
+            continue;
+        }
+        //init client
+        Client c;
+        c.fd = client_fd;
+        c.rbuf = "";
+        c.wbuf = "";
+        //use make pair to use the fd as key and the client struct as data
+        clients.insert(std::make_pair(client_fd, c));   
+        std::cout << "New client: " << client_fd << std::endl;
+    }
+}
+
+void client_quited(int fd, int epfd, std::map<int, Client> clients)
+{
+    std::cout << "Remote closed: " << fd << std::endl;
+    epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
+    close(fd);
+    clients.erase(fd);
+}
+
+int read_client_fd(int fd, int epfd, std::map<int, Client> clients)
+{
+    bool closed = false;
+    while (true) {
+        //read in the read buf 
+        char buf[4096];
+        ssize_t r = recv(fd, buf, sizeof(buf), 0);
+        if (r > 0) {
+            clients[fd].rbuf.append(buf, buf + r);
+            //on cherche a extraire le message, delimite par un \r\n ??
+            size_t pos;
+            while ((pos = clients[fd].rbuf.find("\r\n")) != std::string::npos) {
+                std::string line = clients[fd].rbuf.substr(0, pos);
+                clients[fd].rbuf.erase(0, pos + 2);
+                std::cout << "msg from " << fd << ": [" << line << "]\n";
+                //HERE, we want to parse th msg, and then answer using wbuf
+            }
+        } else if (r == 0) {
+            // client closed cleanly
+            closed = true;
+            return 1;
+        } else {
+            //Quels sont les autres cas couverts ?
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                return 1; // On a fini de parser les events ?
+            } else {
+                perror("recv");
+                closed = true;
+                return 1;
+            }
+        }
+    }
+    if (closed) {
+        epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
+        close(fd);
+        clients.erase(fd);
+        return 0;
+    }
+}
+
+int init_epoll(int server_fd)
+{
     int epfd = epoll_create(64);
     if (epfd < 0) {
       perror("epoll_create");
       close(server_fd);
       exit(EXIT_FAILURE);
     }
+    return epfd;
+}
 
+void handle_events(int server_fd, int epfd, std::map<int, Client> clients, int n, epoll_event events[MAX_EVENTS])
+{
+    //for each event received during epoll_wait
+    for (int i = 0; i < n; ++i) {
+        int fd = events[i].data.fd;
+        uint32_t evs = events[i].events;
+
+        if (fd == server_fd) {
+            new_client(server_fd, epfd, clients);    
+        } else {
+            //error handling 
+                //EPOLLHUP EPOLLERR ??
+            if (evs & (EPOLLHUP | EPOLLERR)) {
+                std::cerr << "EPOLLERR/HUP on fd " << fd << std::endl;
+                epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
+                close(fd);
+                clients.erase(fd);
+                //on continue sans quit ?
+                continue;
+            }
+            if (evs & EPOLLRDHUP) {
+                client_quited(fd, epfd, clients);
+                continue;
+            }
+            //its an event to read 
+            if (evs & EPOLLIN) {
+                if (read_client_fd(fd, epfd, clients))
+                    break;
+                else
+                    continue;
+            }
+        }
+    }
+}
+
+void Server::RunServer() {
+    int server_fd = init_socket(this->_port);
+    std::cout << "Now listening on port: " << this->_port << std::endl;
+    if (server_fd < 0)
+        exit(EXIT_FAILURE);
+
+    int epfd = init_epoll(server_fd);
     //doc 
     epoll_event ev;
     ev.events = EPOLLIN | EPOLLRDHUP; // RDHUP pour détecter fermeture distante
@@ -108,121 +232,20 @@ void Server::RunServer() {
 
     //hash map pour associer chaque client a son fd 
     std::map<int, Client> clients;
-    //faire un define 
-    const int MAX_EVENTS = 64;
     //init a tab of events 
     epoll_event events[MAX_EVENTS];
 
     while (true) {
+        //we check for events from our clients fd registered
         int n = epoll_wait(epfd, events, MAX_EVENTS, -1);
         if (n < 0) {
-            //a tester pour garder 
-            if (errno == EINTR)
-              continue; // signal interrompt -> relancer
+            // if (errno == EINTR)
+            //   continue; // signal interrompt -> relancer
             perror("epoll_wait");
             break;
         }
-
-    //for each event received during epoll_wait
-        for (int i = 0; i < n; ++i) {
-            //What fd is it ? 
-              //case 1 : server_fd = new client
-              //case 2 : msg to parse
-            int fd = events[i].data.fd;
-            uint32_t evs = events[i].events;
-
-            if (fd == server_fd) {
-                while (true) {
-                    int client_fd = accept(server_fd, NULL, NULL);
-                    if (client_fd < 0) {
-                        if (errno == EAGAIN || errno == EWOULDBLOCK) break; // fini pour l'instant
-                        perror("accept");
-                        break;
-                    }
-                    make_nonblocking(client_fd);
-
-                    epoll_event cev;
-          //Doc ???
-                    cev.events = EPOLLIN | EPOLLRDHUP; // lire + detecter fermeture
-                    cev.data.fd = client_fd;
-                    if (epoll_ctl(epfd, EPOLL_CTL_ADD, client_fd, &cev) < 0) {
-                        perror("epoll_ctl add client");
-                        close(client_fd);
-                        continue;
-                    }
-                    //init client
-                    Client c;
-                    c.fd = client_fd;
-                    c.rbuf = "";
-                    c.wbuf = "";
-                    clients.insert(std::make_pair(client_fd, c));                    std::cout << "New client: " << client_fd << std::endl;
-                }
-            } else {
-                //error handling 
-                  //EPOLLHUP EPOLLERR ??
-                if (evs & (EPOLLHUP | EPOLLERR)) {
-                    std::cerr << "EPOLLERR/HUP on fd " << fd << std::endl;
-                    epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
-                    close(fd);
-                    //class clients a faire ?
-                    clients.erase(fd);
-                    //on continue sans quit ?
-                    continue;
-                }
-                if (evs & EPOLLRDHUP) {
-                    // client fermé côté distant
-                    std::cout << "Remote closed: " << fd << std::endl;
-                    epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
-                    close(fd);
-                    clients.erase(fd);
-                    continue;
-                }
-
-                //its an event to read 
-                if (evs & EPOLLIN) {
-                    bool closed = false;
-                    while (true) {
-                        //read in the read buf 
-                        char buf[4096];
-                        ssize_t r = recv(fd, buf, sizeof(buf), 0);
-                        if (r > 0) {
-                            clients[fd].rbuf.append(buf, buf + r);
-                            //on cherche a extraire le message, delimite par un \r\n ??
-                            size_t pos;
-                            while ((pos = clients[fd].rbuf.find("\r\n")) != std::string::npos) {
-                                std::string line = clients[fd].rbuf.substr(0, pos);
-                                clients[fd].rbuf.erase(0, pos + 2);
-                                std::cout << "msg from " << fd << ": [" << line << "]\n";
-                                //HERE, we want to parse th msg, and then answer using wbuf
-                            }
-                        } else if (r == 0) {
-                            // client closed cleanly
-                            closed = true;
-                            break;
-                        } else {
-                            //Quels sont les autres cas couverts ?
-                            if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                                break; // On a fini de parser les events ?
-                            } else {
-                                perror("recv");
-                                closed = true;
-                                break;
-                            }
-                        }
-                    }
-                    //close bool ?
-                    if (closed) {
-                        epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
-                        close(fd);
-                        clients.erase(fd);
-                        continue;
-                    }
-                }
-            }
-        }
+        handle_events(server_fd, epfd, clients, n, events);
     }
-
-    // cleanup
     close(server_fd);
     close(epfd);
 }
