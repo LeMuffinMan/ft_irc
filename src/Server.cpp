@@ -17,8 +17,8 @@
 
 struct Client {
     int fd;
-    std::string rbuf;  //to read msg
-    std::string wbuf; //to send back
+    std::string rbuf; 
+    std::string wbuf; 
 };
 
 
@@ -28,7 +28,6 @@ int make_nonblocking(int fd) {
     if (flags == -1)
       return -1;
 
-    //on ajoute O_NONBLOCK aux flags existants 
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
       return -1;
     return 0;
@@ -56,16 +55,21 @@ int init_socket(const std::string &port_str) {
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = htonl(INADDR_ANY);
     int port = atoi(port_str.c_str());
-  //gerer l'erreur ici 
+    if (port < 0) // ou > a max port ? 
+    {
+        perror("atoi");
+        close(listen_fd);
+        return -1;
+    }
     sin.sin_port = htons(static_cast<uint16_t>(port));
 
-  //doc 
+    //doc 
     if (bind(listen_fd, (sockaddr*)&sin, sizeof(sin)) < 0) {
         perror("bind");
         close(listen_fd);
         return -1;
     }
-//flags ?
+    //flags ?
     if (listen(listen_fd, SOMAXCONN) < 0) {
         perror("listen");
         close(listen_fd);

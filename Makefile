@@ -97,6 +97,7 @@ clean:
 	rm -rfd $(P_OBJ)
 	rm -rfd $(OBJS)
 	rm -rfd $(DEPS)
+	rm -rf .server_output.log
 
 clean-lib:
 	rm -rfd $(P_LIB)
@@ -116,7 +117,7 @@ re:
 	@$(MAKE) fclean
 	@$(MAKE) all
 
-test:
+test: all
 	./tests/basic_tests.sh
 
 # Aliases
@@ -190,3 +191,5 @@ On_Cyan=\033[46m
 On_White=\033[47m
 
 -include $(DEPS)% 
+
+.PHONY: all clean clean-lib clean-bin clean-obj fclean re test debug debug-print-project debug-print debug-print-separator debug-cxx 
