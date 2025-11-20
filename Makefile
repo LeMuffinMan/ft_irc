@@ -29,13 +29,16 @@ P_INC = inc/
 # Headers
 INC = \
 	Debug.hpp \
-	utils.hpp
+	utils.hpp \
+	Server_utils.h 
 
 # Source files
 SRC = \
 	main.cpp \
 	Debug.cpp \
 	utils.cpp \
+	Server.cpp \
+	Server_utils.cpp
 
 LIBS = \
 
@@ -44,8 +47,7 @@ LIBS = \
 #                                        MANIPULATION                                       #
 #                                                                                           #
 #############################################################################################
-SRCS =	src/Server.cpp \
-	$(addprefix $(P_SRC), $(SRC)) 
+SRCS = $(addprefix $(P_SRC), $(SRC)) 
 
 # List of object files (redirect to P_OBJ)
 OBJS = $(subst $(P_SRC), $(P_OBJ), $(SRCS:.cpp=.o))
