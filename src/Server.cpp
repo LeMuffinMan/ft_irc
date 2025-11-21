@@ -18,7 +18,8 @@
 #include "Server_utils.h"
 
 //define ou global ?
-const int MAX_EVENTS = 64;
+const int MAX_EVENTS = 64; //Faire une taille dynamique (au fil de l'eau -> vecteur)
+                           //Interet des bornes ? deinfe / global
 
 struct Client {
     int fd;
@@ -57,6 +58,8 @@ void new_client(int server_fd, int epfd, std::map<int, Client>& clients) {
         c.fd = client_fd;
         c.rbuf = "";
         c.wbuf = "";
+        
+        //si clients.insert a foire, gerer la collision ?
 
         //use make pair to use the fd as key and the client struct as data
         clients.insert(std::make_pair(client_fd, c));   
@@ -64,7 +67,7 @@ void new_client(int server_fd, int epfd, std::map<int, Client>& clients) {
     }
 }
 
-void client_quited(int fd, int epfd, std::map<int, Client>& clients)
+void client_quited(int fd, int epfd, std::map<int, Client>& clients) // leaved plutot que quited
 {
     std::cout << "Remote closed: " << fd << std::endl;
     //we remove the leaving client fd, and the event struct associated
@@ -78,20 +81,23 @@ void client_quited(int fd, int epfd, std::map<int, Client>& clients)
 //return 0 : all done
 //return 1 : there is still data to read
 //return -1 : error to handle
+//
+//Revoir le recv pour les \r\n et faire les tests avec nc -C 127.0.0.1 6667 PUIS des CTRL+D 
+//
 int read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
 {
     bool closed = false;
     while (true) {
         //read in the read buf 
         char buf[4096];
-        ssize_t r = recv(fd, buf, sizeof(buf), 0);
+        ssize_t r = recv(fd, buf, sizeof(buf), 0); // TESTER : deux clients, un qui envoie la bible, l'autre qui envoie un petit text : pas de blocage !
         if (r > 0) {
-            clients[fd].rbuf.append(buf, buf + r);
+            clients[fd].rbuf.append(buf, buf + r); //&buf[r]plus safe sur l'espacement mémoire, unicodes ça ne marchera pas
             //on cherche a extraire le message, delimite par un \r\n ??
             size_t pos;
             //\r ET \n ou \r OU \n ?
             //A casse avec le refacto !
-            while ((pos = clients[fd].rbuf.find("\r\n")) != std::string::npos) {
+            while ((pos = clients[fd].rbuf.find("\r\n")) != std::string::npos) { //make non blocking va pas marcher ici ? et si on peut pas avoir GETFLG encore moins ?
                 std::string line = clients[fd].rbuf.substr(0, pos);
                 clients[fd].rbuf.erase(0, pos + 2);
                 std::cout << "msg from " << fd << ": [" << line << "]\n";
@@ -137,7 +143,7 @@ void handle_events(int server_fd, int epfd, std::map<int, Client> clients, int n
         } else {
             // HUP : fd closed by client : the socket is dead
             // ERR : Error on fd
-            if (evs & (EPOLLHUP | EPOLLERR)) {
+            if (evs & (EPOLLHUP | EPOLLERR)) { // in case of EPOLLHUP / EPOLLRDHUP : we clean our map, but is there any other possibility of client leaving without saying ?
                 std::cerr << "EPOLLERR/HUP on fd " << fd << std::endl;
                 client_quited(fd, epfd, clients);
                 continue;
@@ -161,9 +167,12 @@ void handle_events(int server_fd, int epfd, std::map<int, Client> clients, int n
 
 void Server::RunServer() {
     int server_fd = init_socket(this->_port);
-    std::cout << "Now listening on port: " << this->_port << std::endl;
     if (server_fd < 0)
+    {
+        std::cout << "Failed to listen on port" << this->_port << std::endl;
         exit(EXIT_FAILURE);
+    }
+    std::cout << "Now listening on port: " << this->_port << std::endl;
 
     int epfd = init_epoll(server_fd);
     //doc 

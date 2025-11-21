@@ -8,6 +8,8 @@
 #include <netinet/in.h> // sockaddr_in, INADDR_ANY, htons
 #include <cstdio>
 
+//TOUTES ces fonctions sont supposees etre des methodes 
+
 int init_epoll(int server_fd)
 {
     int epfd = epoll_create(64);
@@ -19,8 +21,8 @@ int init_epoll(int server_fd)
     return epfd;
 }
 
-int make_nonblocking(int fd) {
-    int flags = fcntl(fd, F_GETFL, 0);
+int make_nonblocking(int fd) { //fcntl et NON_BLOCK uniquemet pour MAC OS ? si oui faire un gros if, et gerer autrement la lecture / ecriture : sinon ca marche
+    int flags = fcntl(fd, F_GETFL, 0); //On en n'a pas besoin ?  
     if (flags == -1)
       return -1;
 
@@ -45,7 +47,7 @@ int init_socket(const std::string &port_str) {
     }
 
     sockaddr_in sin;
-    ::memset(&sin, 0, sizeof(sin));
+    std::memset(&sin, 0, sizeof(sin)); //avec ou sans std ?
 
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = htonl(INADDR_ANY);
