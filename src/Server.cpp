@@ -62,7 +62,7 @@ void new_client(int server_fd, int epfd, std::map<int, Client>& clients) {
         //si clients.insert a foire, gerer la collision ?
 
         //use make pair to use the fd as key and the client struct as data
-        clients.insert(std::make_pair(client_fd, c));   
+        clients.insert(std::make_pair(client_fd, c));  //si les buf changent de taille undefined behavior ? si oui, stocker des pointeurs (alloc) 
         std::cout << "New client: " << client_fd << std::endl;
     }
 }

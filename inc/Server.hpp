@@ -11,16 +11,17 @@ class Server {
     std::vector<int> clients_fd;
     const std::string _password;
 
-    Server();
+    Server(); // On ne veut pas de serveur sans mdp ni sans port
   public:
     int getPort() const;
     int checkPassword();
     void RunServer();
 
+    //A voir pour ce qu'on garde de la canonique 
     Server(std::string password, std::string port);
     ~Server();
-    Server(const Server& other);
-    Server& operator=(const Server& other);
+    // Server(const Server& other);
+    // Server& operator=(const Server& other);
 };
 
 #endif 
