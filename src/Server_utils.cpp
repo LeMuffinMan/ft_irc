@@ -7,6 +7,9 @@
 #include <sys/socket.h> // socket, setsockopt, bind, listen
 #include <netinet/in.h> // sockaddr_in, INADDR_ANY, htons
 #include <cstdio>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
 
 int init_epoll(int server_fd)
 {
@@ -29,51 +32,21 @@ int make_nonblocking(int fd) {
     return 0;
 }
 
-//To documentate
-int init_socket(const std::string &port_str) {
-    int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (listen_fd < 0) {
-        perror("socket");
-        return -1;
-    }
+std::string format_time() {
+    std::time_t now = time(NULL);
+    //decalage horraire par rapport a utc + 0
+    const int timezone_offset = 3600; 
+    now += timezone_offset;
 
-    int opt = 1;
-    if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-        perror("setsockopt");
-        close(listen_fd);
-        return -1;
-    }
+    std::time_t seconds_in_day = now % 86400; 
+    int hours = static_cast<int>(seconds_in_day / 3600);
+    int minutes = static_cast<int>((seconds_in_day % 3600) / 60);
+    int seconds = static_cast<int>(seconds_in_day % 60);
 
-    sockaddr_in sin;
-    ::memset(&sin, 0, sizeof(sin));
+    std::ostringstream oss;
+    oss << std::setw(2) << std::setfill('0') << hours << ":"
+        << std::setw(2) << std::setfill('0') << minutes << ":"
+        << std::setw(2) << std::setfill('0') << seconds;
 
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = htonl(INADDR_ANY);
-    int port = atoi(port_str.c_str());
-    if (port < 0) // ou > a max port ? 
-    {
-        perror("atoi");
-        close(listen_fd);
-        return -1;
-    }
-    sin.sin_port = htons(static_cast<uint16_t>(port));
-
-    if (bind(listen_fd, (sockaddr*)&sin, sizeof(sin)) < 0) {
-        perror("bind");
-        close(listen_fd);
-        return -1;
-    }
-    if (listen(listen_fd, SOMAXCONN) < 0) {
-        perror("listen");
-        close(listen_fd);
-        return -1;
-    }
-
-    if (make_nonblocking(listen_fd) < 0) {
-        perror("make_nonblocking");
-        close(listen_fd);
-        return -1;
-    }
-    return listen_fd;
+    return oss.str();
 }
-

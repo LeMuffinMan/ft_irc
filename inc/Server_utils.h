@@ -4,5 +4,6 @@
 int make_nonblocking(int client_fd);
 int init_socket(const std::string& port);
 int init_epoll(int server_fd);
+std::string format_time();
 
 #endif

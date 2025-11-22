@@ -1,4 +1,6 @@
 #include <sys/types.h>
+#include <sstream>
+#include <ctime>
 #include <sys/epoll.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -20,11 +22,88 @@
 //define ou global ?
 const int MAX_EVENTS = 64;
 
-struct Client {
-    int fd;
-    std::string rbuf; 
-    std::string wbuf; 
-};
+//To documentate
+int Server::init_socket(int port) {
+    this->_server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (this->_server_socket < 0) {
+        perror("socket");
+        return -1;
+    }
+
+    int opt = 1;
+    if (setsockopt(this->_server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        perror("setsockopt");
+        close(this->_server_socket);
+        return -1;
+    }
+
+    sockaddr_in sin;
+    ::memset(&sin, 0, sizeof(sin));
+
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    sin.sin_port = htons(static_cast<uint16_t>(port));
+
+    if (bind(this->_server_socket, (sockaddr*)&sin, sizeof(sin)) < 0) {
+        perror("bind");
+        close(this->_server_socket);
+        return -1;
+    }
+    if (listen(this->_server_socket, SOMAXCONN) < 0) {
+        perror("listen");
+        close(this->_server_socket);
+        return -1;
+    }
+
+    if (make_nonblocking(this->_server_socket) < 0) {
+        perror("make_nonblocking");
+        close(this->_server_socket);
+        return -1;
+    }
+    return this->_server_socket;
+}
+
+void enable_epollout(int fd, int epfd)
+{
+    epoll_event ev;
+    ev.events = EPOLLIN | EPOLLOUT | EPOLLRDHUP;
+    ev.data.fd = fd;
+    epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &ev);
+}
+
+int write_client_fd(int fd, int epfd, std::map<int, Client>& clients)
+{
+    std::string &wbuf = clients[fd].wbuf;
+
+    while (!wbuf.empty()) {
+        ssize_t n = send(fd, wbuf.data(), wbuf.size(), 0);
+
+        if (n > 0) {
+            wbuf.erase(0, n);
+        }
+        //socket buffer full 
+        else if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            return 0;
+        }
+        else {
+            // error or client disconnected
+            std::cerr << "send error on fd " << fd << "\n";
+            epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
+            close(fd);
+            clients.erase(fd);
+            return -1;
+        }
+    }
+
+    epoll_event ev;
+    ev.events = EPOLLIN | EPOLLRDHUP;  // remove EPOLLOUT
+    ev.data.fd = fd;
+    epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &ev);
+
+    return 0;
+}
+
 
 void new_client(int server_fd, int epfd, std::map<int, Client>& clients) {
     while (true) {
@@ -58,9 +137,23 @@ void new_client(int server_fd, int epfd, std::map<int, Client>& clients) {
         c.rbuf = "";
         c.wbuf = "";
 
+        std::stringstream ss;
+        std::time_t now = std::time(NULL);
+        ss << "PING :" << now << "\r\n";
+        c.wbuf += ss.str();
+
         //use make pair to use the fd as key and the client struct as data
         clients.insert(std::make_pair(client_fd, c));   
-        std::cout << "New client: " << client_fd << std::endl;
+
+        clients[client_fd].last_ping = now;
+        enable_epollout(client_fd, epfd);
+
+        std::cout << "[" << format_time() << "]" << " New client: " << client_fd << std::endl;
+
+        if (!c.wbuf.empty()) {
+            write_client_fd(client_fd, epfd, clients); // envoyer le PING immédiatement
+            std::cout << "[" << format_time() << "]" << " PING :" << now << " sent to client " << client_fd << std::endl; 
+        }
     }
 }
 
@@ -73,6 +166,7 @@ void client_quited(int fd, int epfd, std::map<int, Client>& clients)
     //we delete in our map the leaving client
     clients.erase(fd);
 }
+
 
 //To fix
 //return 0 : all done
@@ -89,13 +183,34 @@ int read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
             clients[fd].rbuf.append(buf, buf + r);
             //on cherche a extraire le message, delimite par un \r\n ??
             size_t pos;
-            //\r ET \n ou \r OU \n ?
             //A casse avec le refacto !
             while ((pos = clients[fd].rbuf.find("\r\n")) != std::string::npos) {
                 std::string line = clients[fd].rbuf.substr(0, pos);
                 clients[fd].rbuf.erase(0, pos + 2);
-                std::cout << "msg from " << fd << ": [" << line << "]\n";
-                //HERE, we want to parse th msg, and then answer using wbuf
+                // if (line == "PONG")
+                // {
+                //     clients[fd].wbuf += "PONG\n";
+                //     enable_epollout(fd, epfd);
+                // }
+                // else
+                // std::cout << line << std::endl;
+                if (line.rfind("PONG", 0) == 0) {
+                    size_t colon = line.find(':');
+                    if (colon != std::string::npos) {
+                        std::string ts_str = line.substr(colon + 1);
+                        std::istringstream iss(ts_str);
+                        long sent_time = clients[fd].last_ping;
+                        if (iss >> sent_time) {
+                            std::time_t now = std::time(NULL);
+                            long latency = now - sent_time;
+                            std::cout << "[" << format_time() << "] " << line << " from client " << fd << " received (" << latency << " secs)" << std::endl;
+                        } else {
+                            std::cerr << "Invalid timestamp in PONG: " << ts_str << std::endl;
+                        }
+                    }
+                }
+                else
+                    std::cout << "msg from " << fd << ": [" << line << "]" << std::endl;
             }
         } else if (r == 0) {
             // client closed cleanly
@@ -125,7 +240,8 @@ int read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
     }
 }
 
-void handle_events(int server_fd, int epfd, std::map<int, Client> clients, int n, epoll_event events[MAX_EVENTS])
+
+void handle_events(int server_fd, int epfd, std::map<int, Client>& clients, int n, epoll_event events[MAX_EVENTS])
 {
     //for each event received during epoll_wait
     for (int i = 0; i < n; ++i) {
@@ -155,25 +271,32 @@ void handle_events(int server_fd, int epfd, std::map<int, Client> clients, int n
                 else
                     continue;
             }
+
+            if (evs & EPOLLOUT) {
+                if (write_client_fd(fd, epfd, clients) < 0)
+                    continue;
+            }
         }
     }
 }
 
 void Server::RunServer() {
-    int server_fd = init_socket(this->_port);
-    std::cout << "Now listening on port: " << this->_port << std::endl;
-    if (server_fd < 0)
+
+    this->_server_socket = init_socket(this->_port);
+    if (this->_server_socket < 0)
         exit(EXIT_FAILURE);
 
-    int epfd = init_epoll(server_fd);
+    std::cout << "[" << format_time() << "] Listening on port: " << this->_port << std::endl;
+
+    this->_epfd = init_epoll(this->_server_socket);
     //doc 
     epoll_event ev;
     ev.events = EPOLLIN | EPOLLRDHUP; // RDHUP pour détecter fermeture distante
-    ev.data.fd = server_fd;
-    if (epoll_ctl(epfd, EPOLL_CTL_ADD, server_fd, &ev) < 0) {
+    ev.data.fd = this->_server_socket;
+    if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, this->_server_socket, &ev) < 0) {
         perror("epoll_ctl add server");
-        close(server_fd);
-        close(epfd);
+        close(this->_server_socket);
+        close(this->_epfd);
         exit(EXIT_FAILURE);
     }
 
@@ -183,20 +306,20 @@ void Server::RunServer() {
 
     while (true) {
         //we check for events from our clients fd registered
-        int n = epoll_wait(epfd, events, MAX_EVENTS, -1);
+        int n = epoll_wait(this->_epfd, events, MAX_EVENTS, -1);
         if (n < 0) {
             // if (errno == EINTR)
             //   continue; // signal interrompt -> relancer
             perror("epoll_wait");
             break;
         }
-        handle_events(server_fd, epfd, clients, n, events);
+        handle_events(this->_server_socket, this->_epfd, clients, n, events);
     }
-    close(server_fd);
-    close(epfd);
+    close(this->_server_socket);
+    close(this->_epfd);
 }
 
 Server::~Server() {}
 
-Server::Server(std::string port, std::string password) :  _port(port), _password(password) {}
+Server::Server(std::string password, int port) :  _port(port), _password(password) {}
 

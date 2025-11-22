@@ -3,21 +3,33 @@
 
 #include <vector>
 #include <string>
+#include <map>
+#include <ctime> 
+
+struct Client {
+    int fd;
+    std::string rbuf; 
+    std::string wbuf; 
+    std::time_t last_ping;
+};
 
 class Server {
   private:
-    // int port;
-    std::string _port;
-    std::vector<int> clients_fd;
+    int _port;
+    std::vector<int> _clients_fd;
     const std::string _password;
+    std::map<int, Client> _Clients;
+    int _server_socket;
+    int _epfd;
 
     Server();
   public:
     int getPort() const;
     int checkPassword();
     void RunServer();
+    int init_socket(int port);
 
-    Server(std::string password, std::string port);
+    Server(std::string password, int port);
     ~Server();
     Server(const Server& other);
     Server& operator=(const Server& other);

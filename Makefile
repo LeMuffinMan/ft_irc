@@ -120,7 +120,7 @@ re:
 	@$(MAKE) all
 
 test: all
-	./tests/basic_tests.sh
+	cd tests/irc_tester && cargo run
 
 # Aliases
 clear: clean

@@ -79,3 +79,4 @@ compile_commands.json
 **/*.cache
 ircserv
 .server_output.log
+tests/irc_tester/target/
