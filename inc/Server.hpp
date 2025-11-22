@@ -5,12 +5,20 @@
 #include <string>
 #include <map>
 #include <ctime> 
+#include <sys/epoll.h>
 
+
+const int MAX_EVENTS = 64; //Faire une taille dynamique (au fil de l'eau -> vecteur)
+                           //Interet des bornes ? deinfe / global
 struct Client {
     int fd;
     std::string rbuf; 
     std::string wbuf; 
+    bool password;
+    std::string nickname;
+    std::string user;
     std::time_t last_ping;
+    std::time_t timeout;
 };
 
 class Server {
@@ -28,6 +36,11 @@ class Server {
     int checkPassword();
     void RunServer();
     int init_socket(int port);
+    int read_client_fd(int fd, int epfd, std::map<int, Client>& clients);
+    void handle_events(int server_fd, int epfd, std::map<int, Client>& clients, int n, epoll_event events[MAX_EVENTS]);
+    void send_welcome(int fd, int epfd, std::map<int, Client>& clients);
+    void remove_inactive_clients(int epfd, std::map<int, Client>& clients);
+    void check_clients_ping(int epfd, std::map<int, Client>& clients);
 
     Server(std::string password, int port);
     ~Server();

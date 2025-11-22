@@ -1,7 +1,7 @@
 #include <sys/types.h>
+#include <climits>
 #include <sstream>
 #include <ctime>
-#include <sys/epoll.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -21,8 +21,6 @@
 #include "Server.hpp"
 
 //define ou global ?
-const int MAX_EVENTS = 64; //Faire une taille dynamique (au fil de l'eau -> vecteur)
-                           //Interet des bornes ? deinfe / global
 
 //To documentate
 int Server::init_socket(int port) {
@@ -138,26 +136,25 @@ void new_client(int server_fd, int epfd, std::map<int, Client>& clients) {
         c.fd = client_fd;
         c.rbuf = "";
         c.wbuf = "";
+        c.password = false;
+        c.nickname = "";
+        c.user = "";
+        c.last_ping = std::time(NULL);
+        c.timeout = LONG_MAX; // 1min pour repondre PONG 
         
         //si clients.insert a foire, gerer la collision ?
 
-        std::stringstream ss;
-        std::time_t now = std::time(NULL);
-        ss << "PING :" << now << "\r\n";
-        c.wbuf += ss.str();
 
         //use make pair to use the fd as key and the client struct as data
         clients.insert(std::make_pair(client_fd, c));   
 
-        clients[client_fd].last_ping = now;
-        enable_epollout(client_fd, epfd);
 
-        std::cout << "[" << format_time() << "]" << " New client: " << client_fd << std::endl;
 
-        if (!c.wbuf.empty()) {
-            write_client_fd(client_fd, epfd, clients); // envoyer le PING immédiatement
-            std::cout << "[" << format_time() << "]" << " PING :" << now << " sent to client " << client_fd << std::endl; 
-        }
+        std::cout << format_time() << " New client: " << client_fd << std::endl;
+
+        // if (!c.wbuf.empty()) {
+        //     write_client_fd(client_fd, epfd, clients); // envoyer le PING immédiatement
+        // }
     }
 }
 
@@ -171,6 +168,57 @@ void client_quited(int fd, int epfd, std::map<int, Client>& clients) // leaved p
     clients.erase(fd);
 }
 
+void Server::send_welcome(int fd, int epfd, std::map<int, Client>& clients)
+{
+    std::stringstream ss;
+    ss << clients[fd].user << " aka " << clients[fd].nickname << " successfully registered" << "\r\n";
+    clients[fd].wbuf += ss.str();
+    enable_epollout(fd, epfd);
+    write_client_fd(fd, epfd, clients);
+}
+
+void Server::remove_inactive_clients(int epfd, std::map<int, Client>& clients)
+{
+    for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+    {
+        int fd = it->first;
+        Client& client = it->second;
+        
+        std::time_t now = std::time(NULL);
+        if (now > client.timeout) // 1 min
+        {
+            std::stringstream ss;
+            ss << clients[fd].user << " aka " << clients[fd].nickname << " timed out" << "\r\n";
+            clients[fd].wbuf += ss.str();
+            enable_epollout(fd, epfd);
+            write_client_fd(fd, epfd, clients);
+            close(fd);
+            clients.erase(fd);
+        }
+    }
+}
+
+void Server::check_clients_ping(int epfd, std::map<int, Client>& clients)
+{
+    for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+    {
+        int fd = it->first;
+        Client& client = it->second;
+
+        std::time_t now = std::time(NULL);
+        if (now - client.last_ping > 5) // 5 sec
+        {
+            std::stringstream ss;
+            std::time_t now = std::time(NULL);
+            ss << "PING :" << now << "\r\n";
+            client.wbuf += ss.str();
+            clients[fd].timeout = now + 5000; // 5 sec de timeout 
+            enable_epollout(fd, epfd);
+            client.last_ping = now;
+            std::cout << format_time() << " [PING :" << now << "] sent to client " << fd << std::endl; 
+        }
+    }
+}
 
 //To fix
 //return 0 : all done
@@ -179,7 +227,7 @@ void client_quited(int fd, int epfd, std::map<int, Client>& clients) // leaved p
 //
 //Revoir le recv pour les \r\n et faire les tests avec nc -C 127.0.0.1 6667 PUIS des CTRL+D 
 //
-int read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
+int Server::read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
 {
     bool closed = false;
     while (true) {
@@ -194,13 +242,6 @@ int read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
             while ((pos = clients[fd].rbuf.find("\r\n")) != std::string::npos) { //make non blocking va pas marcher ici ? et si on peut pas avoir GETFLG encore moins ?
                 std::string line = clients[fd].rbuf.substr(0, pos);
                 clients[fd].rbuf.erase(0, pos + 2);
-                // if (line == "PONG")
-                // {
-                //     clients[fd].wbuf += "PONG\n";
-                //     enable_epollout(fd, epfd);
-                // }
-                // else
-                // std::cout << line << std::endl;
                 if (line.rfind("PONG", 0) == 0) {
                     size_t colon = line.find(':');
                     if (colon != std::string::npos) {
@@ -210,14 +251,64 @@ int read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
                         if (iss >> sent_time) {
                             std::time_t now = std::time(NULL);
                             long latency = now - sent_time;
-                            std::cout << "[" << format_time() << "] " << line << " from client " << fd << " received (" << latency << " secs)" << std::endl;
+                            std::cout << format_time() << " [" << line << "] from client " << fd << " received (" << latency << " secs)" << std::endl;
+                            clients[fd].timeout = LONG_MAX;
                         } else {
                             std::cerr << "Invalid timestamp in PONG: " << ts_str << std::endl;
+                            //un pirate ? on veut surement le deco
                         }
+                    }
+                }
+                else if (line.rfind("PASS", 0) == 0) {
+                    size_t colon = line.find(' ');
+                    if (colon != std::string::npos) {
+                        std::string pw_str = line.substr(colon + 1);
+                        std::istringstream iss(pw_str);
+                        std::cout << format_time() << " [" << line << "] from client " << fd << std::endl;
+                        if (pw_str == this->_password)
+                            clients[fd].password = true;
+                        else
+                        {
+                            std::cout << "NUM ERROR: Incorrect password" << std::endl;
+                        }
+                        if (clients[fd].password == true && clients[fd].nickname != "" && clients[fd].user != "")
+                        {
+                            this->send_welcome(fd, epfd, clients);
+                            std::cout << clients[fd].user << " aka " << clients[fd].nickname << " successfully connected" << std::endl;
+                        }
+                    }
+                }
+                else if (line.rfind("NICK", 0) == 0) {
+                    size_t colon = line.find(' ');
+                    if (colon != std::string::npos) {
+                        std::string nn_str = line.substr(colon + 1);
+                        std::istringstream iss(nn_str);
+                        std::cout << format_time() << " [" << line << "] from client " << fd << std::endl;
+                        clients[fd].nickname = nn_str;
+                    }
+                    if (clients[fd].password == true && clients[fd].nickname != "" && clients[fd].user != "")
+                    {
+                        this->send_welcome(fd, epfd, clients);
+                        std::cout << clients[fd].user << " aka " << clients[fd].nickname << " successfully connected" << std::endl;
+                    }
+                }
+                else if (line.rfind("USER", 0) == 0) {
+                    size_t colon = line.find(':');
+                    if (colon != std::string::npos) {
+                        std::string us_str = line.substr(colon + 1);
+                        std::istringstream iss(us_str);
+                        std::cout << format_time() << " [" << line << "] from client " << fd << std::endl;
+                        clients[fd].user = us_str;
+                    }
+                    if (clients[fd].password == true && clients[fd].nickname != "" && clients[fd].user != "")
+                    {
+                        this->send_welcome(fd, epfd, clients);
+                        std::cout << clients[fd].user << " aka " << clients[fd].nickname << " successfully connected" << std::endl;
                     }
                 }
                 else
                     std::cout << "msg from " << fd << ": [" << line << "]" << std::endl;
+                clients[fd].last_ping = std::time(NULL);
             }
         } else if (r == 0) {
             // client closed cleanly
@@ -248,7 +339,7 @@ int read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
 }
 
 
-void handle_events(int server_fd, int epfd, std::map<int, Client>& clients, int n, epoll_event events[MAX_EVENTS])
+void Server::handle_events(int server_fd, int epfd, std::map<int, Client>& clients, int n, epoll_event events[MAX_EVENTS])
 {
     //for each event received during epoll_wait
     for (int i = 0; i < n; ++i) {
@@ -273,7 +364,7 @@ void handle_events(int server_fd, int epfd, std::map<int, Client>& clients, int 
             }
             //EPOLLIN : There is data to read in the fd associated 
             if (evs & EPOLLIN) {
-                if (read_client_fd(fd, epfd, clients))
+                if (this->read_client_fd(fd, epfd, clients))
                     break;
                 else
                     continue;
@@ -292,9 +383,7 @@ void Server::RunServer() {
     this->_server_socket = init_socket(this->_port);
     if (this->_server_socket < 0)
         exit(EXIT_FAILURE);
-    std::cout << "Now listening on port: " << this->_port << std::endl;
-
-    std::cout << "[" << format_time() << "] Listening on port: " << this->_port << std::endl;
+    std::cout << format_time() << " Listening on port: " << this->_port << std::endl;
 
     this->_epfd = init_epoll(this->_server_socket);
     //doc 
@@ -314,7 +403,7 @@ void Server::RunServer() {
 
     while (true) {
         //we check for events from our clients fd registered
-        int n = epoll_wait(this->_epfd, events, MAX_EVENTS, -1);
+        int n = epoll_wait(this->_epfd, events, MAX_EVENTS, 2000); //timeout 2 sec
         if (n < 0) {
             // if (errno == EINTR)
             //   continue; // signal interrompt -> relancer
@@ -322,6 +411,8 @@ void Server::RunServer() {
             break;
         }
         handle_events(this->_server_socket, this->_epfd, clients, n, events);
+        this->check_clients_ping(this->_epfd, clients); //si on n'a pas eu de signe d'activite depuis trop longtemps
+        this->remove_inactive_clients(this->_epfd, clients); // remove inactive clients after a unanswered ping
     }
     close(this->_server_socket);
     close(this->_epfd);

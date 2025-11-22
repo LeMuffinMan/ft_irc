@@ -2,7 +2,7 @@
 
 SERVER="./ircserv"
 PORT=6667
-PASS="a"
+PASS="password"
 CLIENT_DIR="tests/irc_tester"
 
 kill_server() {
