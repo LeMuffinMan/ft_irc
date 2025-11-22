@@ -20,8 +20,6 @@
 #include "Server_utils.h"
 #include "Server.hpp"
 
-//define ou global ?
-
 //To documentate
 int Server::init_socket(int port) {
     this->_server_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -64,15 +62,15 @@ int Server::init_socket(int port) {
     return this->_server_socket;
 }
 
-void enable_epollout(int fd, int epfd)
+void Server::enable_epollout(int fd)
 {
     epoll_event ev;
     ev.events = EPOLLIN | EPOLLOUT | EPOLLRDHUP;
     ev.data.fd = fd;
-    epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &ev);
+    epoll_ctl(this->_epfd, EPOLL_CTL_MOD, fd, &ev);
 }
 
-int write_client_fd(int fd, int epfd, std::map<int, Client>& clients)
+int Server::write_client_fd(int fd, std::map<int, Client>& clients)
 {
     std::string &wbuf = clients[fd].wbuf;
 
@@ -89,7 +87,7 @@ int write_client_fd(int fd, int epfd, std::map<int, Client>& clients)
         else {
             // error or client disconnected
             std::cerr << "send error on fd " << fd << "\n";
-            epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
+            epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
             close(fd);
             clients.erase(fd);
             return -1;
@@ -99,13 +97,12 @@ int write_client_fd(int fd, int epfd, std::map<int, Client>& clients)
     epoll_event ev;
     ev.events = EPOLLIN | EPOLLRDHUP;  // remove EPOLLOUT
     ev.data.fd = fd;
-    epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &ev);
+    epoll_ctl(this->_epfd, EPOLL_CTL_MOD, fd, &ev);
 
     return 0;
 }
 
-
-void new_client(int server_fd, int epfd, std::map<int, Client>& clients) {
+void Server::new_client(int server_fd, std::map<int, Client>& clients) {
     while (true) {
         //while we can register a new client we do so
         int client_fd = accept(server_fd, NULL, NULL);
@@ -126,12 +123,13 @@ void new_client(int server_fd, int epfd, std::map<int, Client>& clients) {
         //we bind this new client event struct, with the client fd
         cev.data.fd = client_fd;
         //adding our new fd, and the event struct to our epoll, with the events we just set
-        if (epoll_ctl(epfd, EPOLL_CTL_ADD, client_fd, &cev) < 0) {
+        if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, client_fd, &cev) < 0) {
             perror("epoll_ctl add client");
             close(client_fd);
             continue;
         }
         //Deviendra une classe ? Une struct suffit ici
+        //faire une init pour chaque struct objet
         Client c;
         c.fd = client_fd;
         c.rbuf = "";
@@ -143,41 +141,33 @@ void new_client(int server_fd, int epfd, std::map<int, Client>& clients) {
         c.timeout = LONG_MAX; // 1min pour repondre PONG 
         
         //si clients.insert a foire, gerer la collision ?
-
-
         //use make pair to use the fd as key and the client struct as data
         clients.insert(std::make_pair(client_fd, c));   
 
-
-
         std::cout << format_time() << " New client: " << client_fd << std::endl;
-
-        // if (!c.wbuf.empty()) {
-        //     write_client_fd(client_fd, epfd, clients); // envoyer le PING immédiatement
-        // }
     }
 }
 
-void client_quited(int fd, int epfd, std::map<int, Client>& clients) // leaved plutot que quited
+void Server::client_quited(int fd, std::map<int, Client>& clients) // leaved plutot que quited
 {
     std::cout << "Remote closed: " << fd << std::endl;
     //we remove the leaving client fd, and the event struct associated
-    epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
+    epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
     close(fd);
     //we delete in our map the leaving client
     clients.erase(fd);
 }
 
-void Server::send_welcome(int fd, int epfd, std::map<int, Client>& clients)
+void Server::send_welcome(int fd, std::map<int, Client>& clients)
 {
     std::stringstream ss;
     ss << clients[fd].user << " aka " << clients[fd].nickname << " successfully registered" << "\r\n";
     clients[fd].wbuf += ss.str();
-    enable_epollout(fd, epfd);
-    write_client_fd(fd, epfd, clients);
+    this->enable_epollout(fd);
+    this->write_client_fd(fd, clients);
 }
 
-void Server::remove_inactive_clients(int epfd, std::map<int, Client>& clients)
+void Server::remove_inactive_clients(std::map<int, Client>& clients)
 {
     for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
     {
@@ -190,15 +180,15 @@ void Server::remove_inactive_clients(int epfd, std::map<int, Client>& clients)
             std::stringstream ss;
             ss << clients[fd].user << " aka " << clients[fd].nickname << " timed out" << "\r\n";
             clients[fd].wbuf += ss.str();
-            enable_epollout(fd, epfd);
-            write_client_fd(fd, epfd, clients);
+            this->enable_epollout(fd);
+            this->write_client_fd(fd, clients);
             close(fd);
             clients.erase(fd);
         }
     }
 }
 
-void Server::check_clients_ping(int epfd, std::map<int, Client>& clients)
+void Server::check_clients_ping(std::map<int, Client>& clients)
 {
     for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
     {
@@ -213,12 +203,14 @@ void Server::check_clients_ping(int epfd, std::map<int, Client>& clients)
             ss << "PING :" << now << "\r\n";
             client.wbuf += ss.str();
             clients[fd].timeout = now + 5000; // 5 sec de timeout 
-            enable_epollout(fd, epfd);
+            this->enable_epollout(fd);
             client.last_ping = now;
             std::cout << format_time() << " [PING :" << now << "] sent to client " << fd << std::endl; 
         }
     }
 }
+
+
 
 //To fix
 //return 0 : all done
@@ -227,7 +219,8 @@ void Server::check_clients_ping(int epfd, std::map<int, Client>& clients)
 //
 //Revoir le recv pour les \r\n et faire les tests avec nc -C 127.0.0.1 6667 PUIS des CTRL+D 
 //
-int Server::read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
+//subdiviser pour les commandes
+int Server::read_client_fd(int fd, std::map<int, Client>& clients)
 {
     bool closed = false;
     while (true) {
@@ -243,72 +236,25 @@ int Server::read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
                 std::string line = clients[fd].rbuf.substr(0, pos);
                 clients[fd].rbuf.erase(0, pos + 2);
                 if (line.rfind("PONG", 0) == 0) {
-                    size_t colon = line.find(':');
-                    if (colon != std::string::npos) {
-                        std::string ts_str = line.substr(colon + 1);
-                        std::istringstream iss(ts_str);
-                        long sent_time = clients[fd].last_ping;
-                        if (iss >> sent_time) {
-                            std::time_t now = std::time(NULL);
-                            long latency = now - sent_time;
-                            std::cout << format_time() << " [" << line << "] from client " << fd << " received (" << latency << " secs)" << std::endl;
-                            clients[fd].timeout = LONG_MAX;
-                        } else {
-                            std::cerr << "Invalid timestamp in PONG: " << ts_str << std::endl;
-                            //un pirate ? on veut surement le deco
-                        }
-                    }
+                    pong_command(line, fd, clients);
                 }
                 else if (line.rfind("PASS", 0) == 0) {
-                    size_t colon = line.find(' ');
-                    if (colon != std::string::npos) {
-                        std::string pw_str = line.substr(colon + 1);
-                        std::istringstream iss(pw_str);
-                        std::cout << format_time() << " [" << line << "] from client " << fd << std::endl;
-                        if (pw_str == this->_password)
-                            clients[fd].password = true;
-                        else
-                        {
-                            std::cout << "NUM ERROR: Incorrect password" << std::endl;
-                        }
-                        if (clients[fd].password == true && clients[fd].nickname != "" && clients[fd].user != "")
-                        {
-                            this->send_welcome(fd, epfd, clients);
-                            std::cout << clients[fd].user << " aka " << clients[fd].nickname << " successfully connected" << std::endl;
-                        }
-                    }
+                    pass_command(line, fd, clients, this->_password);
                 }
                 else if (line.rfind("NICK", 0) == 0) {
-                    size_t colon = line.find(' ');
-                    if (colon != std::string::npos) {
-                        std::string nn_str = line.substr(colon + 1);
-                        std::istringstream iss(nn_str);
-                        std::cout << format_time() << " [" << line << "] from client " << fd << std::endl;
-                        clients[fd].nickname = nn_str;
-                    }
-                    if (clients[fd].password == true && clients[fd].nickname != "" && clients[fd].user != "")
-                    {
-                        this->send_welcome(fd, epfd, clients);
-                        std::cout << clients[fd].user << " aka " << clients[fd].nickname << " successfully connected" << std::endl;
-                    }
+                    nick_command(line, fd, clients);
                 }
                 else if (line.rfind("USER", 0) == 0) {
-                    size_t colon = line.find(':');
-                    if (colon != std::string::npos) {
-                        std::string us_str = line.substr(colon + 1);
-                        std::istringstream iss(us_str);
-                        std::cout << format_time() << " [" << line << "] from client " << fd << std::endl;
-                        clients[fd].user = us_str;
-                    }
-                    if (clients[fd].password == true && clients[fd].nickname != "" && clients[fd].user != "")
-                    {
-                        this->send_welcome(fd, epfd, clients);
-                        std::cout << clients[fd].user << " aka " << clients[fd].nickname << " successfully connected" << std::endl;
-                    }
+                    user_command(line, fd, clients);    
                 }
                 else
                     std::cout << "msg from " << fd << ": [" << line << "]" << std::endl;
                 clients[fd].last_ping = std::time(NULL);
+                if (clients[fd].password == true && clients[fd].nickname != "" && clients[fd].user != "")
+                {
+                    this->send_welcome(fd, clients);
+                    std::cout << clients[fd].user << " aka " << clients[fd].nickname << " successfully connected" << std::endl;
+                }
             }
         } else if (r == 0) {
             // client closed cleanly
@@ -331,7 +277,7 @@ int Server::read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
     }
     //non reachable 
     if (closed) {
-        epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
+        epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
         close(fd);
         clients.erase(fd);
         return 0;
@@ -339,39 +285,40 @@ int Server::read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
 }
 
 
-void Server::handle_events(int server_fd, int epfd, std::map<int, Client>& clients, int n, epoll_event events[MAX_EVENTS])
+void Server::handle_events(std::map<int, Client>& clients, int n, epoll_event events[MAX_EVENTS])
 {
     //for each event received during epoll_wait
     for (int i = 0; i < n; ++i) {
         int fd = events[i].data.fd;
         uint32_t evs = events[i].events;
 
-        if (fd == server_fd) {
-            new_client(server_fd, epfd, clients);    
+        if (fd == this->_server_socket) {
+            this->new_client(this->_server_socket, clients);    
         } else {
             // HUP : fd closed by client : the socket is dead
             // ERR : Error on fd
             if (evs & (EPOLLHUP | EPOLLERR)) { // in case of EPOLLHUP / EPOLLRDHUP : we clean our map, but is there any other possibility of client leaving without saying ?
                 std::cerr << "EPOLLERR/HUP on fd " << fd << std::endl;
-                client_quited(fd, epfd, clients);
+                this->client_quited(fd, clients);
                 continue;
             }
             //RDHUP :  client closed fd, the socket is still alive  
             if (evs & EPOLLRDHUP) {
                 std::cout << "EPOLLRDHUP on fd " << fd << std::endl;
-                client_quited(fd, epfd, clients);
+                this->client_quited(fd, clients);
                 continue;
             }
             //EPOLLIN : There is data to read in the fd associated 
             if (evs & EPOLLIN) {
-                if (this->read_client_fd(fd, epfd, clients))
+                if (this->read_client_fd(fd, clients))
                     break;
                 else
                     continue;
             }
 
+            //EPOLLOUT : We set that flag when we write in a client buffer, we need to send it
             if (evs & EPOLLOUT) {
-                if (write_client_fd(fd, epfd, clients) < 0)
+                if (this->write_client_fd(fd, clients) < 0)
                     continue;
             }
         }
@@ -410,9 +357,9 @@ void Server::RunServer() {
             perror("epoll_wait");
             break;
         }
-        handle_events(this->_server_socket, this->_epfd, clients, n, events);
-        this->check_clients_ping(this->_epfd, clients); //si on n'a pas eu de signe d'activite depuis trop longtemps
-        this->remove_inactive_clients(this->_epfd, clients); // remove inactive clients after a unanswered ping
+        handle_events(clients, n, events);
+        this->check_clients_ping(clients); //si on n'a pas eu de signe d'activite depuis trop longtemps
+        this->remove_inactive_clients(clients); // remove inactive clients after a unanswered ping
     }
     close(this->_server_socket);
     close(this->_epfd);

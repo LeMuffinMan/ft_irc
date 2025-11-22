@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <map>
 #include <sys/epoll.h>
 #include <cstring>
 #include <string>
@@ -10,8 +11,9 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
-
-//TOUTES ces fonctions sont supposees etre des methodes 
+#include "Server.hpp" // /!\ pour clients
+#include <iostream>
+#include <climits>
 
 int init_epoll(int server_fd)
 {
@@ -50,4 +52,62 @@ std::string format_time() {
         << std::setw(2) << std::setfill('0') << minutes << ":"
         << std::setw(2) << std::setfill('0') << seconds;
     return oss.str();
+}
+
+void pong_command(std::string line, int fd, std::map<int, Client>& clients)
+{
+    size_t colon = line.find(':');
+    if (colon != std::string::npos) {
+        std::string ts_str = line.substr(colon + 1);
+        std::istringstream iss(ts_str);
+        long sent_time = clients[fd].last_ping;
+        if (iss >> sent_time) {
+            std::time_t now = std::time(NULL);
+            long latency = now - sent_time;
+            std::cout << format_time() << " [" << line << "] from client " << fd << " received (" << latency << " secs)" << std::endl;
+            clients[fd].timeout = LONG_MAX;
+        } else {
+            std::cerr << "Invalid timestamp in PONG: " << ts_str << std::endl;
+            //un pirate ? on veut surement le deco
+        }
+    }
+}
+
+void pass_command(std::string line, int fd, std::map<int, Client>& clients, std::string password)
+{
+    size_t colon = line.find(' ');
+    if (colon != std::string::npos) {
+        std::string pw_str = line.substr(colon + 1);
+        std::istringstream iss(pw_str);
+        std::cout << format_time() << " [" << line << "] from client " << fd << std::endl;
+        if (pw_str == password)
+            clients[fd].password = true;
+        else
+        {
+            std::cout << "NUM ERROR: Incorrect password" << std::endl;
+        }
+    }
+}
+
+
+void nick_command(std::string line, int fd, std::map<int, Client>& clients)
+{
+    size_t colon = line.find(' ');
+    if (colon != std::string::npos) {
+        std::string nn_str = line.substr(colon + 1);
+        std::istringstream iss(nn_str);
+        std::cout << format_time() << " [" << line << "] from client " << fd << std::endl;
+        clients[fd].nickname = nn_str;
+    }
+}
+
+void user_command(std::string line, int fd, std::map<int, Client>& clients)
+{
+    size_t colon = line.find(':');
+    if (colon != std::string::npos) {
+        std::string us_str = line.substr(colon + 1);
+        std::istringstream iss(us_str);
+        std::cout << format_time() << " [" << line << "] from client " << fd << std::endl;
+        clients[fd].user = us_str;
+    }
 }

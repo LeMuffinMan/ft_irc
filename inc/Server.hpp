@@ -36,11 +36,18 @@ class Server {
     int checkPassword();
     void RunServer();
     int init_socket(int port);
-    int read_client_fd(int fd, int epfd, std::map<int, Client>& clients);
-    void handle_events(int server_fd, int epfd, std::map<int, Client>& clients, int n, epoll_event events[MAX_EVENTS]);
+    int read_client_fd(int fd, std::map<int, Client>& clients);
+    void handle_events(std::map<int, Client>& clients, int n, epoll_event events[MAX_EVENTS]);
     void send_welcome(int fd, int epfd, std::map<int, Client>& clients);
     void remove_inactive_clients(int epfd, std::map<int, Client>& clients);
     void check_clients_ping(int epfd, std::map<int, Client>& clients);
+    void enable_epollout(int fd);
+    int write_client_fd(int fd, std::map<int, Client>& clients);
+    void new_client(int server_fd, std::map<int, Client>& clients);
+    void client_quited(int fd, std::map<int, Client>& clients); // leaved plutot que quited
+    void send_welcome(int fd, std::map<int, Client>& clients);
+    void remove_inactive_clients(std::map<int, Client>& clients);
+    void check_clients_ping(std::map<int, Client>& clients);
 
     Server(std::string password, int port);
     ~Server();
