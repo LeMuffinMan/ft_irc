@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
         }
         break;
     }
-            writer.shutdown().await?;
+    writer.shutdown().await?;
 
     Ok(())
 }
