@@ -1,12 +1,62 @@
-#ifndef CLIENT_H
-#define CLIENT_H
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
 
-#include "server.h"
+#include <string>
+#include <ctime>
+#include "LocalUser.hpp"
 
-typedef struct
+struct ClientModes
 {
-   SOCKET sock;
-   char name[BUF_SIZE];
-}Client;
+	bool is_invisible;  // +i
+	bool is_operator;  // +o
+	// Add other modes as needed
+};
 
-#endif
+// TODO: Implement modes on Client
+
+/**
+ * @brief A Client as a representation of a user in the IRC server.
+ * 
+ */
+class Client
+{
+//= Variables =//
+private:
+	LocalUser *localClient;  // Pointer to LocalUser if local
+	bool isLocal;            // Flag indicating if user is local
+public:
+	std::string nickname;    // User's nickname
+	std::string username;    // User's username (ident)
+	std::string realname;    // User's real name
+	std::string host;        // User's host/hostname (can be generated)
+	ClientModes mode;
+	std::time_t last_seen; // Last seen time
+
+//= Methods =//
+public:
+	Client();
+	Client(LocalUser *localClient);
+	~Client();
+
+	void clear();
+	void setLocalClient(LocalUser *localClient);
+	void setNickname(const std::string &nickname);
+	const std::string& getNickname() const;
+
+	void setUsername(const std::string &username);
+	const std::string& getUsername() const;
+
+	void setRealname(const std::string &realname);
+	const std::string& getRealname() const;
+
+	void setHost(const std::string &host);
+	const std::string& getHost() const;
+
+	void setMode(const ClientModes mode);
+	const ClientModes getMode() const;
+
+	void setLastSeen(std::time_t last_seen);
+	const std::time_t& getLastSeen() const;
+};
+
+#endif // CLIENT_HPP

@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include "Server.hpp"
+#include "Client.hpp"
+#include "LocalUser.hpp"
 #include "Debug.hpp"
 
 int main(int argc, char** argv)

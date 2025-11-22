@@ -30,7 +30,10 @@ P_INC = inc/
 INC = \
 	Debug.hpp \
 	utils.hpp \
-	Server_utils.h 
+	Server_utils.h \
+	LocalUser.hpp \
+	Client.hpp \
+	NetworkState.hpp \
 
 # Source files
 SRC = \
@@ -38,7 +41,9 @@ SRC = \
 	Debug.cpp \
 	utils.cpp \
 	Server.cpp \
-	Server_utils.cpp
+	Client.cpp \
+	NetworkState.cpp \
+	Server_utils.cpp 
 
 LIBS = \
 

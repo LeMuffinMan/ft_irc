@@ -21,13 +21,8 @@
 const int MAX_EVENTS = 64; //Faire une taille dynamique (au fil de l'eau -> vecteur)
                            //Interet des bornes ? deinfe / global
 
-struct Client {
-    int fd;
-    std::string rbuf; 
-    std::string wbuf; 
-};
 
-void new_client(int server_fd, int epfd, std::map<int, Client>& clients) {
+void new_client(int server_fd, int epfd, std::map<int, LocalUser>& clients) {
     while (true) {
         //while we can register a new client we do so
         int client_fd = accept(server_fd, NULL, NULL);
@@ -54,7 +49,7 @@ void new_client(int server_fd, int epfd, std::map<int, Client>& clients) {
             continue;
         }
         //Deviendra une classe ? Une struct suffit ici
-        Client c;
+        LocalUser c;
         c.fd = client_fd;
         c.rbuf = "";
         c.wbuf = "";
@@ -67,7 +62,7 @@ void new_client(int server_fd, int epfd, std::map<int, Client>& clients) {
     }
 }
 
-void client_quited(int fd, int epfd, std::map<int, Client>& clients) // leaved plutot que quited
+void client_quited(int fd, int epfd, std::map<int, LocalUser>& clients) // leaved plutot que quited
 {
     std::cout << "Remote closed: " << fd << std::endl;
     //we remove the leaving client fd, and the event struct associated
@@ -84,7 +79,7 @@ void client_quited(int fd, int epfd, std::map<int, Client>& clients) // leaved p
 //
 //Revoir le recv pour les \r\n et faire les tests avec nc -C 127.0.0.1 6667 PUIS des CTRL+D 
 //
-int read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
+int read_client_fd(int fd, int epfd, std::map<int, LocalUser>& clients)
 {
     bool closed = false;
     while (true) {
@@ -131,7 +126,7 @@ int read_client_fd(int fd, int epfd, std::map<int, Client>& clients)
     }
 }
 
-void handle_events(int server_fd, int epfd, std::map<int, Client> clients, int n, epoll_event events[MAX_EVENTS])
+void handle_events(int server_fd, int epfd, std::map<int, LocalUser> clients, int n, epoll_event events[MAX_EVENTS])
 {
     //for each event received during epoll_wait
     for (int i = 0; i < n; ++i) {
@@ -187,7 +182,7 @@ void Server::RunServer() {
     }
 
     //hash map pour associer chaque client a son fd : acceder a chaque client en utilisant son fd comme cle 
-    std::map<int, Client> clients;
+    std::map<int, LocalUser> clients;
     epoll_event events[MAX_EVENTS];
 
     while (true) {
