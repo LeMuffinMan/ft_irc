@@ -18,6 +18,7 @@
 #include <string.h>
 #include <map> 
 #include "Server_utils.h"
+#include "Server.hpp"
 
 //define ou global ?
 const int MAX_EVENTS = 64; //Faire une taille dynamique (au fil de l'eau -> vecteur)
@@ -291,7 +292,6 @@ void Server::RunServer() {
     this->_server_socket = init_socket(this->_port);
     if (this->_server_socket < 0)
         exit(EXIT_FAILURE);
-    }
     std::cout << "Now listening on port: " << this->_port << std::endl;
 
     std::cout << "[" << format_time() << "] Listening on port: " << this->_port << std::endl;

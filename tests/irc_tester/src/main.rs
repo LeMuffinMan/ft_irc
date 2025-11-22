@@ -11,7 +11,8 @@ async fn main() -> Result<()> {
     let stream = TcpStream::connect(("127.0.0.1", port)).await?;
     println!("Simple connexion: OK");
 
-    let mut reader = BufReader::new(stream);
+    let (reader, mut writer) = stream.into_split();
+    let mut reader = BufReader::new(reader);
     let mut line = String::new();
 
     loop {
@@ -19,7 +20,7 @@ async fn main() -> Result<()> {
         let n = reader.read_line(&mut line).await?;
 
         if n == 0 {
-            println!("Connexion fermée par le serveur.");
+            println!("Connexion closed by server");
             break;
         }
 
@@ -29,11 +30,12 @@ async fn main() -> Result<()> {
             let payload = line.trim().trim_start_matches("PING").trim();
             let response = format!("PONG {}\r\n", payload);
 
-            reader.get_mut().write_all(response.as_bytes()).await?;
+            writer.write_all(response.as_bytes()).await?;
             println!(">> {}", response.trim());
         }
+        break;
     }
+            writer.shutdown().await?;
 
     Ok(())
 }
-
