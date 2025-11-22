@@ -11,6 +11,8 @@
 #include <iomanip>
 #include <sstream>
 
+//TOUTES ces fonctions sont supposees etre des methodes 
+
 int init_epoll(int server_fd)
 {
     int epfd = epoll_create(64);
@@ -22,8 +24,8 @@ int init_epoll(int server_fd)
     return epfd;
 }
 
-int make_nonblocking(int fd) {
-    int flags = fcntl(fd, F_GETFL, 0);
+int make_nonblocking(int fd) { //fcntl et NON_BLOCK uniquemet pour MAC OS ? si oui faire un gros if, et gerer autrement la lecture / ecriture : sinon ca marche
+    int flags = fcntl(fd, F_GETFL, 0); //On en n'a pas besoin ?  
     if (flags == -1)
       return -1;
 
@@ -47,6 +49,5 @@ std::string format_time() {
     oss << std::setw(2) << std::setfill('0') << hours << ":"
         << std::setw(2) << std::setfill('0') << minutes << ":"
         << std::setw(2) << std::setfill('0') << seconds;
-
     return oss.str();
 }

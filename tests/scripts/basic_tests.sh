@@ -5,7 +5,7 @@ GREEN='\033[0;32m'
 NC='\033[0m' 
 
 
-PORT=${1:-6667}
+PORT=${1:-6667} # tester plusieurs ports, invalids, et deja occupes 
 SERVER_BIN="./ircserv"
 SERVER_LOG=".server_output.log"
 HOST=127.0.0.1
@@ -24,7 +24,9 @@ pkill ircserv
 rm -f "$SERVER_LOG"
 echo -n "Launch server: "
 
-$SERVER_BIN "$PORT" testpassword > "$SERVER_LOG" 2>&1 &
+export PASSWD="testpasswd"
+
+$SERVER_BIN "$PORT" testpassword > "$SERVER_LOG" 2>&1 & #il faut que ce soit une variable d'environnement 
 
 SERVER_PID=$!
 sleep 0.5
@@ -37,7 +39,7 @@ echo -e "${GREEN}OK${NC} pid = $SERVER_PID"
 
 
 echo -n "Simple client connexion: "
-timeout 1 bash -c "timeout 1 nc $HOST $PORT <<< ''"
+timeout 1 bash -c "nc -C $HOST $PORT <<< ''"
 if grep -Fq "New client: 5" "$SERVER_LOG"; then
     echo -e " ${GREEN}OK${NC}"
 else
@@ -46,7 +48,7 @@ fi
 
 
 echo -n "Regular msg: "
-printf "hello\r\n" | timeout 1 nc $HOST $PORT
+printf "hello\n" | timeout 1 nc -C $HOST $PORT # pourquoi ici pas besoin de \r et nc -C s'en occupe ?
 if grep -Fq "msg from 5: [hello]" "$SERVER_LOG"; then
     echo -e " ${GREEN}OK${NC}"
 else
@@ -55,7 +57,7 @@ fi
 
 
 echo -n "Multi‑lines: "
-printf "a\r\nb\r\nc\r\n" | timeout 1 nc $HOST $PORT
+printf "a\nb\nc\r\n" | timeout 1 nc -C $HOST $PORT #pourquoi ici le \r est necessaire ?
 if grep -Fq "msg from 5: [a]" "$SERVER_LOG" && \
    grep -Fq "msg from 5: [b]" "$SERVER_LOG" && \
    grep -Fq "msg from 5: [c]" "$SERVER_LOG"; then
@@ -71,8 +73,8 @@ echo -n "Fragmentate: "
     sleep 0.2;
     printf "tial";
     sleep 0.2;
-    printf " msg\r\n";
-) | timeout 1 nc $HOST $PORT
+    printf " msg\n";
+) | timeout 1 nc -C $HOST $PORT
 if grep -Fq "msg from 5: [partial msg]" "$SERVER_LOG"; then
     echo -e " ${GREEN}OK${NC}"
 else

@@ -22,7 +22,7 @@ class Server {
     int _server_socket;
     int _epfd;
 
-    Server();
+    Server(); // On ne veut pas de serveur sans mdp ni sans port
   public:
     int getPort() const;
     int checkPassword();
@@ -31,8 +31,8 @@ class Server {
 
     Server(std::string password, int port);
     ~Server();
-    Server(const Server& other);
-    Server& operator=(const Server& other);
+    // Server(const Server& other);
+    // Server& operator=(const Server& other);
 };
 
 #endif 
