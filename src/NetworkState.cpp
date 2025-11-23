@@ -11,6 +11,11 @@ NetworkState::~NetworkState()
 		delete it->second;
 	}
 	clients.clear();
+	// Clean up all Channel pointers
+	for (std::map<std::string, Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
+		delete it->second;
+	}
+	channels.clear();
 }
 
 bool NetworkState::addClient(const std::string &nickname, Client *client)

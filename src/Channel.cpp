@@ -5,6 +5,7 @@
 Channel::Channel(std::string channel_name)
 {
 	this->channel_name = channel_name;
+	clear();
 }
 
 Channel::~Channel()
@@ -14,7 +15,7 @@ Channel::~Channel()
 
 void Channel::clear()
 {
-	Debug::print(INFO, "Clearing channel " + this->channel_name);
+	Debug::print(INFO, "Clearing channel: " + this->channel_name);
 	this->topic.clear();
 	this->key.clear();
 	std::memset(&this->mode, 0, sizeof(ChannelModes));
@@ -92,6 +93,11 @@ bool Channel::removeClient(Client *client)
 bool Channel::isClientInChannel(Client *client) const
 {
 	return clients.find(client) != clients.end();
+}
+
+bool Channel::isClientOPChannel(Client *client) const
+{
+	return operators.find(client) != operators.end();
 }
 
 Client* Channel::getClientByNickname(const std::string &nickname) const
