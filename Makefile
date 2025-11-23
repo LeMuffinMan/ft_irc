@@ -30,6 +30,9 @@ P_INC = inc/
 INC = \
 	Debug.hpp \
 	utils.hpp \
+	ACommand.hpp \
+	CommandFactory.hpp \
+	InviteCommand.hpp \
 	Server_utils.h \
 	LocalUser.hpp \
 	Client.hpp \
@@ -40,6 +43,8 @@ INC = \
 SRC = \
 	main.cpp \
 	Debug.cpp \
+	CommandFactory.cpp \
+	InviteCommand.cpp \
 	utils.cpp \
 	Server.cpp \
 	Client.cpp \

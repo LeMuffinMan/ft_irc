@@ -33,9 +33,9 @@ subject.pdf
 *.dylib
 
 # Executables
-webserv
-Webserv
-WebServ
+ircserv
+ircServ
+IrcServ
 *.exe
 *.out
 *.app
