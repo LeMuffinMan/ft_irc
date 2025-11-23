@@ -34,6 +34,7 @@ INC = \
 	LocalUser.hpp \
 	Client.hpp \
 	NetworkState.hpp \
+	Channel.hpp \
 
 # Source files
 SRC = \
@@ -43,6 +44,7 @@ SRC = \
 	Server.cpp \
 	Client.cpp \
 	NetworkState.cpp \
+	Channel.cpp \
 	Server_utils.cpp 
 
 LIBS = \

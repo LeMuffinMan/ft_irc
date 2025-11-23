@@ -5,6 +5,8 @@
 #include <ctime>
 #include "LocalUser.hpp"
 
+struct LocalUser; // Forward declaration
+
 struct ClientModes
 {
 	bool is_invisible;  // +i
