@@ -1,4 +1,5 @@
 #include "Channel.hpp"
+#include "Debug.hpp"
 #include <cstring>
 
 Channel::Channel(std::string channel_name)
@@ -11,9 +12,9 @@ Channel::~Channel()
 	clear();
 }
 
-
 void Channel::clear()
 {
+	Debug::print(INFO, "Clearing channel " + this->channel_name);
 	this->topic.clear();
 	this->key.clear();
 	std::memset(&this->mode, 0, sizeof(ChannelModes));
@@ -91,4 +92,21 @@ bool Channel::removeClient(Client *client)
 bool Channel::isClientInChannel(Client *client) const
 {
 	return clients.find(client) != clients.end();
+}
+
+Client* Channel::getClientByNickname(const std::string &nickname) const
+{
+	Debug::print(INFO, "Searching for client in channel" + this->channel_name + "with nickname: " + nickname);
+	for (std::set<Client*>::const_iterator it = this->clients.begin(); it != this->clients.end(); ++it)
+	{
+		if ((*it)->getNickname() == nickname)
+			return *it;
+	}
+	Debug::print(INFO, "Searching for operators in channel" + this->channel_name + "with nickname: " + nickname);
+	for (std::set<Client*>::const_iterator it = this->operators.begin(); it != this->operators.end(); ++it)
+	{
+		if ((*it)->getNickname() == nickname)
+			return *it;
+	}
+	return NULL;
 }

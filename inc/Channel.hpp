@@ -56,6 +56,7 @@ public:
 	bool addClient(Client *client, bool is_operator);
 	bool removeClient(Client *client);
 	bool isClientInChannel(Client *client) const;
+	Client* getClientByNickname(const std::string &nickname) const;
 };
 
 #endif // CHANNEL_HPP
