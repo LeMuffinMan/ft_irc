@@ -9,11 +9,11 @@
 
 struct ChannelModes
 {
-	bool is_invite_only; // +i
-	bool is_topic_set_op_only; //+t
-	bool has_key;      // +k
-	bool is_operator;  // +o
-	bool is_limited;  // +l
+	bool is_invite_only;		//!< +i: Invite only mode
+	bool is_topic_set_op_only;	//!< +t: Topic set by operator only
+	bool has_key;				//!< +k: Key (password) set
+	bool is_operator;			//!< +o: Operator mode
+	bool is_limited;			//!< +l: User limit set
 	// Add other modes as needed
 };
 
@@ -27,16 +27,16 @@ class Channel
 {
 //= Variables =//
 private:
-	std::string channel_name;    // Channel's name
-	std::string topic;        // Channel's topic
-	std::string key;        // Channel's key (password)
+	std::string channel_name;	//!< Channel's name
+	std::string topic;			//!< Channel's topic
+	std::string key;			//!< Channel's key (password)
 	ChannelModes mode;
-	size_t user_limit; // Maximum number of users allowed in the channel
-	std::set<Client*> clients; // Set of current Client pointers
-	std::set<Client*> operators; // Set of current channel operators pointers
-	std::vector<std::string> allowed_clients; // List of allowed client realnames
-	std::vector<std::string> operators_realnames; // List of operator realnames
-	// std::vector<std::string> banned_clients; // List of banned client realnames
+	size_t user_limit;			//!< Maximum number of users allowed in the channel
+	std::set<Client*> clients;	//!< Set of current Client pointers
+	std::set<Client*> operators;	//!< Set of current channel operators pointers
+	std::vector<std::string> allowed_clients; //!< List of allowed client realnames
+	std::vector<std::string> operators_realnames; //!< List of operator realnames
+	//std::vector<std::string> banned_clients; //!< List of banned client realnames
 
 public:
 //= Methods =//

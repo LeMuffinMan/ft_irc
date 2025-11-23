@@ -9,8 +9,8 @@ struct LocalUser; // Forward declaration
 
 struct ClientModes
 {
-	bool is_invisible;  // +i
-	bool is_operator;  // +o
+	bool is_invisible;  //!< +i: Invisible mode
+	bool is_operator;  //!< +o: Operator mode
 	// Add other modes as needed
 };
 
@@ -24,15 +24,15 @@ class Client
 {
 //= Variables =//
 private:
-	LocalUser *localClient;  // Pointer to LocalUser if local
-	bool isLocal;            // Flag indicating if user is local
+	LocalUser *localClient;		//!< Pointer to LocalUser if local
+	bool isLocal;            //!< Flag indicating if user is local
 public:
-	std::string nickname;    // User's nickname
-	std::string username;    // User's username (ident)
-	std::string realname;    // User's real name
-	std::string host;        // User's host/hostname (can be generated)
+	std::string nickname;    //!< User's nickname
+	std::string username;    //!< User's username (ident)
+	std::string realname;    //!< User's real name
+	std::string host;        //!< User's host/hostname (can be generated)
 	ClientModes mode;
-	std::time_t last_seen; // Last seen time
+	std::time_t last_seen; 	//!< Last seen time
 
 //= Methods =//
 public:

@@ -12,11 +12,11 @@ class Client;
  */
 struct LocalUser
 {
-	int fd;              // File descriptor for the user's socket connection
-	bool registered;   // Registration status of the user
-	Client *client;      // Pointer to the associated Client structure
-	std::string rbuf;    // Read buffer to store incoming data
-	std::string wbuf;    // Write buffer to store outgoing data
+	int fd;              //!< File descriptor for the user's socket connection
+	bool registered;   //!< Registration status of the user
+	Client *client;      //!< Pointer to the associated Client structure
+	std::string rbuf;    //!< Read buffer to store incoming data
+	std::string wbuf;    //!< Write buffer to store outgoing data
 };
 
 #endif // LOCALUSER_HPP

@@ -14,8 +14,8 @@ class NetworkState
 {
 //= Variables =//
 private:
-	std::map<std::string, Client*> clients; // Map of nickname to Client pointers
-	std::map<std::string, Channel*> channels; // Map of channel name to Channel pointers
+	std::map<std::string, Client*> clients; //!< Map of nickname to Client pointers
+	std::map<std::string, Channel*> channels; //!< Map of channel name to Channel pointers
 
 //= Methods =//
 public:
