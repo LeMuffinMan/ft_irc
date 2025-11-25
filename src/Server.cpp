@@ -132,7 +132,7 @@ void Server::new_client(int server_fd, std::map<int, Client>& clients) {
         //faire une init pour chaque struct objet
         Client c;
         c.fd = client_fd;
-        c.rbuf = "";
+        c.rbuf = "";  
         c.wbuf = "";
         c.password = false;
         c.nickname = "";
@@ -364,5 +364,5 @@ void Server::RunServer() {
 
 Server::~Server() {}
 
-Server::Server(std::string password, int port) :  _port(port), _password(password) {}
+Server::Server(int port, std::string password) :  _port(port), _password(password) {}
 

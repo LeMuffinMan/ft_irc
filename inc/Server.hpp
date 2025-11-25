@@ -56,7 +56,7 @@ class Server {
     void remove_inactive_clients(std::map<int, Client>& clients);
     void check_clients_ping(std::map<int, Client>& clients);
 
-    Server(std::string password, int port);
+    Server(int port, std::string password);
     ~Server();
     // Server(const Server& other);
     // Server& operator=(const Server& other);
