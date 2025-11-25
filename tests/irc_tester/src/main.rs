@@ -5,12 +5,12 @@ use anyhow::Result;
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::TcpStream,
-    time::{sleep, Duration},
+    time::{Duration, sleep},
 };
 
 //Redefinir regles PR pour Dev
 
-//proteger port 0 et les autres : -> 1024 
+//proteger port 0 et les autres : -> 1024
 
 //Benchmark map vs vector -> 1 client -> 1000 clients
 
@@ -24,17 +24,16 @@ async fn main() -> Result<()> {
     //faux mot passe
     normal_connection_wrong_password(port, debug).await?; //should disconnect immediately
 
-    //Remplacer un nick 
+    //Remplacer un nick
     // normal_connection_override_existing_nick(port).await?; //attente implementations
     //Remplacer un user
     // normal_connection_override_existing_user(port).await?; //attente implementations
     fragemented_messages(port, debug).await?; //Après X secondes sans \r\n → timeout
     low_bandwidth(port, debug).await?;
 
-
-    //PASS apres NICK -> Doit echouer ? 
+    //PASS apres NICK -> Doit echouer ?
     //Overflow du buffer (bible)
-    // read_bible(port).await?;   //On veut un MAX buffer sur la lecture ? 
+    // read_bible(port).await?;   //On veut un MAX buffer sur la lecture ?
     //  max 512 octets par ligne
     //  max X lignes par seconde
     // Le serveur NE doit PAS :
@@ -44,7 +43,7 @@ async fn main() -> Result<()> {
     //  Crasher/segfault/panique.
     //
     //UNICODES
-    //Chars interdits : 
+    //Chars interdits :
     //NICK \xC0bad\r\n
     //USER test 0 * :name\xFF\r\n
     //
@@ -62,7 +61,7 @@ async fn main() -> Result<()> {
     // - partial registration and only answer to ping
     //
     //
-    // 
+    //
     //
 
     Ok(())
@@ -88,7 +87,7 @@ async fn stress_test(port: u16, num_clients: usize) -> Result<()> {
                 Ok(c) => c,
                 Err(_) => return Err(anyhow::anyhow!("Failed to connect")),
             };
-            
+
             let messages = vec![
                 "PASS password\r\n".to_string(),
                 format!("NICK {}\r\n", nick),
@@ -119,7 +118,10 @@ async fn stress_test(port: u16, num_clients: usize) -> Result<()> {
         }
     }
 
-    println!("Stress test finished: {} \x1b[32mOK\x1b[0m, {} \x1b[31mKO\x1b[0m", ok_count, ko_count);
+    println!(
+        "Stress test finished: {} \x1b[32mOK\x1b[0m, {} \x1b[31mKO\x1b[0m",
+        ok_count, ko_count
+    );
     Ok(())
 }
 
@@ -131,7 +133,7 @@ async fn stress_test(port: u16, num_clients: usize) -> Result<()> {
 //
 //     let auth_messages = [
 //         "PASS password\r\n",
-//         "NICK player1\r\n", 
+//         "NICK player1\r\n",
 //     ];
 //
 //     println!("Expecting timeout after 10 secs ...");
@@ -162,9 +164,7 @@ async fn normal_connection_wrong_password(port: u16, debug: bool) -> Result<()> 
     let mut reader = BufReader::new(reader);
     let mut line = String::new();
 
-    let auth_messages = [
-        "PASS incorrect_password\r\n",
-    ];
+    let auth_messages = ["PASS incorrect_password\r\n"];
 
     for msg in &auth_messages {
         if debug {
@@ -181,12 +181,9 @@ async fn normal_connection_wrong_password(port: u16, debug: bool) -> Result<()> 
                 if debug {
                     print!("<< {}", line);
                 }
-                if line.contains("Incorrect password")
-                {
+                if line.contains("Incorrect password") {
                     ok("Wrong password: ");
-                }
-                else
-                {
+                } else {
                     ko("Wrong password: ");
                 }
             }
@@ -200,11 +197,11 @@ async fn normal_connection_wrong_password(port: u16, debug: bool) -> Result<()> 
     Ok(())
 }
 
-async fn normal_connection(port: u16, debug: bool) -> Result <()> {
+async fn normal_connection(port: u16, debug: bool) -> Result<()> {
     let mut client = Client::connect(port).await?;
     let messages = [
         "PASS password\r\n",
-        "NICK player1\r\n", 
+        "NICK player1\r\n",
         "USER player1 0 * :test user\r\n",
     ];
 
@@ -241,7 +238,7 @@ async fn normal_connection(port: u16, debug: bool) -> Result <()> {
     Ok(())
 }
 
-async fn fragemented_messages(port: u16, debug: bool) -> Result <()> {
+async fn fragemented_messages(port: u16, debug: bool) -> Result<()> {
     let stream = TcpStream::connect(("127.0.0.1", port)).await?;
     let (reader, mut writer) = stream.into_split();
     let mut reader = BufReader::new(reader);
@@ -320,7 +317,7 @@ async fn fragemented_messages(port: u16, debug: bool) -> Result <()> {
                     print!("<< {}", line);
                 }
                 auth_responses.push(line.clone());
-                
+
                 if line.starts_with("PING") {
                     let payload = line.trim().trim_start_matches("PING").trim();
                     let response = format!("PONG {}\r\n", payload);
@@ -353,7 +350,7 @@ async fn low_bandwidth(port: u16, debug: bool) -> Result<()> {
     let mut line = String::new();
 
     let message = "PASS password\r\nNICK slow\r\nUSER slow 0 * :slow user\r\n";
-    
+
     if debug {
         println!("Sending char by char...");
     }
@@ -367,7 +364,7 @@ async fn low_bandwidth(port: u16, debug: bool) -> Result<()> {
     }
 
     sleep(Duration::from_millis(1000)).await;
-    
+
     let mut received_response = false;
     loop {
         line.clear();
@@ -377,7 +374,7 @@ async fn low_bandwidth(port: u16, debug: bool) -> Result<()> {
                     print!("<< {}", line);
                 }
                 received_response = true;
-                
+
                 if line.starts_with("PING") {
                     let payload = line.trim().trim_start_matches("PING").trim();
                     let response = format!("PONG {}\r\n", payload);

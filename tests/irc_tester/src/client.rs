@@ -2,7 +2,7 @@ use anyhow::Result;
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::TcpStream,
-    time::{sleep, Duration},
+    time::{Duration, sleep},
 };
 
 pub struct Client {
@@ -31,7 +31,12 @@ impl Client {
 
     pub async fn read_line_timeout(&mut self, timeout_ms: u64) -> Result<Option<String>> {
         let mut line = String::new();
-        match tokio::time::timeout(Duration::from_millis(timeout_ms), self.reader.read_line(&mut line)).await {
+        match tokio::time::timeout(
+            Duration::from_millis(timeout_ms),
+            self.reader.read_line(&mut line),
+        )
+        .await
+        {
             Ok(Ok(n)) if n > 0 => Ok(Some(line)),
             _ => Ok(None),
         }
