@@ -58,6 +58,8 @@ public:
 	bool isClientInChannel(Client *client) const;
 	bool isClientOPChannel(Client *client) const;
 	Client* getClientByNickname(const std::string &nickname) const;
+	std::set<Client*>& getClients();
+	std::set<Client*>& getOperators();
 };
 
 #endif // CHANNEL_HPP

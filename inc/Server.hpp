@@ -18,6 +18,12 @@ public:
 	int checkPassword();
 	void RunServer();
 
+
+	void reply(Client* client, std::string message);
+	void replyChannel(Channel& channel, std::string message);
+	void replyChannelOnlyOP(Channel& channel, std::string message);
+	void broadcast(NetworkState&, std::string message);
+	void noticeServers(NetworkState&, std::string message);
 	//A voir pour ce qu'on garde de la canonique 
 	// Server(std::string password, std::string port, NetworkState &networkState); // TODO: Implement Server(Networkstate&)
 	Server(std::string password, std::string port);

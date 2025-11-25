@@ -116,3 +116,13 @@ Client* Channel::getClientByNickname(const std::string &nickname) const
 	}
 	return NULL;
 }
+
+std::set<Client*>& Channel::getClients()
+{
+	return this->clients;
+}
+
+std::set<Client*>& Channel::getOperators()
+{
+	return this->operators;
+}
