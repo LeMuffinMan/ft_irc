@@ -38,6 +38,6 @@ echo "Starting Rust tester..."
 echo "Kill " $SERVER_PID 
 kill $SERVER_PID
 
-echo "--- Server log ---"
+# echo "--- Server log ---"
 # verbose mode
 # cat .server.log

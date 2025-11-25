@@ -69,7 +69,7 @@ async fn main() -> Result<()> {
     
     // -- parralle --
 
-    stress_test(6667, 1700).await?;
+    stress_test(6667, 1100).await?;
 
     //faire un mode verbose !!
     // let tests: Vec<(&str, tokio::task::JoinHandle<Result<()>>)> = vec![
@@ -105,7 +105,6 @@ async fn stress_test(port: u16, num_clients: usize) -> Result<()> {
     let mut handles = Vec::with_capacity(num_clients);
 
     for i in 0..num_clients {
-        let port = port;
         let handle = tokio::spawn(async move {
             let nick = format!("stress_{}", i);
             let mut client = match Client::connect(port).await {
@@ -230,7 +229,6 @@ async fn normal_connection(port: u16) -> Result <()> {
     }
 
     let mut responses = Vec::new();
-    let mut line = String::new();
     loop {
         if let Some(line) = client.read_line_timeout(100).await? {
             print!("<< {}", line);
@@ -253,6 +251,7 @@ async fn normal_connection(port: u16) -> Result <()> {
     //     writer.write_all(response.as_bytes()).await?;
     //     println!(">> {}", response.trim());
     // }
+    client.shutdown().await?;
     Ok(())
 }
 
