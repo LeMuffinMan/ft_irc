@@ -11,7 +11,7 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
-#include "Server.hpp" // /!\ pour clients
+#include "Server.hpp" // /!\ pour localUser
 #include <iostream>
 #include <climits>
 
@@ -50,18 +50,18 @@ std::string format_time() {
     return oss.str();
 }
 
-void pong_command(std::string line, int fd, std::map<int, Client>& clients)
+void pong_command(std::string line, int fd, std::map<int, LocalUser>& localUser)
 {
     size_t colon = line.find(':');
     if (colon != std::string::npos) {
         std::string ts_str = line.substr(colon + 1);
         std::istringstream iss(ts_str);
-        long sent_time = clients[fd].last_ping;
+        long sent_time = localUser[fd].last_ping;
         if (iss >> sent_time) {
             std::time_t now = std::time(NULL);
             long latency = now - sent_time;
             std::cout << format_time() << " [" << line << "] from client " << fd << " received (" << latency << " secs)" << std::endl;
-            clients[fd].timeout = LONG_MAX;
+            localUser[fd].timeout = LONG_MAX;
         } else {
             std::cerr << "Invalid timestamp in PONG: " << ts_str << std::endl;
             //un pirate ? on veut surement le deco
@@ -69,7 +69,7 @@ void pong_command(std::string line, int fd, std::map<int, Client>& clients)
     }
 }
 
-void pass_command(std::string line, int fd, std::map<int, Client>& clients, std::string password)
+void pass_command(std::string line, int fd, std::map<int, LocalUser>& localUser, std::string password)
 {
     size_t colon = line.find(' ');
     if (colon != std::string::npos) {
@@ -77,7 +77,7 @@ void pass_command(std::string line, int fd, std::map<int, Client>& clients, std:
         std::istringstream iss(pw_str);
         std::cout << format_time() << " [" << line << "] from client " << fd << std::endl;
         if (pw_str == password)
-            clients[fd].password = true;
+            localUser[fd].client->password_correct = true;
         else
         {
             std::cout << "NUM ERROR: Incorrect password" << std::endl;
@@ -86,24 +86,24 @@ void pass_command(std::string line, int fd, std::map<int, Client>& clients, std:
 }
 
 
-void nick_command(std::string line, int fd, std::map<int, Client>& clients)
+void nick_command(std::string line, int fd, std::map<int, LocalUser>& localUser)
 {
     size_t colon = line.find(' ');
     if (colon != std::string::npos) {
         std::string nn_str = line.substr(colon + 1);
         std::istringstream iss(nn_str);
         std::cout << format_time() << " [" << line << "] from client " << fd << std::endl;
-        clients[fd].nickname = nn_str;
+        localUser[fd].client->setNickname(nn_str);
     }
 }
 
-void user_command(std::string line, int fd, std::map<int, Client>& clients)
+void user_command(std::string line, int fd, std::map<int, LocalUser>& localUser)
 {
     size_t colon = line.find(':');
     if (colon != std::string::npos) {
         std::string us_str = line.substr(colon + 1);
         std::istringstream iss(us_str);
         std::cout << format_time() << " [" << line << "] from client " << fd << std::endl;
-        clients[fd].user = us_str;
+        localUser[fd].client->setUsername(us_str);
     }
 }

@@ -6,12 +6,19 @@ Client::Client()
    this->clear();
 }
 
-Client::Client(LocalUser *localClient)
+Client::Client(int fd)
 {
    this->clear();
-   this->localClient = localClient;
+   this->localClient.fd = fd;
    this->isLocal = true;
 }
+
+// Client::Client(LocalUser *localClient)
+// {
+//    this->clear();
+//    this->localClient = localClient;
+//    this->isLocal = true;
+// }
 
 Client::~Client()
 {
@@ -25,11 +32,13 @@ void Client::clear()
    this->host.clear();
    memset(&this->mode, 0, sizeof(ClientModes));
    this->last_seen = 0;
+   this->password_correct = false;
+   this->registered = false;
 }
 
 void Client::setLocalClient(LocalUser *localClient)
 {
-   this->localClient = localClient;
+   this->localClient = *localClient;
    this->isLocal = true;
 }
 

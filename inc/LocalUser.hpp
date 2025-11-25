@@ -13,10 +13,11 @@ class Client;
 struct LocalUser
 {
 	int fd;              //!< File descriptor for the user's socket connection
-	bool registered;   //!< Registration status of the user
 	Client *client;      //!< Pointer to the associated Client structure
 	std::string rbuf;    //!< Read buffer to store incoming data
 	std::string wbuf;    //!< Write buffer to store outgoing data
+	std::time_t last_ping;  //!< Time of the last ping received
+	std::time_t timeout;  //!< Time when the user will timeout if no activity
 };
 
 #endif // LOCALUSER_HPP

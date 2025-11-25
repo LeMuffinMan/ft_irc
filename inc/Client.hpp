@@ -24,21 +24,24 @@ class Client
 {
 //= Variables =//
 private:
-	LocalUser *localClient;		//!< Pointer to LocalUser if local
 	bool isLocal;            //!< Flag indicating if user is local
 public:
+	LocalUser localClient;		//!< Pointer to LocalUser if local
 	std::string nickname;    //!< User's nickname
 	std::string username;    //!< User's username (ident)
 	std::string realname;    //!< User's real name
 	std::string host;        //!< User's host/hostname (can be generated)
 	ClientModes mode;
 	std::time_t last_seen; 	//!< Last seen time
+	bool password_correct; //!< Flag indicating if the user has provided the correct password
+	bool registered; //!< Flag indicating if the user has provided all the auth info
 
 //= Methods =//
 public:
 	Client();
-	Client(LocalUser *localClient);
+	Client(int fd);
 	~Client();
+	// Client(LocalUser *localClient);
 
 	void clear();
 	void setLocalClient(LocalUser *localClient);
