@@ -5,6 +5,12 @@ use tokio::{
     time::{sleep, Duration},
 };
 
+//Redefinir regles PR pour Dev
+//Faire dev depuis Classes
+//Gerer conflits apres merge epol loop 
+
+//Benchmark map vs vector -> 1 client -> 1000 clients
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let port = 6667;
