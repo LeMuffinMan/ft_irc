@@ -30,15 +30,27 @@ P_INC = inc/
 INC = \
 	Debug.hpp \
 	utils.hpp \
-	Server_utils.h 
+	ACommand.hpp \
+	CommandFactory.hpp \
+	InviteCommand.hpp \
+	Server_utils.h \
+	LocalUser.hpp \
+	Client.hpp \
+	NetworkState.hpp \
+	Channel.hpp \
 
 # Source files
 SRC = \
 	main.cpp \
 	Debug.cpp \
+	CommandFactory.cpp \
+	InviteCommand.cpp \
 	utils.cpp \
 	Server.cpp \
-	Server_utils.cpp
+	Client.cpp \
+	NetworkState.cpp \
+	Channel.cpp \
+	Server_utils.cpp 
 
 LIBS = \
 

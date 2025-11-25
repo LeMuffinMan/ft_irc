@@ -23,11 +23,11 @@ class Debug
 {
 //= Variables =//
 private:
-	static std::ostream* stream;
-	static std::ostream* errStream;
+	static std::ostream* stream;	//!< Output stream for debug messages
+	static std::ostream* errStream;	//!< Output stream for error messages
 
 public:
-	static bool useColors;
+	static bool useColors;			//!< Flag to enable/disable colored output
 
 //= Methods =//
 private:

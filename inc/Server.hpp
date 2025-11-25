@@ -6,6 +6,7 @@
 #include <map>
 #include <ctime> 
 #include <sys/epoll.h>
+#include "NetworkState.hpp"
 
 
 const int MAX_EVENTS = 64; //Faire une taille dynamique (au fil de l'eau -> vecteur)
