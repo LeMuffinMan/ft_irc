@@ -14,11 +14,12 @@ struct Client {
     int fd;
     std::string rbuf; 
     std::string wbuf; 
+    std::time_t last_ping;
+    std::time_t timeout;
+
     bool password;
     std::string nickname;
     std::string user;
-    std::time_t last_ping;
-    std::time_t timeout;
     bool registered;
 };
 

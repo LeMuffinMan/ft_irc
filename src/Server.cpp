@@ -219,7 +219,7 @@ int Server::read_client_fd(int fd, std::map<int, Client>& clients)
     ssize_t r = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
     
     if (r > 0) {
-        clients[fd].rbuf.append(buf, buf + r);
+        clients[fd].rbuf.append(buf, buf + r); // &buf[r]
         // std::cout << "Received " << r << " bytes from fd " << fd << std::endl;
         
         size_t pos;
@@ -347,7 +347,7 @@ void Server::RunServer() {
 
     while (true) {
         //we check for events from our clients fd registered
-        int n = epoll_wait(this->_epfd, events, MAX_EVENTS, 2000); //timeout 2 sec
+        int n = epoll_wait(this->_epfd, events, MAX_EVENTS, 2000); //timeout 2 sec -> revoir la gestion du timeout : retour de fct / teste evs
         if (n < 0) {
             // if (errno == EINTR)
             //   continue; // signal interrompt -> relancer

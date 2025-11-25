@@ -10,14 +10,25 @@ async fn main() -> Result<()> {
     let port = 6667;
     //Tester ports authorises / interdits / invalids
 
+    //client qui arrive t s'en va sans rien faire 
+    //client qui sest deco avant de finir de s'auth
+    //client qui se connecte partiellement, qui repond au ping, mais qui reste la
+    //faux mot passe
+    //
+    //Remplacer un nick / user
     normal_connection(port).await?;
     fragemented_messages(port).await?;
-    // test_low_bandwidth(port).await?;
+    test_low_bandwidth(port).await?;
     //plus de tests mono client
+    //Overflow du buffer (bible)
     //
     //Des tests avec plusieurs clients
+    //- tester 0 FD MAX
+    //- Overflow 2 fd
     //
     //tester le max clients simultanes 
+    //- Limite de perf 
+    //- latence (sans local host ?)
     
     Ok(())
 }
