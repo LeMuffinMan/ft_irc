@@ -39,4 +39,5 @@ echo "Kill " $SERVER_PID
 kill $SERVER_PID
 
 echo "--- Server log ---"
-cat .server.log
+# verbose mode
+# cat .server.log
