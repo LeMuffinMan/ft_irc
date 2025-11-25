@@ -211,79 +211,74 @@ void Server::check_clients_ping(std::map<int, Client>& clients)
 }
 
 
-
-//To fix
-//return 0 : all done
-//return 1 : there is still data to read
-//return -1 : error to handle
-//
-//Revoir le recv pour les \r\n et faire les tests avec nc -C 127.0.0.1 6667 PUIS des CTRL+D 
-//
-//subdiviser pour les commandes
 int Server::read_client_fd(int fd, std::map<int, Client>& clients)
 {
-    bool closed = false;
-    while (true) {
-        //read in the read buf 
-        char buf[4096];
-        ssize_t r = recv(fd, buf, sizeof(buf), 0); // TESTER : deux clients, un qui envoie la bible, l'autre qui envoie un petit text : pas de blocage !
-        if (r > 0) {
-            clients[fd].rbuf.append(buf, buf + r); //&buf[r]plus safe sur l'espacement mémoire, unicodes ça ne marchera pas
-            //on cherche a extraire le message, delimite par un \r\n ??
-            size_t pos;
-            //A casse avec le refacto !
-            while ((pos = clients[fd].rbuf.find("\r\n")) != std::string::npos) { //make non blocking va pas marcher ici ? et si on peut pas avoir GETFLG encore moins ?
-                std::string line = clients[fd].rbuf.substr(0, pos);
-                clients[fd].rbuf.erase(0, pos + 2);
-                if (line.rfind("PONG", 0) == 0) {
-                    pong_command(line, fd, clients);
-                }
-                else if (line.rfind("PASS", 0) == 0) {
-                    pass_command(line, fd, clients, this->_password);
-                }
-                else if (line.rfind("NICK", 0) == 0) {
-                    nick_command(line, fd, clients);
-                }
-                else if (line.rfind("USER", 0) == 0) {
-                    user_command(line, fd, clients);    
-                }
-                else
-                    std::cout << "msg from " << fd << ": [" << line << "]" << std::endl;
-                clients[fd].last_ping = std::time(NULL);
-                if (clients[fd].password == true && clients[fd].nickname != "" && clients[fd].user != "")
-                {
-                    this->send_welcome(fd, clients);
-                    std::cout << clients[fd].user << " aka " << clients[fd].nickname << " successfully connected" << std::endl;
-                }
+    char buf[4096];
+    
+    // MSG_DONTWAIT : rend non bloquant et suffisant ?
+    ssize_t r = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
+    
+    if (r > 0) {
+        clients[fd].rbuf.append(buf, buf + r);
+        // std::cout << "Received " << r << " bytes from fd " << fd << std::endl;
+        
+        size_t pos;
+        while ((pos = clients[fd].rbuf.find("\r\n")) != std::string::npos) {
+            std::string line = clients[fd].rbuf.substr(0, pos);
+            clients[fd].rbuf.erase(0, pos + 2);
+            
+            // std::cout << "Processing: [" << line << "]" << std::endl;
+            
+            if (line.rfind("PONG", 0) == 0) {
+                pong_command(line, fd, clients);
             }
-        } else if (r == 0) {
-            // client closed cleanly
-            closed = true;
-            close(fd);
-            clients.erase(fd);
-            return 1;
-        } else {
-            // autres cas a couvrir ? EINT ?
-            if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                return 1; 
-            } else {
-                perror("recv");
-                closed = true;
-                close(fd);
-                clients.erase(fd);
-                return 1;
+            else if (line.rfind("PASS", 0) == 0) {
+                pass_command(line, fd, clients, this->_password);
+            }
+            else if (line.rfind("NICK", 0) == 0) {
+                nick_command(line, fd, clients);
+            }
+            else if (line.rfind("USER", 0) == 0) {
+                user_command(line, fd, clients);    
+            }
+            else {
+                std::cout << "msg from " << fd << ": [" << line << "]" << std::endl;
+            }
+            
+            clients[fd].last_ping = std::time(NULL);
+            
+            if (!clients[fd].registered && 
+                clients[fd].password == true && 
+                clients[fd].nickname != "" && 
+                clients[fd].user != "") {
+                
+                this->send_welcome(fd, clients);
+                clients[fd].registered = true;
+                std::cout << clients[fd].user << " aka " << clients[fd].nickname << " successfully connected" << std::endl;
             }
         }
-    }
-    //non reachable 
-    if (closed) {
+        
+        return 1;
+        
+    } else if (r == 0) {
+        std::cout << "Client " << fd << " disconnected" << std::endl;
         epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
         close(fd);
         clients.erase(fd);
         return 0;
+    } else {
+        //error handling
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return 1;
+        } else {
+            perror("recv");
+            epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
+            close(fd);
+            clients.erase(fd);
+            return 0;
+        }
     }
 }
-
 
 void Server::handle_events(std::map<int, Client>& clients, int n, epoll_event events[MAX_EVENTS])
 {
@@ -310,10 +305,11 @@ void Server::handle_events(std::map<int, Client>& clients, int n, epoll_event ev
             }
             //EPOLLIN : There is data to read in the fd associated 
             if (evs & EPOLLIN) {
-                if (this->read_client_fd(fd, clients))
-                    break;
-                else
+                int result = this->read_client_fd(fd, clients);
+                // 0 = client disconnected
+                if (result == 0) {
                     continue;
+                }
             }
 
             //EPOLLOUT : We set that flag when we write in a client buffer, we need to send it
@@ -336,6 +332,7 @@ void Server::RunServer() {
     //doc 
     epoll_event ev;
     ev.events = EPOLLIN | EPOLLRDHUP; // RDHUP pour détecter fermeture distante
+                                      //EPOLLET permet de rendre les sockets non bloquants ?;
     ev.data.fd = this->_server_socket;
     if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, this->_server_socket, &ev) < 0) {
         perror("epoll_ctl add server");

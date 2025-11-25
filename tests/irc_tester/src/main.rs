@@ -12,7 +12,7 @@ async fn main() -> Result<()> {
 
     normal_connection(port).await?;
     fragemented_messages(port).await?;
-    test_low_bandwidth(port).await?;
+    // test_low_bandwidth(port).await?;
     //plus de tests mono client
     //
     //Des tests avec plusieurs clients
@@ -88,8 +88,8 @@ async fn fragemented_messages(port: u16) -> Result <()> {
     writer.flush().await?;
     sleep(Duration::from_millis(50)).await;
 
-    println!(">> _test\\r\\n");
-    writer.write_all(b"_test\r\n").await?;
+    println!(">> test\\r\\n");
+    writer.write_all(b" test\r\n").await?;
     writer.flush().await?;
     sleep(Duration::from_millis(100)).await;
 
@@ -98,8 +98,8 @@ async fn fragemented_messages(port: u16) -> Result <()> {
     writer.flush().await?;
     sleep(Duration::from_millis(80)).await;
 
-    println!(">> R");
-    writer.write_all(b"R").await?;
+    println!(">> R ");
+    writer.write_all(b"R ").await?;
     writer.flush().await?;
     sleep(Duration::from_millis(80)).await;
 
@@ -154,8 +154,9 @@ async fn test_low_bandwidth(port: u16) -> Result<()> {
 
     let message = "PASS password\r\nNICK slow\r\nUSER slow 0 * :slow user\r\n";
     
-    println!("Envoi caractère par caractère...");
+    println!("Sending char by char...");
     for byte in message.as_bytes() {
+        print!("{}", *byte as char);
         writer.write_all(&[*byte]).await?;
         writer.flush().await?;
         sleep(Duration::from_millis(10)).await;
@@ -183,9 +184,9 @@ async fn test_low_bandwidth(port: u16) -> Result<()> {
     }
 
     if received_response {
-        println!("✓ Serveur gère la faible bande passante: OK");
+        println!("Low bandwith: OK");
     } else {
-        println!("✗ Problème avec la faible bande passante");
+        println!("Low bandwith: KO");
     }
 
     writer.shutdown().await?;

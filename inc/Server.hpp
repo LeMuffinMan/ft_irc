@@ -19,6 +19,7 @@ struct Client {
     std::string user;
     std::time_t last_ping;
     std::time_t timeout;
+    bool registered;
 };
 
 class Server {

@@ -27,11 +27,7 @@ int init_epoll(int server_fd)
 }
 
 int make_nonblocking(int fd) { //fcntl et NON_BLOCK uniquemet pour MAC OS ? si oui faire un gros if, et gerer autrement la lecture / ecriture : sinon ca marche
-    int flags = fcntl(fd, F_GETFL, 0); //On en n'a pas besoin ?  
-    if (flags == -1)
-      return -1;
-
-    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+    if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
       return -1;
     return 0;
 }
