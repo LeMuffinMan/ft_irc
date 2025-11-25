@@ -11,11 +11,8 @@ use tokio::{
 //Redefinir regles PR pour Dev
 
 //proteger port 0 et les autres : -> 1024 
-// 65535  
 
 //Benchmark map vs vector -> 1 client -> 1000 clients
-//
-//
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -23,16 +20,10 @@ async fn main() -> Result<()> {
     let debug = false;
 
     normal_connection(port, debug).await?;
-    //normal connection et tester 2 pings
 
     //faux mot passe
-    normal_connection_wrong_password(port, debug).await?;
+    normal_connection_wrong_password(port, debug).await?; //should disconnect immediately
 
-    //client qui arrive t s'en va sans rien faire : quel comportement chercher ? on clean ? 
-    // unactive_connection(port).await?;
-    //client qui sest deco avant de finir de s'auth : idem
-    // uncomplete_connection(port).await?;
-    //
     //Remplacer un nick 
     // normal_connection_override_existing_nick(port).await?; //attente implementations
     //Remplacer un user
@@ -40,8 +31,6 @@ async fn main() -> Result<()> {
     fragemented_messages(port, debug).await?; //Après X secondes sans \r\n → timeout
     low_bandwidth(port, debug).await?;
 
-    //client qui se connecte partiellement, qui repond au ping, mais qui reste la : timeout de 10s
-    // uncomplete_inactive_connection(port, debug).await?;
 
     //PASS apres NICK -> Doit echouer ? 
     //Overflow du buffer (bible)
@@ -59,35 +48,22 @@ async fn main() -> Result<()> {
     //NICK \xC0bad\r\n
     //USER test 0 * :name\xFF\r\n
     //
-    //Des tests avec plusieurs clients
-    //- tester 0 -> FD MAX
-    //- tester le non bloquant (Bible et normal connection en meme temps)
-    //- Overflow 2 fd
-    //
-    //tester le max clients simultanes 
-    //- Limite de perf 
-    //- latence (sans local host ?)
-    
     // -- parralle --
 
     stress_test(6667, 1100).await?;
 
-    //faire un mode verbose !!
-    // let tests: Vec<(&str, tokio::task::JoinHandle<Result<()>>)> = vec![
-    //     ("normal_connection", tokio::spawn(normal_connection(port))),
-    //     ("normal_connection_wrong_password", tokio::spawn(normal_connection_wrong_password(port))),
-    //     ("fragemented_messages", tokio::spawn(fragemented_messages(port))),
-    //     ("low_bandwidth", tokio::spawn(low_bandwidth(port))),
-    //     ("uncomplete_inactive_connection", tokio::spawn(uncomplete_inactive_connection(port))),
-    // ];
+    //- tester 0 -> FD MAX
+    //- tester le non bloquant (Bible et normal connection en meme temps)
+    //- Overflow 2 fd
+
+    // Timeout tests
+    // - PONG kick
+    // - not registered and only answer to ping
+    // - partial registration and only answer to ping
     //
-    // for (name, handle) in tests {
-    //     match handle.await {
-    //         Ok(Ok(_)) => println!("{} \x1b[32mOK\x1b[0m", name),
-    //         Ok(Err(e)) => println!("{} \x1b[31mKO\x1b[0m - {:?}", name, e),
-    //         Err(e) => println!("{} \x1b[31mKO\x1b[0m - Task panicked: {:?}", name, e),
-    //     }
-    // }
+    //
+    // 
+    //
 
     Ok(())
 }
@@ -345,7 +321,6 @@ async fn fragemented_messages(port: u16, debug: bool) -> Result <()> {
                 }
                 auth_responses.push(line.clone());
                 
-                //Faire une fonction dediee pour gerer le ping pong 
                 if line.starts_with("PING") {
                     let payload = line.trim().trim_start_matches("PING").trim();
                     let response = format!("PONG {}\r\n", payload);

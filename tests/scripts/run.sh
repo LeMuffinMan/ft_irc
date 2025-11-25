@@ -12,6 +12,10 @@ kill_server() {
 }
 trap kill_server EXIT
 
+# Port < 0
+# Port 0 -> 1024
+# port > 65535  
+
 echo "Starting server on port $PORT..."
 $SERVER "$PORT" "$PASS" > .server.log 2>&1 &
 SERVER_PID=$!
