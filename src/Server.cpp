@@ -146,13 +146,14 @@ void Server::new_client(int server_fd) {
         c.wbuf = "";
         c.last_ping = std::time(NULL);
         c.timeout = LONG_MAX; // 1min pour repondre PONG
-        Client client(client_fd);
-        c.client = &client;
-        client.setLocalClient(&c);
+        Client* client = new Client(client_fd);
+        c.client = client;
+        client->setLocalClient(&c);
+        client->setUsername("RandomUser");
         // si localUsers.insert a foire, gerer la collision ?
         // use make pair to use the fd as key and the client struct as data
         this->_localUsers.insert(std::make_pair(client_fd, c));   
-        this->_networkState->addClient("", &client); // adding client to network state
+        this->_networkState->addClient("", client); // adding client to network state
         std::cout << format_time() << " New client: " << client_fd << std::endl;
     }
 }
