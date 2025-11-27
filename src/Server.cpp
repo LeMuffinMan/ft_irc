@@ -22,9 +22,15 @@
 #include "ACommand.hpp"
 #include "CommandFactory.hpp"
 
+std::string Server::_password = "";
+
 Server::~Server() {}
 
-Server::Server(int port, std::string password) :  _port(port), _password(password) {welcomed = 0;}
+Server::Server(int port, std::string password) :  _port(port) 
+{
+    welcomed = 0;
+    _password = password;
+}
 
 int Server::init_network(NetworkState &networkState)
 {
@@ -276,6 +282,11 @@ std::vector<std::string> Server::get_params(std::string line)
         }
     }
     return params;
+}
+
+std::string& Server::getPassword()
+{
+    return _password;
 }
 
 ACommand* Server::parse_command(int fd)
