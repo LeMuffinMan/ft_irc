@@ -11,8 +11,8 @@ protected:
 //= Methods =//
 public:
 	InviteCommand(std::vector<std::string> params);
-	~InviteCommand() {};
+	~InviteCommand() {}
 	void execute(Client* executor, NetworkState& network);
 };
 
-#endif
+#endif  // INVITECOMMAND_HPP

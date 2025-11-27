@@ -6,23 +6,26 @@
 #include "Debug.hpp"
 #include <cstdlib>
 
+#include <cstdlib>
+#include <string>
+
 int main(int argc, char** argv)
 {
-  if (argc != 3)
-  {
-    std::cout << "Usage: ./ircserv <port> <password>" << std::endl;
-    return -1;
-  }
-  int port = atoi(argv[1]);
-  if (port < 0) //revoir les ports autorises 
-  {
-  	std::cout << "Incorrect port: " << port << std::endl;
-      return -1;
-  }
+	if (argc != 3)
+	{
+		std::cerr << "Usage: ./ircserv <port> <password>" << std::endl;
+		return -1;
+	}
+	int port = atoi(argv[1]); // Needs to be replaced as atoi is not 'cpp like'
+	if (port < 1024 || port > 49151)
+	{
+		std::cerr << "Incorrect port: " << port << std::endl;
+		return -1;
+	}
 	std::string password(argv[2]);
 	Server server(port, password);
-  NetworkState networkState;
-  server.init_network(networkState);
+	NetworkState networkState;
+	server.init_network(networkState);
 	server.RunServer();
 	return 0;
 }

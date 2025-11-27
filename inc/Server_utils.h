@@ -1,5 +1,5 @@
-#ifndef SERVER_UTILS_H
-#define SERVER_UTILS_H
+#ifndef SERVER_UTILS_HPP
+#define SERVER_UTILS_HPP
 
 #include <map>
 
@@ -13,4 +13,4 @@ void nick_command(std::string line, int fd, std::map<int, LocalUser>& localUser)
 void user_command(std::string line, int fd, std::map<int, LocalUser>& localUser);
 void pong_command(std::string line, int fd, std::map<int, LocalUser>& localUser);
 
-#endif
+#endif  // SERVER_UTILS_HPP

@@ -38,14 +38,17 @@ private:
 	Debug& operator=(const Debug& other);
 
 public:
-	static void print(debug_level level, const std::string &message);
-	static void printSTD(debug_level level, const std::string &message);
 	static std::ostream* changeStream(std::ostream &newStream);
 	static std::ostream* changeErrStream(std::ostream &newStream);
 	static void changeUseColor(bool val);
 
 	//= Templates =//
-
+	template <typename T>
+	static void print(debug_level level, const T &content);
+	template <typename T>
+	static void printSTD(debug_level level, const T &content);
 };
 
-#endif
+#include "Debug.tpp"
+
+#endif // DEBUG_HPP

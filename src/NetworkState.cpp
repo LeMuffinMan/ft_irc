@@ -31,6 +31,7 @@ bool NetworkState::removeClient(const std::string &nickname)
 {
 	if (clients.find(nickname) != clients.end()) {
 		delete clients[nickname];
+		clients[nickname] = NULL;
 		clients.erase(nickname);
 		return true;
 	}
@@ -56,6 +57,9 @@ bool NetworkState::addChannel(const std::string &channel_name)
 
 Channel* NetworkState::getChannel(const std::string &channel_name)
 {
+	if (channel_name.empty() || channel_name[0] != '#') {
+		return NULL;
+	}
 	if (channels.find(channel_name) != channels.end()) {
 		return channels[channel_name];
 	}

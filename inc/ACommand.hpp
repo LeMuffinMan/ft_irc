@@ -22,14 +22,14 @@ enum command_type
 	PRIVATE_MESSAGE,
 	LIST_CHANNELS,
 	LIST_USERS,
-	UNKNOWN,
+	UNKNOWN
 };
 
 enum param_type
 {
 	BOOL_PARAM,
 	INT_PARAM,
-	STRING_PARAM,
+	STRING_PARAM
 };
 
 class ACommand
@@ -40,7 +40,7 @@ protected:
 
 //= Methods =//
 public:
-	virtual ~ACommand() {};
+	virtual ~ACommand() {}
 	virtual void execute(Client* executor, NetworkState& network) = 0;
 	virtual void print_params() const
 	{
@@ -52,4 +52,4 @@ public:
 	}
 };
 
-#endif
+#endif  // ACOMMAND_HPP

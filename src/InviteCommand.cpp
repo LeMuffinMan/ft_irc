@@ -12,13 +12,13 @@ void InviteCommand::execute(Client* executor, NetworkState& network)
 		return;
 	}
 	Client* target = network.getClient(_params[0]);
-    Channel* channel = network.getChannel(_params[1]);
-    if (!target || !channel) {
+	Channel* channel = network.getChannel(_params[1]);
+	if (!target || !channel) {
 		// ERR_NOSUCHNICK
 		Debug::print(DEBUG, "Invalid params");
-        // executor.sendError("Invalid params");
-        return;
-    }
+		// executor.sendError("Invalid params");
+		return;
+	}
 	if (!channel->isClientInChannel(executor))
 	{
 		// ERR_NOTONCHANNEL

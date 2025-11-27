@@ -27,15 +27,15 @@ class Channel
 {
 //= Variables =//
 private:
-	std::string channel_name;	//!< Channel's name
-	std::string topic;			//!< Channel's topic
-	std::string key;			//!< Channel's key (password)
-	ChannelModes mode;
-	size_t user_limit;			//!< Maximum number of users allowed in the channel
-	std::set<Client*> clients;	//!< Set of current Client pointers
-	std::set<Client*> operators;	//!< Set of current channel operators pointers
-	std::vector<std::string> allowed_clients; //!< List of allowed client realnames
-	std::vector<std::string> operators_realnames; //!< List of operator realnames
+	std::string _channel_name;	//!< Channel's name
+	std::string _topic;			//!< Channel's topic
+	std::string _key;			//!< Channel's key (password)
+	ChannelModes _mode;
+	size_t _user_limit;			//!< Maximum number of users allowed in the channel
+	std::set<Client*> _clients;	//!< Set of current Client pointers
+	std::set<Client*> _operators;	//!< Set of current channel operators pointers
+	std::vector<std::string> _allowed_clients; //!< List of allowed client realnames
+	std::vector<std::string> _operators_realnames; //!< List of operator realnames
 	//std::vector<std::string> banned_clients; //!< List of banned client realnames
 
 public:

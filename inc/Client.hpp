@@ -24,27 +24,28 @@ class Client
 {
 //= Variables =//
 private:
-	bool isLocal;            //!< Flag indicating if user is local
+	bool _isLocal;            //!< Flag indicating if user is local
 public:
-	LocalUser localClient;		//!< Pointer to LocalUser if local
-	std::string nickname;    //!< User's nickname
-	std::string username;    //!< User's username (ident)
-	std::string realname;    //!< User's real name
-	std::string host;        //!< User's host/hostname (can be generated)
-	ClientModes mode;
-	std::time_t last_seen; 	//!< Last seen time
-	bool password_correct; //!< Flag indicating if the user has provided the correct password
-	bool registered; //!< Flag indicating if the user has provided all the auth info
+	LocalUser* _localClient;		//!< Pointer to LocalUser if local
+	std::string _nickname;    //!< User's nickname
+	std::string _username;    //!< User's username (ident)
+	std::string _realname;    //!< User's real name
+	ClientModes _mode;
+	std::string _host;        //!< User's host/hostname (can be generated)
+	std::time_t _last_seen; 	//!< Last seen time
+	bool _password_correct; //!< Flag indicating if the user has provided the correct password
+	bool _registered; //!< Flag indicating if the user has provided all the auth info
 
 //= Methods =//
 public:
 	Client();
 	Client(int fd);
+	Client(LocalUser *localClient);
 	~Client();
-	// Client(LocalUser *localClient);
 
 	void clear();
 	void setLocalClient(LocalUser *localClient);
+	LocalUser* getLocalClient();
 	void setNickname(const std::string &nickname);
 	const std::string& getNickname() const;
 
