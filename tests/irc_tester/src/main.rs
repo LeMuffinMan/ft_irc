@@ -1,4 +1,5 @@
 mod client;
+use std::time::Instant;
 use crate::client::Client;
 
 use anyhow::Result;
@@ -7,8 +8,6 @@ use tokio::{
     net::TcpStream,
     time::{Duration, sleep},
 };
-
-//Redefinir regles PR pour Dev
 
 //proteger port 0 et les autres : -> 1024
 
@@ -49,7 +48,7 @@ async fn main() -> Result<()> {
     //
     // -- parralle --
 
-    stress_test(6667, 1100).await?;
+    stress_test(6667, 1000, 0).await?;
 
     //- tester 0 -> FD MAX
     //- tester le non bloquant (Bible et normal connection en meme temps)
@@ -75,9 +74,10 @@ fn ko(msg: &str) {
     println!("{} \x1b[31mKO\x1b[0m", msg);
 }
 
-async fn stress_test(port: u16, num_clients: usize) -> Result<()> {
+async fn stress_test(port: u16, num_clients: usize, timeout_ms: u64) -> Result<()> {
     println!("Starting stress test with {} clients...", num_clients);
 
+    let start = Instant::now();
     let mut handles = Vec::with_capacity(num_clients);
 
     for i in 0..num_clients {
@@ -98,7 +98,7 @@ async fn stress_test(port: u16, num_clients: usize) -> Result<()> {
                 client.send(&msg, 0).await?;
             }
 
-            if let Some(line) = client.read_line_timeout(100).await? {
+            if let Some(line) = client.read_line_timeout(timeout_ms).await? {
                 if line.contains("successfully registered") {
                     return Ok(());
                 }
@@ -107,6 +107,8 @@ async fn stress_test(port: u16, num_clients: usize) -> Result<()> {
         });
         handles.push(handle);
     }
+    let spawn_duration = start.elapsed();
+    println!("All tasks spawned in: {:?}", spawn_duration);
 
     let mut ok_count = 0;
     let mut ko_count = 0;
@@ -118,10 +120,13 @@ async fn stress_test(port: u16, num_clients: usize) -> Result<()> {
         }
     }
 
+    let total_duration = start.elapsed();
     println!(
         "Stress test finished: {} \x1b[32mOK\x1b[0m, {} \x1b[31mKO\x1b[0m",
         ok_count, ko_count
     );
+    println!("Total time: {:?}", total_duration);
+    println!("Time per client: {:?}", total_duration / num_clients as u32);
     Ok(())
 }
 
@@ -342,7 +347,6 @@ async fn fragemented_messages(port: u16, debug: bool) -> Result<()> {
     Ok(())
 }
 
-//Envoyer char by char a 10 ms suffit a simuler une bande passante faible ?
 async fn low_bandwidth(port: u16, debug: bool) -> Result<()> {
     let stream = TcpStream::connect(("127.0.0.1", port)).await?;
     let (reader, mut writer) = stream.into_split();

@@ -31,6 +31,18 @@ impl Client {
 
     pub async fn read_line_timeout(&mut self, timeout_ms: u64) -> Result<Option<String>> {
         let mut line = String::new();
+
+        if timeout_ms == 0 {
+            let n = self.reader.read_line(&mut line).await?;
+            if n > 0 {
+                // println!("<< {line}");
+                return Ok(Some(line));
+            } else {
+                return Ok(None);
+            }
+        }
+
+
         match tokio::time::timeout(
             Duration::from_millis(timeout_ms),
             self.reader.read_line(&mut line),

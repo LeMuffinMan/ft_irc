@@ -7,6 +7,8 @@
 #include <ctime> 
 #include <sys/epoll.h>
 #include "NetworkState.hpp"
+#include "ACommand.hpp"
+#include <vector>
 
 #include <sys/types.h>
 #include <sys/epoll.h>
@@ -31,32 +33,36 @@ const int MAX_EVENTS = 64;	//Faire une taille dynamique (au fil de l'eau -> vect
 							//Interet des bornes ? deinfe / global
 
 class Server {
-private:
-	int _port;		//!< Port number the server listens on
-	std::vector<int> _localUsers_fd;		//!< Vector of file descriptors for local users
-	const std::string _password;		//!< Server password for client authentication
-	std::map<int, LocalUser> _localUsers;	//!< Map of file descriptors to LocalUser structures
-	int _server_socket;		//!< Server socket file descriptor
-	int _epfd;		//!< Epoll file descriptor
-	NetworkState *_networkState;		//!< Pointer to the network state
+  private:
+    int _port;
+    std::vector<int> _localUsers_fd;
+    const std::string _password;
+    std::map<int, LocalUser> _localUsers;
+    int _server_socket;
+    int _epfd;
+    NetworkState *_networkState;
+    int welcomed;
 
-	Server(); // On ne veut pas de serveur sans mdp ni sans port
-public:
-	// int getPort() const;
-	// int checkPassword();
-	void RunServer();
-	int init_network(NetworkState &networkState);
-	int init_socket(int port);
-	int read_client_fd(int fd);
-	void handle_events(int n, epoll_event events[MAX_EVENTS]);
-	void send_welcome(int fd);
-	void remove_inactive_localUsers();
-	void check_localUsers_ping();
-	void enable_epollout(int fd);
-	void disable_epollout(int fd);
-	int write_client_fd(int fd);
-	void new_client(int server_fd);
-	void client_quited(int fd); // leaved plutot que quited
+    Server(); // On ne veut pas de serveur sans mdp ni sans port
+  public:
+    // int getPort() const;
+    // int checkPassword();
+    void RunServer();
+    int init_network(NetworkState &networkState);
+    int init_socket(int port);
+    int read_client_fd(int fd);
+    void handle_events(int n, epoll_event events[MAX_EVENTS]);
+    void enable_epollout(int fd);
+    void disable_epollout(int fd);
+    int write_client_fd(int fd);
+    void new_client(int server_fd);
+    void client_quited(int fd); // leaved plutot que quited
+    void send_welcome(int fd);
+    void remove_inactive_localUsers();
+    void check_localUsers_ping();
+    ACommand* parse_command(int fd);
+    std::string get_command(std::string line);
+    std::vector<std::string> get_params(std::string line);
 
 	Server(int port, std::string password);
 	~Server();
