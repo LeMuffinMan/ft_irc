@@ -1,5 +1,5 @@
 #include <sys/types.h>
-// #include <climits>
+#include <climits>
 #include <sstream>
 #include <ctime>
 #include <fcntl.h>
@@ -98,27 +98,29 @@ void Server::disable_epollout(int fd)
 
 int Server::write_client_fd(int fd)
 {
-    std::string &wbuf = _localUsers[fd].wbuf;
+	std::string &wbuf = _localUsers[fd].wbuf;
 
-    while (!wbuf.empty()) {
-        ssize_t n = send(fd, wbuf.data(), wbuf.size(), 0);
+	while (!wbuf.empty()) {
+		ssize_t n = send(fd, wbuf.data(), wbuf.size(), 0);
 
-        if (n > 0) {
-            wbuf.erase(0, n);
-        }
-        else if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-            return 0;
-        }
-        else {
-            std::cerr << "send error on fd " << fd << "\n";
-            epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
-            close(fd);
-            _localUsers.erase(fd);
-            return -1;
-        }
-    }
-    this->disable_epollout(fd);
-    return 0;
+		if (n > 0) {
+			wbuf.erase(0, static_cast<size_t>(n));
+		}
+		//socket buffer full 
+		else if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+			return 0;
+		}
+		else {
+			// error or client disconnected
+			std::cerr << "send error on fd " << fd << "\n";
+			epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
+			close(fd);
+			_localUsers.erase(fd);
+			return -1;
+		}
+	}
+	this->disable_epollout(fd);
+	return 0;
 }
 
 void Server::new_client(int server_fd) {
@@ -137,37 +139,39 @@ void Server::new_client(int server_fd) {
         }
         make_nonblocking(client_fd);
 
-        epoll_event cev;
-        std::memset(&cev, 0, sizeof(cev));
-        //we set en epoll_event, triggered in case of data to read or
-        //if client close its writing end (fragmented msgs)
-        cev.events = EPOLLIN | EPOLLRDHUP;
-        //we bind this new client event struct, with the client fd
-        cev.data.fd = client_fd;
-        //adding our new fd, and the event struct to our epoll, with the events we just set
-        if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, client_fd, &cev) < 0) {
-            perror("epoll_ctl add client");
-            close(client_fd);
-            continue;
-        }
-        //Deviendra une classe ? Une struct suffit ici
-        //faire une init pour chaque struct objet
-        LocalUser c;
-        c.fd = client_fd;
-        c.rbuf = "";  
-        c.wbuf = "";
-        c.last_ping = std::time(NULL);
-        c.timeout = std::time(NULL) + 60; // 1min pour repondre PONG
-        Client* client = new Client(client_fd);
-        c.client = client;
-        client->setLocalClient(&c);
-        client->setUsername("RandomUser");
-        // si localUsers.insert a foire, gerer la collision ?
-        // use make pair to use the fd as key and the client struct as data
-        this->_localUsers.insert(std::make_pair(client_fd, c));   
-        this->_networkState->addClient("", client); // adding client to network state
-        std::cout << format_time() << " New client: " << client_fd << std::endl;
-    }
+		epoll_event cev;
+		std::memset(&cev, 0, sizeof(cev));
+		//we set en epoll_event, triggered in case of data to read or
+		//if client close its writing end (fragmented msgs)
+		cev.events = EPOLLIN | EPOLLRDHUP;
+		//we bind this new client event struct, with the client fd
+		cev.data.fd = client_fd;
+		//adding our new fd, and the event struct to our epoll, with the events we just set
+		if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, client_fd, &cev) < 0) {
+			perror("epoll_ctl add client");
+			close(client_fd);
+			continue;
+		}
+		//Deviendra une classe ? Une struct suffit ici
+		//faire une init pour chaque struct objet
+		LocalUser c;
+		c.fd = client_fd;
+		c.rbuf = "";  
+		c.wbuf = "";
+		c.last_ping = std::time(NULL);
+		c.timeout = LONG_MAX; // 1min pour repondre PONG
+		Client* client = new Client(client_fd);
+		c.client = client;
+		client->setNickname("Random");
+		// si localUsers.insert a foire, gerer la collision ?
+		// use make pair to use the fd as key and the client struct as data
+		this->_localUsers.insert(std::make_pair(client_fd, c));
+		LocalUser &ref = this->_localUsers[client_fd];   
+		client->setLocalClient(&ref);
+		ref.client = client;
+		this->_networkState->addClient("", client); // adding client to network state
+		std::cout << format_time() << " New client: " << client_fd << std::endl;
+	}
 }
 
 void Server::client_quited(int fd) // leaved plutot que quited
@@ -214,25 +218,25 @@ void Server::remove_inactive_localUsers()
 
 void Server::check_localUsers_ping()
 {
-    for (std::map<int, LocalUser>::iterator it = this->_localUsers.begin(); 
-         it != this->_localUsers.end(); ++it)
-    {
-        int fd = it->first;
-        LocalUser& client = it->second;
+	for (std::map<int, LocalUser>::iterator it = this->_localUsers.begin(); 
+		it != this->_localUsers.end(); ++it)
+	{
+		int fd = it->first;
+		LocalUser& client = it->second;
 
-        std::time_t now = std::time(NULL);
-        
-        if (now - client.last_ping > 30) 
-        {
-            std::stringstream ss;
-            ss << "PING :" << now << "\r\n";
-            client.wbuf += ss.str();
-            client.timeout = now + 60;
-            this->enable_epollout(fd);
-            client.last_ping = now;
-            std::cout << format_time() << " [PING :" << now << "] sent to client " << fd << std::endl; 
-        }
-    }
+		std::time_t now = std::time(NULL);
+		
+		if (now - client.last_ping > 30) 
+		{
+			std::stringstream ss;
+			ss << "PING :" << now << "\r\n";
+			client.wbuf += ss.str();
+			client.timeout = now + 60;
+			this->enable_epollout(fd);
+			client.last_ping = now;
+			std::cout << format_time() << " [PING :" << now << "] sent to client " << fd << std::endl; 
+		}
+	}
 }
 
 std::string Server::get_command(std::string line) 
@@ -386,46 +390,47 @@ int Server::read_client_fd(int fd)
 
 void Server::handle_events(int n, epoll_event events[MAX_EVENTS])
 {
-    //for each event received during epoll_wait
-    for (int i = 0; i < n; ++i) {
-        int fd = events[i].data.fd;
-        uint32_t evs = events[i].events;
+	//for each event received during epoll_wait
+	for (int i = 0; i < n; ++i) {
+		int fd = events[i].data.fd;
+		uint32_t evs = events[i].events;
 
-        if (fd == this->_server_socket) {
-            this->new_client(this->_server_socket);    
-        } else {
-            // HUP : fd closed by client : the socket is dead
-            // ERR : Error on fd
-            if (evs & (EPOLLHUP | EPOLLERR)) { // in case of EPOLLHUP / EPOLLRDHUP : we clean our map, but is there any other possibility of client leaving without saying ?
-                std::cerr << "EPOLLERR/HUP on fd " << fd << std::endl;
-                this->client_quited(fd);
-                continue;
-            }
-            //RDHUP :  client closed fd, the socket is still alive  
-            if (evs & EPOLLRDHUP) {
-                std::cout << "EPOLLRDHUP on fd " << fd << std::endl;
-                this->client_quited(fd);
-                continue;
-            }
-            //EPOLLIN : There is data to read in the fd associated 
-            if (evs & EPOLLIN) {
-                int result = this->read_client_fd(fd);
-                // 0 = client disconnected
-                if (result == 0) {
-                    continue;
-                } else if (result == 1 ){
-                    this->parse_command(fd);
-                }
-                // else : erreur de recv 
-            }
-
-            //EPOLLOUT : We set that flag when we write in a client buffer, we need to send it
-            if (evs & EPOLLOUT) {
-                if (this->write_client_fd(fd) < 0)
-                    continue;
-            }
-        }
-    }
+		if (fd == this->_server_socket) {
+			this->new_client(this->_server_socket);    
+		} else {
+			// HUP : fd closed by client : the socket is dead
+			// ERR : Error on fd
+			if (evs & (EPOLLHUP | EPOLLERR)) { // in case of EPOLLHUP / EPOLLRDHUP : we clean our map, but is there any other possibility of client leaving without saying ?
+				std::cerr << "EPOLLERR/HUP on fd " << fd << std::endl;
+				this->client_quited(fd);
+				continue;
+			}
+			//RDHUP :  client closed fd, the socket is still alive  
+			if (evs & EPOLLRDHUP) {
+				std::cout << "EPOLLRDHUP on fd " << fd << std::endl;
+				this->client_quited(fd);
+				continue;
+			}
+			//EPOLLOUT : We set that flag when we write in a client buffer, we need to send it
+			// if (evs & EPOLLOUT) {
+			// 	std::cout << "L'erreur est bien ici !" << fd << std::endl;
+			// 	Server::reply(this->_localUsers[fd].client, "je suis fou");
+			// }
+			//EPOLLIN : There is data to read in the fd associated 
+			if (evs & EPOLLIN) {
+				int result = this->read_client_fd(fd);
+				// 0 = client disconnected
+				if (result == 0) {
+					continue;
+				} else if (result == 1 ){
+					if (this->_localUsers[fd].rbuf.find("\r\n") != std::string::npos) // si on a recu une ligne complete: -> À SUPPRIMER
+						Server::reply(this->_localUsers[fd].client, "Merci du message");
+					this->parse_command(fd);
+				}
+				// else : erreur de recv
+			}
+		}
+	}
 }
 
 void Server::RunServer() {
