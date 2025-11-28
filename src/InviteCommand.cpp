@@ -7,6 +7,8 @@ InviteCommand::InviteCommand(std::vector<std::string> params)
 
 void InviteCommand::execute(Client* executor, NetworkState& network)
 {
+	std::vector<int> vec;
+
 	if (_params.size() < 2) {
 		// ERR_NEEDMOREPARAMS
 		return;

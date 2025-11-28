@@ -22,6 +22,7 @@ enum command_type
 	PRIVATE_MESSAGE,
 	LIST_CHANNELS,
 	LIST_USERS,
+	PONG,
 	UNKNOWN
 };
 

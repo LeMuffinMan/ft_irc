@@ -1,4 +1,6 @@
 #include "PassCommand.hpp"
+#include "LocalUser.hpp"
+#include "Server.hpp"
 
 PassCommand::PassCommand(std::vector<std::string> params)
 {
@@ -7,19 +9,31 @@ PassCommand::PassCommand(std::vector<std::string> params)
 
 void PassCommand::execute(Client* executor, NetworkState& network)
 {
-  //Comment traiter PASS password extra params ?
-	if (_params.size() < 1) {
-		// ERR_NEEDMOREPARAMS
+	std::vector<int> vec;
+
+	(void)network;
+
+	if (_params.empty() || _params[1].empty())
+		vec.push_back(461); // ERR_NEEDMOREPARAMS
+	if (executor->_registered)
+		vec.push_back(462); // ERR_ALREADYREGISTRED
+
+	if (!vec.empty())
+		return;
+
+  if (executor->_password_correct)
+	{
+		vec.push_back(0);
 		return;
 	}
 
-  if (executor.password_correct)
-    return; // si il a deja renseigne un mot de passe correct
-
-	Client* password = network.getClient(_params[0]);
-	if (password != server.getPassword())
+	if (_params[1] == Server::getPassword())
 	{
-	  executor.password_correct = true;
+		// std::cout << "Correct password" << std::endl;
+	  executor->_password_correct = true;
+	  vec.push_back(0);
+	} else {
+		vec.push_back(464); //ERR_PASSWDMISMATCH
 	}
 	return;
 }

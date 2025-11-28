@@ -1,13 +1,25 @@
 use anyhow::Result;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use tokio::{
-    io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
+    io::{AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter},
     net::TcpStream,
     time::{Duration, sleep},
 };
 
+
+#[derive(Copy, Clone, Debug)]
+pub enum ClientBehavior {
+    LegitDisconnect,      // Se connecte et se déconnecte normalement
+    LegitIgnorePong,      // Se connecte, ignore pong
+    StartIgnoreAll,       // Connexion partielle, ignore tout
+    PongOnly,             // Se connecte, répond uniquement aux pong
+    PongWithoutConnect,   // Répond au pong mais ne fait pas la handshake complète
+}
+
 pub struct Client {
-    reader: BufReader<tokio::net::tcp::OwnedReadHalf>,
-    writer: tokio::net::tcp::OwnedWriteHalf,
+    writer: Arc<Mutex<BufWriter<tokio::net::tcp::OwnedWriteHalf>>>,
+    reader: tokio::io::BufReader<tokio::net::tcp::OwnedReadHalf>,
 }
 
 impl Client {
@@ -16,13 +28,15 @@ impl Client {
         let (reader, writer) = stream.into_split();
         Ok(Self {
             reader: BufReader::new(reader),
-            writer,
+            writer: Arc::new(Mutex::new(BufWriter::new(writer))),
         })
     }
 
-    pub async fn send(&mut self, msg: &str, delay_ms: u64) -> Result<()> {
-        self.writer.write_all(msg.as_bytes()).await?;
-        self.writer.flush().await?;
+    pub async fn send(&self, msg: &str, delay_ms: u64) -> Result<()> {
+        let mut writer = self.writer.lock().await;
+        writer.write_all(msg.as_bytes()).await?;
+        writer.flush().await?;
+        drop(writer);
         if delay_ms > 0 {
             sleep(Duration::from_millis(delay_ms)).await;
         }
@@ -54,8 +68,16 @@ impl Client {
         }
     }
 
-    pub async fn shutdown(&mut self) -> Result<()> {
-        self.writer.shutdown().await?;
+    pub async fn shutdown(&self) -> Result<()> {
+        let mut writer = self.writer.lock().await;
+        writer.shutdown().await?;
+        Ok(())
+    }
+
+    pub async fn send_raw(&self, data: &[u8]) -> Result<()> {
+        let mut writer = self.writer.lock().await;
+        writer.write_all(data).await?;
+        writer.flush().await?;
         Ok(())
     }
 }

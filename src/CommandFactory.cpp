@@ -1,5 +1,10 @@
 #include "CommandFactory.hpp"
 #include "InviteCommand.hpp"
+#include "PassCommand.hpp"
+#include "NickCommand.hpp"
+#include "UserCommand.hpp"
+#include "PongCommand.hpp"
+#include "PrivmsgCommand.hpp"
 
 CommandFactory::CommandFactory() {}
 CommandFactory::~CommandFactory() {}
@@ -23,6 +28,7 @@ command_type CommandFactory::findType(std::string const& command_name) {
 	if (command_name == "PRIVATE_MESSAGE") return PRIVATE_MESSAGE;
 	if (command_name == "LIST_CHANNELS") return LIST_CHANNELS;
 	if (command_name == "LIST_USERS") return LIST_USERS;
+	if (command_name == "PONG") return PONG;
     return UNKNOWN;
 }
 
@@ -39,24 +45,26 @@ ACommand* CommandFactory::createCommand(const std::string& command, const std::v
 		// 	return new ChangeTopicCommand(params);
 		// case MODE:
 		// 	return new ModeCommand(params);
-		// case NICK:
-		// 	return new SetNickCommand(params);
-		// case USER:
-		// 	return new SetUsernameCommand(params);
-		// case PASS:
-		// 	return new PasswordCommand(params);
+		case NICK:
+			return new NickCommand(params);
+		case USER:
+			return new UserCommand(params);
+		case PASS:
+			return new PassCommand(params);
 		// case JOIN:
 		// 	return new JoinCommand(params);
 		// case LEAVE:
 		// 	return new LeaveCommand(params);
 		// case SEND_MESSAGE:
 		// 	return new SendMessageCommand(params);
-		// case PRIVATE_MESSAGE:
-		// 	return new PrivateMessageCommand(params);
+		case PRIVATE_MESSAGE:
+			return new PrivmsgCommand(params);
 		// case LIST_CHANNELS:
 		// 	return new ListChannelsCommand(params);
 		// case LIST_USERS:
 		// 	return new ListUsersCommand(params);
+		case PONG:
+			return new PongCommand(params); 
 		case UNKNOWN:
 		default:
 			return 0;
