@@ -51,8 +51,6 @@ public:
 	Server(int port, std::string password);
 	~Server();
 	std::string& getPassword();
-	// int getPort() const;
-	// int checkPassword();
 	void RunServer();
 	int init_network(NetworkState &networkState);
 	int init_socket(int port);
@@ -64,11 +62,12 @@ public:
 	void enable_epollout(int fd);
 	void disable_epollout(int fd);
 	int write_client_fd(int fd);
-
+	int getEpfd() const;
 
 	//Clients managing
 	void handle_events(int n, epoll_event events[MAX_EVENTS]);
 	void new_client(int server_fd);
+	void removeLocalUser(int fd);
 	void client_quited(int fd); // leaved plutot que quited
 	void send_welcome(int fd);
 	void remove_inactive_localUsers();

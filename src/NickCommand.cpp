@@ -8,6 +8,8 @@ NickCommand::NickCommand(std::vector<std::string> params)
 
 void NickCommand::execute(Client* executor, Server& server)
 {
+
+	(void)server;
 	std::vector<int> vec;
 	if (!executor->_password_correct)
 	{

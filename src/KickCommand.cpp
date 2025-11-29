@@ -6,9 +6,11 @@ KickCommand::KickCommand(std::vector<std::string> params)
 	_params = params;
 }
 
-void KickCommand::execute(Client* executor, NetworkState& network)
+void KickCommand::execute(Client* executor, NetworkState& network, Server& server)
 {
 	std::vector<int> vec;
+
+	(void)server;
 	if (_params.size() < 3)
 	{
 		vec.push_back(461); // ERR_NEEDMOREPARAMS

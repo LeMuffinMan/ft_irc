@@ -2,6 +2,7 @@
 #define DEBUG_TPP
 
 #include "Debug.hpp"
+#include "Server_utils.h" //format_time()
 
 /**
  * @brief Print a debug message with a specific level
@@ -17,16 +18,16 @@ void Debug::print(debug_level level, const T& message)
 		case NOTHING:
 			return;
 		case INFO:
-			*stream << "[INFO] ";
+			*stream << format_time() << " [INFO] ";
 			break;
 		case DEBUG:
-			*stream << "[DEBUG] ";
+			*stream  << format_time() << " [DEBUG] ";
 			break;
 		case ERROR:
 			if (useColors)
-				*errStream << "[" << RED << "ERROR" << RESET << "] ";
+				*errStream  << format_time() << " [" << RED << "ERROR" << RESET << "] ";
 			else
-				*errStream << "[ERROR] ";
+				*errStream  << format_time() << " [ERROR] ";
 			break;
 		default:
 			break;
@@ -52,16 +53,16 @@ void Debug::printSTD(debug_level level, const T& message)
 		case NOTHING:
 			return;
 		case INFO:
-			std::cout << "[INFO] ";
+			std::cout << format_time() << " [INFO] ";
 			break;
 		case DEBUG:
-			std::cout << "[DEBUG] ";
+			std::cout << format_time() << " [DEBUG] ";
 			break;
 		case ERROR:
 			if (useColors)
-				std::cerr << "[" << RED << "ERROR" << RESET << "] ";
+				std::cerr << format_time() << " [" << RED << "ERROR" << RESET << "] ";
 			else
-				std::cerr << "[ERROR] ";
+				std::cerr << format_time() << " [ERROR] ";
 			break;
 		default:
 			break;

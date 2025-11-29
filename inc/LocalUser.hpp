@@ -18,6 +18,7 @@ struct LocalUser
 	std::string wbuf;    //!< Write buffer to store outgoing data
 	std::time_t last_ping;  //!< Time of the last ping received
 	std::time_t timeout;  //!< Time when the user will timeout if no activity
+	std::time_t connection_time; //!< Time when user connected to server 
 };
 
 #endif // LOCALUSER_HPP

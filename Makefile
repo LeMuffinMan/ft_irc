@@ -153,8 +153,10 @@ re:
 	@$(MAKE) fclean
 	@$(MAKE) all
 
+NUM_CLIENTS ?= 1000
+
 test: all
-	./tests/scripts/run.sh
+	./tests/scripts/run.sh $(NUM_CLIENTS)
 
 # Aliases
 clear: clean

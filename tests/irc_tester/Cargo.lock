@@ -128,7 +128,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "irc_testeur"
+name = "irc_tester"
 version = "0.1.0"
 dependencies = [
  "anyhow",

@@ -10,6 +10,7 @@ PrivmsgCommand::PrivmsgCommand(std::vector<std::string> params)
 void PrivmsgCommand::execute(Client* executor, Server& server)
 {
 	std::vector<int> vec;
+	(void)server;
 
 	if (!executor->_registered)
 		return;

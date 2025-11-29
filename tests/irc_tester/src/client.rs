@@ -7,14 +7,17 @@ use tokio::{
     time::{Duration, sleep},
 };
 
-
 #[derive(Copy, Clone, Debug)]
 pub enum ClientBehavior {
-    LegitDisconnect,      // Se connecte et se déconnecte normalement
-    LegitIgnorePong,      // Se connecte, ignore pong
-    StartIgnoreAll,       // Connexion partielle, ignore tout
-    PongOnly,             // Se connecte, répond uniquement aux pong
-    PongWithoutConnect,   // Répond au pong mais ne fait pas la handshake complète
+    LegitDisconnect,
+    LegitIgnorePong,
+    StartIgnoreAll,
+    PongOnly,
+    PongWithoutConnect,
+    NormalConnection,
+    WrongPassword,
+    // FragmentedMessages,
+    LowBandwidth,
 }
 
 pub struct Client {
@@ -55,7 +58,6 @@ impl Client {
                 return Ok(None);
             }
         }
-
 
         match tokio::time::timeout(
             Duration::from_millis(timeout_ms),
