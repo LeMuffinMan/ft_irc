@@ -3,14 +3,16 @@
 NetworkState::NetworkState()
 {
 }
-
+#include <iostream>
 NetworkState::~NetworkState()
 {
 	// Clean up all Client pointers
+	// std::cout << "Number of clients to delete: " << clients.size() << std::endl;
 	for (std::map<std::string, Client*>::iterator it = clients.begin(); it != clients.end(); ++it) {
+		// std::cout << "Deleting client: " << it->second->getNickname() << std::endl;
 		delete it->second;
 	}
-	clients.clear();
+	// clients.clear();
 	// Clean up all Channel pointers
 	for (std::map<std::string, Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
 		delete it->second;

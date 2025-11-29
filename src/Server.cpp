@@ -22,11 +22,21 @@
 #include "ACommand.hpp"
 #include "CommandFactory.hpp"
 
-Server::~Server() {}
+Server::~Server()
+{
+	// delete this->_networkState;
+	for (std::map<int, LocalUser>::iterator it = this->_localUsers.begin(); it != this->_localUsers.end(); ++it)
+	{
+		close(it->first);
+		// delete it->second.client;
+	}
+}
 
 Server::Server(int port, std::string password) :  _port(port) 
 {
+	g_sig = 0;
 	_password = password;
+	signal_init();
 }
 
 std::string format_time() {
@@ -472,7 +482,7 @@ void Server::RunServer() {
 	//hash map pour associer chaque client a son fd : acceder a chaque client en utilisant son fd comme cle 
 	epoll_event events[MAX_EVENTS];
 
-	while (true) {
+	while (g_sig == 0) {
 		//we check for events from our localUsers fd registered
 		int n = epoll_wait(this->_epfd, events, MAX_EVENTS, 100); //timeout 100ms 
 		if (n < 0) {

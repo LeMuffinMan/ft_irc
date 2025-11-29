@@ -27,6 +27,7 @@
 #include <string.h>
 #include <map> 
 #include "Server_utils.h"
+#include <signal.h>
 
 #define PING_INTERVAL 5
 #define PING_TIMEOUT 3
@@ -34,12 +35,16 @@
 const int MAX_EVENTS = 64;	//Faire une taille dynamique (au fil de l'eau -> vecteur)
 							//Interet des bornes ? deinfe / global
 
+extern sig_atomic_t	g_sig;
+int		signal_init(void);
+void	reset_signal_default(void);
+void	ignore_signal(void);
+
 class ACommand;
 
 class Server {
 private:
 	int _port;
-	std::vector<int> _localUsers_fd;
 	std::string _password;
 	std::map<int, LocalUser> _localUsers;
 	int _server_socket;

@@ -71,6 +71,7 @@ SRC = \
 	Channel.cpp \
 	Server_utils.cpp \
 	ACommand.cpp \
+	Signals.cpp \
 
 LIBS = \
 
