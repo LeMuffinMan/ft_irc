@@ -22,7 +22,7 @@ void UserCommand::execute(Client* executor, Server& server)
 		return;
 	}
 
-	if (_params.size() < 5) // on veut 0 et * quand meme ?
+	if (_params.size() < 4) // on veut 0 et * quand meme ?
 	{
 		vec.push_back(461); // ERR_NEEDMOREPARAMS
 		return;
@@ -30,8 +30,8 @@ void UserCommand::execute(Client* executor, Server& server)
 
 	vec.push_back(0);
 	// std::cout << "New username : " << _params[1] << std::endl;
-  executor->_username = _params[1];
-  executor->_realname = _params[4];
+	executor->_username = _params[0];
+	executor->_realname = _params[3];
 
 	return;
 }
