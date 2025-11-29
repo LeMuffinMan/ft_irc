@@ -34,11 +34,13 @@
 const int MAX_EVENTS = 64;	//Faire une taille dynamique (au fil de l'eau -> vecteur)
 							//Interet des bornes ? deinfe / global
 
+class ACommand;
+
 class Server {
 private:
 	int _port;
 	std::vector<int> _localUsers_fd;
-	static std::string _password;
+	std::string _password;
 	std::map<int, LocalUser> _localUsers;
 	int _server_socket;
 	int _epfd;
@@ -48,7 +50,7 @@ private:
 public:
 	Server(int port, std::string password);
 	~Server();
-	static std::string& getPassword();
+	std::string& getPassword();
 	// int getPort() const;
 	// int checkPassword();
 	void RunServer();
@@ -78,11 +80,12 @@ public:
 	std::vector<std::string> get_params(std::string line);
 	void is_authentification_complete(int fd);
 	void interpret_msg(int fd);
+	NetworkState& getNetwork();
 
 	//Reply
 	bool reply(Client* client, std::string message);
-	bool replyChannel(Channel& channel, std::string message);
-	bool replyChannelOnlyOP(Channel& channel, std::string message);
+	bool replyChannel(Channel* channel, std::string message);
+	bool replyChannelOnlyOP(Channel* channel, std::string message);
 	bool broadcast(NetworkState&, std::string message);
 	bool noticeServers(NetworkState&, std::string message);
 

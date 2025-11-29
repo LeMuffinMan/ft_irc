@@ -11,8 +11,8 @@ protected:
 //= Methods =//
 public:
 	UserCommand(std::vector<std::string> params);
-	~UserCommand() {};
-	void execute(Client* executor, NetworkState& network);
+	~UserCommand() {}
+	void execute(Client* executor, Server& server);
 };
 
 #endif

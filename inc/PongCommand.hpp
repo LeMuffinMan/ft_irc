@@ -11,8 +11,8 @@ protected:
 //= Methods =//
 public:
 	PongCommand(std::vector<std::string> params);
-	~PongCommand() {};
-	void execute(Client* executor, NetworkState& network);
+	~PongCommand() {}
+	void execute(Client* executor, Server& server);
 };
 
 #endif

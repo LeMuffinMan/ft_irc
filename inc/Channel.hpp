@@ -60,6 +60,8 @@ public:
 	Client* getClientByNickname(const std::string &nickname) const;
 	std::set<Client*>& getClients();
 	std::set<Client*>& getOperators();
+	size_t getUserLimit() const;
+	void setUserLimit(size_t limit);
 };
 
 #endif // CHANNEL_HPP

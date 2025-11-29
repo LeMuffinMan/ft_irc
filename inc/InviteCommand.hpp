@@ -12,7 +12,7 @@ protected:
 public:
 	InviteCommand(std::vector<std::string> params);
 	~InviteCommand() {}
-	void execute(Client* executor, NetworkState& network);
+	void execute(Client* executor, Server& server);
 };
 
 #endif  // INVITECOMMAND_HPP

@@ -126,3 +126,14 @@ std::set<Client*>& Channel::getOperators()
 {
 	return this->_operators;
 }
+
+size_t Channel::getUserLimit() const
+{
+	return this->_user_limit;
+}
+
+void Channel::setUserLimit(size_t limit)
+{
+	this->_user_limit = limit;
+}
+

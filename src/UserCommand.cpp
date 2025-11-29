@@ -6,11 +6,11 @@ UserCommand::UserCommand(std::vector<std::string> params)
 	_params = params;
 }
 
-void UserCommand::execute(Client* executor, NetworkState& network)
+void UserCommand::execute(Client* executor, Server& server)
 {
 	std::vector<int> vec;
 
-	(void)network;
+	(void)server;
 	if (!executor->_password_correct)
 	{
 		vec.push_back(0); // on repond rien, on peut aussi avoir nos propres exit code ?

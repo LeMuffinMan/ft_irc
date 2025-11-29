@@ -11,8 +11,8 @@ protected:
 //= Methods =//
 public:
 	PrivmsgCommand(std::vector<std::string> params);
-	~PrivmsgCommand() {};
-	void execute(Client* executor, NetworkState& network);
+	~PrivmsgCommand() {}
+	void execute(Client* executor, Server& server);
 };
 
 #endif

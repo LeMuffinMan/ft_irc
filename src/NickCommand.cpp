@@ -6,7 +6,7 @@ NickCommand::NickCommand(std::vector<std::string> params)
 	_params = params;
 }
 
-void NickCommand::execute(Client* executor, NetworkState& network)
+void NickCommand::execute(Client* executor, Server& server)
 {
 	std::vector<int> vec;
 	if (!executor->_password_correct)
@@ -19,21 +19,20 @@ void NickCommand::execute(Client* executor, NetworkState& network)
 		vec.push_back(431); // ERR_NONICKNAMEGIVEN
 		return;
 	}
-	if (_params[1].empty())
-  {
-  	vec.push_back(432); //ERR_ERRONEUSNICKNAME
-    // Ca peut etre aussi des char interdits ... ou trop long 
-    return; 
-  }
-
-	if (network.getClient(_params[1]))
+	if (_params[0].empty())
 	{
-		vec.push_back(433); // ERR_NICKNAMEINUSE 
-    return;
+		vec.push_back(432); //ERR_ERRONEUSNICKNAME
+		// Ca peut etre aussi des char interdits ... ou trop long 
+		return; 
 	}
 
+	if (server.getNetwork().getClient(_params[0]))
+	{
+		vec.push_back(433); // ERR_NICKNAMEINUSE 
+    	return;
+	}
 	// std::cout << "New nickname : " << _params[1] << std::endl;
-  executor->_nickname = _params[1];
+	executor->setNickname(_params[0]);
 	vec.push_back(0);
 	return;
 }

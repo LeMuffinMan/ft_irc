@@ -11,8 +11,8 @@ protected:
 //= Methods =//
 public:
 	NickCommand(std::vector<std::string> params);
-	~NickCommand() {};
-	void execute(Client* executor, NetworkState& network);
+	~NickCommand() {}
+	void execute(Client* executor, Server& server);
 };
 
 #endif

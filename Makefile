@@ -34,6 +34,8 @@ INC = \
 	CommandFactory.hpp \
 	PassCommand.hpp \
 	InviteCommand.hpp \
+	TopicCommand.hpp \
+	JoinCommand.hpp \
 	NickCommand.hpp \
 	UserCommand.hpp \
 	PongCommand.hpp \
@@ -43,6 +45,7 @@ INC = \
 	Client.hpp \
 	NetworkState.hpp \
 	Channel.hpp \
+	Reply.hpp \
 
 # Template implementation  files
 TPP = \
@@ -54,6 +57,8 @@ SRC = \
 	Debug.cpp \
 	CommandFactory.cpp \
 	InviteCommand.cpp \
+	TopicCommand.cpp \
+	JoinCommand.cpp \
 	PassCommand.cpp \
 	NickCommand.cpp \
 	UserCommand.cpp \
@@ -64,7 +69,8 @@ SRC = \
 	Client.cpp \
 	NetworkState.cpp \
 	Channel.cpp \
-	Server_utils.cpp 
+	Server_utils.cpp \
+	ACommand.cpp \
 
 LIBS = \
 

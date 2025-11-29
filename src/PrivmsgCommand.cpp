@@ -7,7 +7,7 @@ PrivmsgCommand::PrivmsgCommand(std::vector<std::string> params)
 }
 
 //supporter l;envoie a des channels, si operator ?
-void PrivmsgCommand::execute(Client* executor, NetworkState& network)
+void PrivmsgCommand::execute(Client* executor, Server& server)
 {
 	std::vector<int> vec;
 
@@ -24,7 +24,7 @@ void PrivmsgCommand::execute(Client* executor, NetworkState& network)
 
 	if (vec.empty())
 	{
-		Client* target = network.getClient(_params[1]);
+		Client* target = server.getNetwork().getClient(_params[1]);
 		if (target)
 		{
 			// reply ici
