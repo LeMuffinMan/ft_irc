@@ -200,12 +200,18 @@ void Server::init_localuser(int client_fd)
 	LocalUser &ref = this->_localUsers[client_fd];   
 	client->setLocalClient(&ref);
 	ref.client = client;
-	client->setUsername(""); // Mon check de registration implique que Username soit vide au depart.
-	// On maintient deux listes ?
-	this->_networkState->addClient("", client);
-	std::stringstream ss;
-	ss << " New client: " << client_fd;
-	Debug::print(DEBUG, ss.str());
+	srand(time(NULL)); // FIXME: Forbidden functions, needs to be replaced
+	while (true) // workaround to generate a unique username as networkState key needs to be unique, not optimal, we test collision, if it occurs we retry
+	{
+		int a = rand(); // FIXME: Forbidden functions, needs to be replaced
+		std::stringstream ss;
+		ss << a;
+		std::string str = ss.str();
+		client->setUsername(str); // Mon check de registration implique que Username soit vide au depart. 
+		if (this->_networkState->addClient(str, client))
+			break;
+	}
+	std::cout << format_time() << " New client: " << client_fd << std::endl;
 }
 
 //for each call to accept with our server fd, if there is a client to register, it will returns a > 0 fd
