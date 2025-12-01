@@ -1,5 +1,7 @@
 #include "Client.hpp"
+#include "Debug.hpp"
 #include <cstring>
+#include <sstream>
 
 Client::Client() : _localClient(0)
 {
@@ -21,12 +23,21 @@ Client::Client(LocalUser *localClient) : _localClient(0)
 	this->_isLocal = true;
 }
 
+Client::Client(Client const &other) : _isLocal(other._isLocal), _key(other._key), _localClient(other._localClient),
+	_nickname(other._nickname), _username(other._username), _realname(other._realname),
+	_mode(other._mode), _host(other._host), _last_seen(other._last_seen),
+	_password_correct(other._password_correct), _registered(other._registered)
+{
+	// Copy constructor
+};
+
 Client::~Client()
 {
 }
 
 void Client::clear()
 {
+	this->_key.clear();
 	this->_nickname.clear();
 	this->_username.clear();
 	this->_realname.clear();
@@ -50,6 +61,52 @@ void Client::setLocalClient(LocalUser *localClient)
 LocalUser* Client::getLocalClient()
 {
 	return this->_localClient;
+}
+
+void Client::printClientInfo()
+{
+	std::stringstream ss;
+	Debug::print(INFO, "Client Info:");
+	Debug::print(INFO, "Key: " + this->_key);
+	if (this->_isLocal)
+	{
+		Debug::print(INFO, "Type: Local");
+		ss << "\tFD: " << this->_localClient->fd;
+		Debug::print(INFO, ss.str());
+		ss.str("");
+		ss << "\tLocalClient Address: " << this->_localClient;;
+		Debug::print(INFO, ss.str());
+		ss.str("");
+	}
+	else
+		Debug::print(INFO, "Type: Remote");
+	Debug::print(INFO, "Nickname: " + this->_nickname);
+	Debug::print(INFO, "Username: " + this->_username);
+	Debug::print(INFO, "Realname: " + this->_realname);
+	Debug::print(INFO, "Host: " + this->_host);
+	int mode_flags = 0;
+	if (this->_mode.is_invisible)
+		mode_flags |= 0x01;
+	if (this->_mode.is_operator)
+		mode_flags |= 0x02;
+	ss << "Mode: " << mode_flags;
+	Debug::print(INFO, ss.str());
+	ss.str("");
+	ss << "Last Seen: " << this->_last_seen;
+	Debug::print(INFO, ss.str());
+	Debug::print(INFO, "Password Correct: " + std::string(this->_password_correct ? "true" : "false"));
+	Debug::print(INFO, "Registered: " + std::string(this->_registered ? "true" : "false"));
+}
+
+
+void Client::setKey(const std::string &key)
+{
+	this->_key = key;
+}
+
+const std::string& Client::getKey() const
+{
+	return this->_key;
 }
 
 void Client::setNickname(const std::string &nickname)

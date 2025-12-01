@@ -22,9 +22,9 @@ public:
 	NetworkState();
 	~NetworkState();
 
-	bool addClient(const std::string &nickname, Client *client);
-	bool removeClient(const std::string &nickname);
-	Client* getClient(const std::string &nickname);
+	bool addClient(const std::string &key, Client *client);
+	bool removeClient(const std::string &key);
+	Client* getClient(const std::string &key);
 	bool addChannel(const std::string &channel_name);
 	Channel* getChannel(const std::string &channel_name);
 };

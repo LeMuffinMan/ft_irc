@@ -1,9 +1,10 @@
 #include "NetworkState.hpp"
+#include "Debug.hpp"
+#include <iostream>
 
 NetworkState::NetworkState()
 {
 }
-#include <iostream>
 NetworkState::~NetworkState()
 {
 	// Clean up all Client pointers
@@ -22,7 +23,9 @@ NetworkState::~NetworkState()
 
 bool NetworkState::addClient(const std::string &nickname, Client *client)
 {
-	if (clients.find(nickname) == clients.end()) {
+	Debug::print(DEBUG, "Adding client with nickname: " + nickname);
+	std::map<std::string, Client*>::iterator it = clients.find(nickname);
+	if (it == clients.end()) {
 		clients[nickname] = client;
 		return true;
 	}
@@ -31,10 +34,10 @@ bool NetworkState::addClient(const std::string &nickname, Client *client)
 
 bool NetworkState::removeClient(const std::string &nickname)
 {
-	if (clients.find(nickname) != clients.end()) {
-		delete clients[nickname];
-		clients[nickname] = NULL;
-		clients.erase(nickname);
+	std::map<std::string, Client*>::iterator it = clients.find(nickname);
+	if (it != clients.end()) {
+		delete it->second;
+		clients.erase(it);
 		return true;
 	}
 	return false;
@@ -42,15 +45,17 @@ bool NetworkState::removeClient(const std::string &nickname)
 
 Client* NetworkState::getClient(const std::string &nickname)
 {
-	if (clients.find(nickname) != clients.end()) {
-		return clients[nickname];
+	std::map<std::string, Client*>::iterator it = clients.find(nickname);
+	if (it != clients.end()) {
+		return it->second;
 	}
 	return NULL;
 }
 
 bool NetworkState::addChannel(const std::string &channel_name)
 {
-	if (channels.find(channel_name) == channels.end()) {
+	std::map<std::string, Channel*>::iterator it = channels.find(channel_name);
+	if (it == channels.end()) {
 		channels[channel_name] = new Channel(channel_name);
 		return true;
 	}
@@ -62,8 +67,9 @@ Channel* NetworkState::getChannel(const std::string &channel_name)
 	if (channel_name.empty() || channel_name[0] != '#') {
 		return NULL;
 	}
-	if (channels.find(channel_name) != channels.end()) {
-		return channels[channel_name];
+	std::map<std::string, Channel*>::iterator it = channels.find(channel_name);
+	if (it != channels.end()) {
+		return it->second;
 	}
 	return NULL;
 }

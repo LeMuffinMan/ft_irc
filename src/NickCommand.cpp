@@ -30,7 +30,8 @@ void NickCommand::execute(Client* executor, Server& server)
 
 	if (server.getNetwork().getClient(_params[0]))
 	{
-		vec.push_back(433); // ERR_NICKNAMEINUSE 
+		server.reply(executor, ERR_NICKNAMEINUSE(executor->getNickname(), _params[0]));
+		// vec.push_back(433); // ERR_NICKNAMEINUSE 
     	return;
 	}
 	// std::cout << "New nickname : " << _params[1] << std::endl;

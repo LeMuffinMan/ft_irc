@@ -207,9 +207,11 @@ void Server::init_localuser(int client_fd)
 		std::stringstream ss;
 		ss << a;
 		std::string str = ss.str();
-		client->setUsername(str); // Mon check de registration implique que Username soit vide au depart. 
 		if (this->_networkState->addClient(str, client))
+		{
+			client->setKey(str);
 			break;
+		}
 	}
 	std::cout << format_time() << " New client: " << client_fd << std::endl;
 }
@@ -375,42 +377,48 @@ int Server::read_client_fd(int fd)
 //a mettre en bas de PASS USER et NICK uniquement
 void Server::is_authentification_complete(int fd)
 {
-    if (!this->_localUsers[fd].client->_registered && 
-        this->_localUsers[fd].client->_password_correct == true && 
-        this->_localUsers[fd].client->getNickname() != "" && 
-        this->_localUsers[fd].client->getUsername() != "") {
-        
-        this->send_welcome(fd);
-        this->_localUsers[fd].client->_registered = true;
-
-        std::stringstream ss;
-        ss << this->_localUsers[fd].client->getUsername() << " aka " << this->_localUsers[fd].client->getNickname() << " successfully registered";
-        Debug::print(DEBUG, ss.str()); 
-
-    }
+	if (!this->_localUsers[fd].client->_registered && 
+		this->_localUsers[fd].client->_password_correct == true && 
+		this->_localUsers[fd].client->getNickname() != "" && 
+		this->_localUsers[fd].client->getUsername() != "") {
+		
+		this->send_welcome(fd);
+		LocalUser &current_local_user = this->_localUsers[fd];
+		Client* old_client = current_local_user.client;
+		current_local_user.client->_registered = true;
+		Client* new_client = new Client(*old_client);
+		new_client->setKey(old_client->getNickname());
+		if (!this->_networkState->addClient(new_client->getNickname(), new_client))
+		{
+			Debug::print(ERROR, "Nickname collision detected during registration for " + new_client->getUsername() + ", must choose another nickname");
+			Debug::print(DEBUG, "Deleting temporary new client " + new_client->getUsername());
+			delete new_client;
+			return;
+		}
+		current_local_user.client = new_client;
+		this->_networkState->removeClient(old_client->getKey());
+		std::cout << current_local_user.client->getUsername() << " aka " << current_local_user.client->getNickname() << " successfully connected" << std::endl;
+		new_client->printClientInfo();
+	}
 }
 
 void Server::interpret_msg(int fd)
 {
-    size_t pos;
-    while ((pos = this->_localUsers[fd].rbuf.find("\r\n")) != std::string::npos) {
-        std::string line = this->_localUsers[fd].rbuf.substr(0, pos);
-        this->_localUsers[fd].rbuf.erase(0, pos + 2);
-        ACommand* cmd = this->parse_command(line);      
-        if (cmd)
-            cmd->execute(this->_localUsers[fd].client, *this);
-        else
-        {
-            std::stringstream ss;
-            ss << "[" << line << "]" 
-                << " from client " << fd 
-                << " received";
-
-            Debug::print(INFO, ss.str());
-        }
-    }
-    this->_localUsers[fd].last_ping = std::time(NULL);
-    this->is_authentification_complete(fd);
+	size_t pos;
+	while ((pos = this->_localUsers[fd].rbuf.find("\r\n")) != std::string::npos) {
+		std::string line = this->_localUsers[fd].rbuf.substr(0, pos);
+		this->_localUsers[fd].rbuf.erase(0, pos + 2);
+		ACommand* cmd = this->parse_command(line);      
+		//try catch ?
+		if (cmd)
+		{
+			cmd->execute(this->_localUsers[fd].client, *this);
+			delete cmd;
+			// this->_localUsers[fd].client->printClientInfo();
+		}
+	}
+	this->_localUsers[fd].last_ping = std::time(NULL);
+	this->is_authentification_complete(fd);
 }
 
 void Server::handle_events(int n, epoll_event events[MAX_EVENTS])
