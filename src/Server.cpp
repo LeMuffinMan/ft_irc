@@ -181,6 +181,7 @@ int Server::init_epoll_event(int client_fd)
 
 void Server::init_localuser(int client_fd)
 {
+	static unsigned int counter = 0;
 	//since we added a client in our epoll, we need a struct to represent it on our server
 	//LocalUser contains the pipes and tools, Client contains its server infos
 	LocalUser c;
@@ -200,18 +201,25 @@ void Server::init_localuser(int client_fd)
 	LocalUser &ref = this->_localUsers[client_fd];   
 	client->setLocalClient(&ref);
 	ref.client = client;
-	srand(time(NULL)); // FIXME: Forbidden functions, needs to be replaced
-	while (true) // workaround to generate a unique username as networkState key needs to be unique, not optimal, we test collision, if it occurs we retry
-	{
-		int a = rand(); // FIXME: Forbidden functions, needs to be replaced
+	unsigned int attempt = 0;
+	do {// workaround to generate a unique username as networkState key needs to be unique, not optimal, we test collision, if it occurs we retry
 		std::stringstream ss;
-		ss << a;
+		ss << "client_" << std::hex << reinterpret_cast<uintptr_t>(client) << std::hex
+           << "_" << ++counter;
 		std::string str = ss.str();
 		if (this->_networkState->addClient(str, client))
 		{
 			client->setKey(str);
 			break;
 		}
+	} while (attempt++ < 5);
+	if (attempt == 5)
+	{
+		Debug::print(ERROR, "Could not generate unique key for new client, disconnecting");
+		close(client_fd);
+		this->_localUsers.erase(client_fd);
+		delete client;
+		return;
 	}
 	std::cout << format_time() << " New client: " << client_fd << std::endl;
 }
