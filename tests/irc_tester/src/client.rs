@@ -13,11 +13,44 @@ pub enum ClientBehavior {
     LegitIgnorePong,
     StartIgnoreAll,
     PongOnly,
+    WrongPong,
     PongWithoutConnect,
     NormalConnection,
     WrongPassword,
-    // FragmentedMessages,
+    FragmentedMessages,
     LowBandwidth,
+    ContinuousNoise,
+    TooLongMessage,
+
+    NickNormalClaimAndChange,
+    NickNoNicknameGiven,
+    // NickAlreadyInUse,
+    PassAlreadyRregistered,
+    PassNeedMoreParams,
+    PassNotFirst,
+
+    UserAlreadyRegistered,
+    UserNeedMoreParams,
+
+    InviteNeedMoreParams,
+    InviteNoSuchNick,
+    InviteNotOnChannel,
+
+    PrivmsgNoRecipient,
+    PrivmsgNoTextToSend,
+    PrivmsgNoSuchChannel,
+    // PrivmsgCannotSendToChan,
+    PrivmsgNoSuchNick,
+
+    // KickBadChanMask,
+    KickNoSuchChannel,
+    KickNeedMoreParams,
+    // KickChaNoPrivsNeeded,
+    // KickUserNotInChannel,
+    JoinNeedMoreParams,
+    JoinNoSuchChan,
+
+    TopicNeedMoreParams,
 }
 
 pub struct Client {

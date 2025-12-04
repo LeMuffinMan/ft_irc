@@ -11,8 +11,11 @@ void InviteCommand::execute(Client* executor, Server& server)
 		server.reply(executor, ERR_NEEDMOREPARAMS(executor->getNickname(), "INVITE"));
 		return;
 	}
-	Client* target = server.getClient(_params[0]);
-	Channel* channel = server.getChannel(_params[1]);
+	Client* target = NULL; // a virer
+	//ajouter fd en param et chercher dans la map
+	// Client* target = server.getClient(_params[0]);
+	Channel* channel = NULL;
+	// Channel* channel = server.getChannel(_params[1]);
 	if (!target || !channel) {
 		server.reply(executor, ERR_NOSUCHNICK(executor->getNickname(), _params[1]));
 		return;

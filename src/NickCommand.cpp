@@ -28,7 +28,8 @@ void NickCommand::execute(Client* executor, Server& server)
 		return; 
 	}
 
-	if (server.getClient(_params[0]))
+	// if (server.getClient(_params[0]))
+	if (false)
 	{
 		server.reply(executor, ERR_NICKNAMEINUSE(executor->getNickname(), _params[0]));
 		// vec.push_back(433); // ERR_NICKNAMEINUSE 

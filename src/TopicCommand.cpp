@@ -11,7 +11,8 @@ void TopicCommand::execute(Client* executor, Server& server)
 		server.reply(executor, ERR_NEEDMOREPARAMS(executor->getNickname(), "TOPIC"));
 		return;
 	}
-	Channel* channel = server.getChannel(_params[0]);
+	// Channel* channel = server.getChannel(_params[0]);
+	Channel* channel = NULL;
 	if (!channel) {
 		server.reply(executor, ERR_NOSUCHCHANNEL(executor->getNickname(), _params[0]));
 		return;

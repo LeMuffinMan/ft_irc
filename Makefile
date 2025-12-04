@@ -43,6 +43,7 @@ INC = \
 	Server_utils.h \
 	Client.hpp \
 	Channel.hpp \
+	Server.hpp \
 	Reply.hpp \
 
 # Template implementation  files
@@ -53,14 +54,6 @@ TPP = \
 SRC = \
 	main.cpp \
 	Debug.cpp \
-	utils.cpp \
-	Server.cpp \
-	ServerIRC.cpp \
-	Client.cpp \
-	Channel.cpp \
-	Server_utils.cpp \
-	ACommand.cpp \
-	Signals.cpp \
 	CommandFactory.cpp \
 	InviteCommand.cpp \
 	TopicCommand.cpp \
@@ -70,6 +63,13 @@ SRC = \
 	UserCommand.cpp \
 	PongCommand.cpp \
 	PrivmsgCommand.cpp \
+	utils.cpp \
+	Server.cpp \
+	Client.cpp \
+	Channel.cpp \
+	Server_utils.cpp \
+	ACommand.cpp \
+	Signals.cpp \
 
 LIBS = \
 
@@ -152,16 +152,17 @@ re:
 	@$(MAKE) fclean
 	@$(MAKE) all
 
-NUM_CLIENTS ?= 1000
+CLIENTS ?= 1000
+LEAKS ?= 0
+STRESS ?= 0
 
 test: all
-	./tests/scripts/run.sh $(NUM_CLIENTS)
+	./tests/scripts/run.sh $(CLIENTS) $(LEAKS) $(STRESS)
 
 # Aliases
 clear: clean
 fclear: fclean
 flcean: fclean
-fclena: fclean
 flcear: fclean
 
 #############################################################################################
