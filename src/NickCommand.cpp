@@ -27,13 +27,7 @@ void NickCommand::execute(Client* executor, Server& server)
 
 	std::string nick = _params[0];
 
-	if (nick == "admin" || nick == "root" || nick == "operator")
-	{
-			server.reply(executor, ERR_ERRONEUSNICKNAME(executor->getNickname(), _params[0]));
-			return;
-	}
-
-	if (nick.size() > 29)
+	if (nick.size() > 29 || nick == "admin" || nick == "root" || nick == "operator")
 	{
 			server.reply(executor, ERR_ERRONEUSNICKNAME(executor->getNickname(), _params[0]));
 			return;
