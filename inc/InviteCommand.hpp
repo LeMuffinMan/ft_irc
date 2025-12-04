@@ -1,18 +1,15 @@
-#ifndef INVITECOMMAND_HPP
-#define INVITECOMMAND_HPP
+#ifndef INVITE_COMMAND_HPP
+#define INVITE_COMMAND_HPP
 
 #include "ACommand.hpp"
 
 class InviteCommand : public ACommand
 {
-//= Variables =//
-protected:
-
-//= Methods =//
+	//= Methods =//
 public:
 	InviteCommand(std::vector<std::string> params);
 	~InviteCommand() {}
-	void execute(Client* executor, Server& server);
+	void execute(Client *executor, Server &server);
 };
 
-#endif  // INVITECOMMAND_HPP
+#endif // INVITE_COMMAND_HPP

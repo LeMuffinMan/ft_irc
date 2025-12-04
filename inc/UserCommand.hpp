@@ -5,14 +5,11 @@
 
 class UserCommand : public ACommand
 {
-//= Variables =//
-protected:
-
-//= Methods =//
+	//= Methods =//
 public:
 	UserCommand(std::vector<std::string> params);
 	~UserCommand() {}
-	void execute(Client* executor, Server& server);
+	void execute(Client *executor, Server &server);
 };
 
 #endif

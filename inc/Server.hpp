@@ -1,29 +1,12 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include <vector>
-#include <string>
 #include <map>
-#include <ctime> 
-#include <sys/epoll.h>
-#include <vector>
-#include <sys/types.h>
-#include <sys/epoll.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <iostream>
-#include <vector>
-#include <unistd.h>
-#include <errno.h>
-#include <stdlib.h>
 #include <cstdio>
-#include <cstring>
-#include <string.h>
-#include <map> 
-#include <signal.h>
+#include <csignal>
+#include <sys/epoll.h>
+#include <netinet/in.h>
+
 #include "ACommand.hpp"
 #include "Client.hpp"
 #include "Channel.hpp"
@@ -32,66 +15,64 @@
 #define PING_INTERVAL 5
 #define PING_TIMEOUT 3
 
-const int MAX_EVENTS = 64;	//Faire une taille dynamique (au fil de l'eau -> vecteur)
-							//Interet des bornes ? deinfe / global
+const int MAX_EVENTS = 64; // Faire une taille dynamique (au fil de l'eau -> vecteur)
+						   // Interet des bornes ? deinfe / global
 
-extern sig_atomic_t	g_sig;
-int		signal_init(void);
-void	reset_signal_default(void);
-void	ignore_signal(void);
+extern sig_atomic_t g_sig;
+int signal_init(void);
+void reset_signal_default(void);
+void ignore_signal(void);
 
 class ACommand;
 
-class Server {
+class Server
+{
 private:
 	int _port;
 	std::string _password;
-	std::map<int, Client> clients;//!< Map of client socket to Client class
+	std::map<int, Client> clients; //!< Map of client socket to Client class
 	int _server_socket;
 	int _epfd;
-	std::map<std::string, Channel*> channels; //!< Map of channel name to Channel pointers
+	std::map<std::string, Channel *> channels; //!< Map of channel name to Channel pointers
 
 	Server(); // On ne veut pas de serveur sans mdp ni sans port
 public:
 	Server(int port, std::string password);
 	~Server();
-	std::string& getPassword();
+	std::string &getPassword();
 	void RunServer();
 	int init_socket(int port);
 	void init_localuser(int client_fd);
 	int init_epoll_event(int client_fd);
-	
-	//I/O
+
+	// I/O
 	int read_client_fd(int fd);
 	void enable_epollout(int fd);
 	void disable_epollout(int fd);
 	int write_client_fd(int fd);
 	int getEpfd() const;
 
-	//Clients managing
+	// Clients managing
 	void client_kicked(int fd);
 	void handle_events(int n, epoll_event events[MAX_EVENTS]);
 	void new_client(int server_fd);
 	void removeLocalUser(int fd);
-	void client_quited(int fd); // leaved plutot que quited
-	void send_welcome(int fd);
+	void client_quited(int fd);
 	void remove_inactive_clients();
 	void check_clients_ping();
-	Client* getClient(const std::string& nickname);
-	Channel* getChannel(const std::string& nickname);
+	Client *getClient(const std::string &nickname);
+	Channel *getChannel(const std::string &nickname);
 	bool addChannel(const std::string &channel_name);
 
-	//Parsing and execution of commands
-	ACommand* parse_command(std::string line);
-	std::string get_command(std::string line);
-	std::vector<std::string> get_params(std::string line);
+	// Parsing and execution of commands
+	ACommand *parse_command(std::string line);
 	void is_authentification_complete(int fd);
 	void interpret_msg(int fd);
 
-	//Reply
-	bool reply(Client* client, std::string message);
-	bool replyChannel(Channel* channel, std::string message);
-	bool replyChannelOnlyOP(Channel* channel, std::string message);
+	// Reply
+	bool reply(Client *client, std::string message);
+	bool replyChannel(Channel *channel, std::string message);
+	bool replyChannelOnlyOP(Channel *channel, std::string message);
 };
 
-#endif	// SERVER_HPP
+#endif // SERVER_HPP

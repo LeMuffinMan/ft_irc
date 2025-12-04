@@ -21,8 +21,8 @@ bool is_stdin_on_tty()
 
 /**
  * @brief Check if a given path is a terminal
- * 
- * @param[in] fd file descriptor to check 
+ *
+ * @param[in] fd file descriptor to check
  * @return true true if the path is a terminal
  * @return false false if the path is not a terminal
  */

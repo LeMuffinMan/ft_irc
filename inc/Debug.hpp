@@ -5,10 +5,13 @@
 
 enum debug_level
 {
-	NOTHING = 0,
-	INFO = 1,
-	DEBUG = 2,
-	ERROR = 3
+	NOTHING,
+	INFO,
+	REPLY,
+	ERR_REPLY,
+	DEBUG,
+	WARNING,
+	ERROR
 };
 
 # define RESET "\033[0m"

@@ -5,15 +5,17 @@ InviteCommand::InviteCommand(std::vector<std::string> params)
 	_params = params;
 }
 
-void InviteCommand::execute(Client* executor, Server& server)
+void InviteCommand::execute(Client *executor, Server &server)
 {
-	if (_params.size() < 2) {
+	if (_params.size() < 2)
+	{
 		server.reply(executor, ERR_NEEDMOREPARAMS(executor->getNickname(), "INVITE"));
 		return;
 	}
-	Client* target = server.getClient(_params[0]);
-	Channel* channel = server.getChannel(_params[1]);
-	if (!target || !channel) {
+	Client *target = server.getClient(_params[0]);
+	Channel *channel = server.getChannel(_params[1]);
+	if (!target || !channel)
+	{
 		server.reply(executor, ERR_NOSUCHNICK(executor->getNickname(), _params[1]));
 		return;
 	}

@@ -6,7 +6,7 @@ PassCommand::PassCommand(std::vector<std::string> params)
 	_params = params;
 }
 
-void PassCommand::execute(Client* executor, Server& server)
+void PassCommand::execute(Client *executor, Server &server)
 {
 	if (_params.empty())
 	{
@@ -27,8 +27,11 @@ void PassCommand::execute(Client* executor, Server& server)
 
 	if (_params[0] == server.getPassword())
 	{
-		executor->setPasswordCorrect();;
-	} else {
+		executor->setPasswordCorrect();
+		;
+	}
+	else
+	{
 		server.reply(executor, ERR_PASSWDMISMATCH(executor->getNickname()));
 		server.client_kicked(executor->fd);
 		// server.removeLocalUser(executor->_localClient->fd);

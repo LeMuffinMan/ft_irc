@@ -6,7 +6,7 @@ JoinCommand::JoinCommand(std::vector<std::string> params)
 	_params = params;
 }
 
-static void join_message(Client* executor, Server& server, const std::string& channel_name)
+static void join_message(Client *executor, Server &server, const std::string &channel_name)
 {
 	std::string join_msg = ":" + executor->getNickname() + " JOIN " + channel_name;
 	server.reply(executor, join_msg);
@@ -15,9 +15,10 @@ static void join_message(Client* executor, Server& server, const std::string& ch
 // TODO: ERR_TOOMANYCHANNELS and ERR_UNAVAILRESOURCE and ERR_BADCHANMASK ??
 // TODO: ban handling : ERR_BANNEDFROMCHAN
 
-void JoinCommand::execute(Client* executor, Server& server)
+void JoinCommand::execute(Client *executor, Server &server)
 {
-	if (_params.size() < 1) {
+	if (_params.size() < 1)
+	{
 		server.reply(executor, ERR_NEEDMOREPARAMS(executor->getNickname(), "JOIN"));
 		return;
 	}
@@ -42,7 +43,7 @@ void JoinCommand::execute(Client* executor, Server& server)
 		while (getline(ss_2, channel_key, del))
 			channel_keys.push_back(channel_key);
 	}
-	Channel* channel;
+	Channel *channel;
 	for (size_t i = 0; i < channel_names.size(); ++i)
 	{
 		if (channel_names[i].empty() || (channel_names[i][0] != '#' && channel_names[i][0] != '&'))
@@ -60,7 +61,12 @@ void JoinCommand::execute(Client* executor, Server& server)
 		if (!channel) // Channel does not exist so we create it
 		{
 			server.addChannel(channel_names[i]);
-			channel = server.getChannel(channel_names[i]);
+			channel = server.getChannel(channel_names[i]);\
+			if (!channel)
+			{
+				Debug::print(ERROR, "Failed to create or retrieve channel: " + channel_names[i]);
+				continue;
+			}
 			channel->addClient(executor, true); // First user is operator
 			join_message(executor, server, channel_names[i]);
 			continue;

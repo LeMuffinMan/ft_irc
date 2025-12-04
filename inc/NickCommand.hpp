@@ -5,14 +5,11 @@
 
 class NickCommand : public ACommand
 {
-//= Variables =//
-protected:
-
-//= Methods =//
+	//= Methods =//
 public:
 	NickCommand(std::vector<std::string> params);
 	~NickCommand() {}
-	void execute(Client* executor, Server& server);
+	void execute(Client *executor, Server &server);
 };
 
 #endif

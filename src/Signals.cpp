@@ -1,19 +1,19 @@
-#include <signal.h>
+#include <csignal>
 
-sig_atomic_t	g_sig;
+sig_atomic_t g_sig;
 
 // TODO: look for theses functions: sigfillset, sigaddset, sigdelset, sigismember
 
-static void	signal_handler(int sig, siginfo_t *info, void *context);
+static void signal_handler(int sig, siginfo_t *info, void *context);
 
 /**
  * @brief Initialize signal handling for SIGINT and SIGQUIT
- * 
- * @return int 
+ *
+ * @return int
  */
-int	signal_init(void)
+int signal_init(void)
 {
-	struct sigaction	action_receive;
+	struct sigaction action_receive;
 
 	action_receive.sa_sigaction = signal_handler;
 	sigemptyset(&action_receive.sa_mask);
@@ -33,14 +33,14 @@ int	signal_init(void)
  * @param info Information about the signal.
  * @param context Context of the signal.
  */
-void	signal_handler(int sig, siginfo_t *info, void *context)
+void signal_handler(int sig, siginfo_t *info, void *context)
 {
 	(void)info;
 	(void)context;
 	if (sig == SIGINT || sig == SIGQUIT)
 	{
 		g_sig = sig;
-		return ;
+		return;
 	}
 }
 
@@ -48,9 +48,9 @@ void	signal_handler(int sig, siginfo_t *info, void *context)
  * @brief Function to reset signals to default
  *
  */
-void	reset_signal_default(void)
+void reset_signal_default(void)
 {
-	struct sigaction	action;
+	struct sigaction action;
 
 	sigemptyset(&action.sa_mask);
 	action.sa_handler = SIG_DFL;
@@ -63,9 +63,9 @@ void	reset_signal_default(void)
  * @brief Function to ignore certain signals
  *
  */
-void	ignore_signal(void)
+void ignore_signal(void)
 {
-	struct sigaction	action;
+	struct sigaction action;
 
 	sigemptyset(&action.sa_mask);
 	action.sa_handler = SIG_IGN;

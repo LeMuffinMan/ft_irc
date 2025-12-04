@@ -65,6 +65,7 @@ SRC = \
 	PrivmsgCommand.cpp \
 	utils.cpp \
 	Server.cpp \
+	ServerIRC.cpp \
 	Client.cpp \
 	Channel.cpp \
 	Server_utils.cpp \

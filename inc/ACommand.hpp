@@ -38,15 +38,15 @@ enum param_type
 
 class ACommand
 {
-//= Variables =//
+	//= Variables =//
 protected:
 	std::vector<std::string> _params; //!< Parameters for the command
 
-//= Methods =//
+	//= Methods =//
 public:
 	virtual ~ACommand();
-	virtual void execute(Client* executor, Server& server) = 0;
+	virtual void execute(Client *executor, Server &server) = 0;
 	virtual void print_params() const;
 };
 
-#endif  // ACOMMAND_HPP
+#endif // ACOMMAND_HPP

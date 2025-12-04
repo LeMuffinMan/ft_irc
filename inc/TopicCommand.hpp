@@ -5,14 +5,11 @@
 
 class TopicCommand : public ACommand
 {
-//= Variables =//
-protected:
-
-//= Methods =//
+	//= Methods =//
 public:
 	TopicCommand(std::vector<std::string> params);
 	~TopicCommand() {}
-	void execute(Client* executor, Server& server);
+	void execute(Client *executor, Server &server);
 };
 
 #endif // TOPIC_COMMAND_HPP

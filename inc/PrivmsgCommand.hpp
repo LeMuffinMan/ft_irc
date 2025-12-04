@@ -5,14 +5,11 @@
 
 class PrivmsgCommand : public ACommand
 {
-//= Variables =//
-protected:
-
-//= Methods =//
+	//= Methods =//
 public:
 	PrivmsgCommand(std::vector<std::string> params);
 	~PrivmsgCommand() {}
-	void execute(Client* executor, Server& server);
+	void execute(Client *executor, Server &server);
 };
 
 #endif

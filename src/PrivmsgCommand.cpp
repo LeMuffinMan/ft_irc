@@ -6,8 +6,8 @@ PrivmsgCommand::PrivmsgCommand(std::vector<std::string> params)
 	_params = params;
 }
 
-//supporter l;envoie a des channels, si operator ?
-void PrivmsgCommand::execute(Client* executor, Server& server)
+// supporter l;envoie a des channels, si operator ?
+void PrivmsgCommand::execute(Client *executor, Server &server)
 {
 	std::vector<int> vec;
 	(void)server;
@@ -19,18 +19,20 @@ void PrivmsgCommand::execute(Client* executor, Server& server)
 		// server.reply(executor, ERR_TOOMANYTARGETS(executor->getNickname(), _params[0], 407, abort ?))
 		return;
 	}
-	if (_params.empty()) {
-    	server.reply(executor, ERR_NORECIPIENT(executor->getNickname(), "PRIVMSG"));
-    	return;
+	if (_params.empty())
+	{
+		server.reply(executor, ERR_NORECIPIENT(executor->getNickname(), "PRIVMSG"));
+		return;
 	}
 
-	if (_params.size() < 2) {
-    	server.reply(executor, ERR_NOTEXTTOSEND(executor->getNickname()));
-    	return;
+	if (_params.size() < 2)
+	{
+		server.reply(executor, ERR_NOTEXTTOSEND(executor->getNickname()));
+		return;
 	}
 	if (_params[0][0] == '#')
 	{
-		Channel* target = server.getChannel(_params[0]);
+		Channel *target = server.getChannel(_params[0]);
 		if (!target)
 		{
 			server.reply(executor, ERR_NOSUCHCHANNEL(executor->getNickname(), _params[0]));
@@ -42,21 +44,19 @@ void PrivmsgCommand::execute(Client* executor, Server& server)
 			return;
 		}
 
-		//reply channel ici
+		// reply channel ici
 		return;
-	} else {
+	}
+	else
+	{
 
-		Client* target = server.getClient(_params[0]);
+		Client *target = server.getClient(_params[0]);
 
 		if (!target)
 		{
 			server.reply(executor, ERR_NOSUCHNICK(executor->getNickname(), _params[0]));
 		}
-		//reply au user ici
+		// reply au user ici
 		return;
 	}
-
-
-  return;
 }
-

@@ -8,7 +8,7 @@ NickCommand::NickCommand(std::vector<std::string> params)
 	_params = params;
 }
 
-void NickCommand::execute(Client* executor, Server& server)
+void NickCommand::execute(Client *executor, Server &server)
 {
 
 	(void)server;
@@ -29,24 +29,24 @@ void NickCommand::execute(Client* executor, Server& server)
 
 	if (nick.size() > 29 || nick == "admin" || nick == "root" || nick == "operator")
 	{
-			server.reply(executor, ERR_ERRONEUSNICKNAME(executor->getNickname(), _params[0]));
-			return;
+		server.reply(executor, ERR_ERRONEUSNICKNAME(executor->getNickname(), _params[0]));
+		return;
 	}
 
 	for (size_t i = 0; i < nick.size(); ++i)
 	{
-			char c = nick[i];
-			if (!isalnum(c) && c != '-' && c != '_') 
-			{
-					server.reply(executor, ERR_ERRONEUSNICKNAME(executor->getNickname(), _params[0]));
-					return;
-			}
+		char c = nick[i];
+		if (!isalnum(c) && c != '-' && c != '_')
+		{
+			server.reply(executor, ERR_ERRONEUSNICKNAME(executor->getNickname(), _params[0]));
+			return;
+		}
 	}
 
 	if (server.getClient(_params[0]))
 	{
-			server.reply(executor, ERR_NICKNAMEINUSE(executor->getNickname(), _params[0]));
-			return;
+		server.reply(executor, ERR_NICKNAMEINUSE(executor->getNickname(), _params[0]));
+		return;
 	}
 
 	if (!executor->getNickname().empty())
@@ -61,5 +61,5 @@ void NickCommand::execute(Client* executor, Server& server)
 }
 
 // ERR_NICKCOLLISION-> netword seulement
-// ERR_UNAVAILRESOURCE	-> admin / root ...						
-// ERR_RESTRICTED -> pour un statut de guest 
+// ERR_UNAVAILRESOURCE	-> admin / root ...
+// ERR_RESTRICTED -> pour un statut de guest

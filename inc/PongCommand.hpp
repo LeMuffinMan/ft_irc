@@ -5,14 +5,11 @@
 
 class PongCommand : public ACommand
 {
-//= Variables =//
-protected:
-
-//= Methods =//
+	//= Methods =//
 public:
 	PongCommand(std::vector<std::string> params);
 	~PongCommand() {}
-	void execute(Client* executor, Server& server);
+	void execute(Client *executor, Server &server);
 };
 
 #endif

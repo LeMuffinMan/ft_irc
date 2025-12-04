@@ -1,8 +1,8 @@
 #include "Debug.hpp"
 #include "utils.hpp"
 
-std::ostream* Debug::stream = &std::cout;
-std::ostream* Debug::errStream = &std::cerr;
+std::ostream *Debug::stream = &std::cout;
+std::ostream *Debug::errStream = &std::cerr;
 bool Debug::useColors = false;
 
 Debug::Debug()
@@ -18,21 +18,19 @@ Debug::Debug(const Debug &f)
 	(void)f;
 }
 
-Debug& Debug::operator=(const Debug &other)
+Debug &Debug::operator=(const Debug &other)
 {
 	(void)other;
 	return (*this);
 }
 
-
-
 /**
  * @brief Change the stream
- * 
+ *
  * @param[in,out] newStream stream that will replaced the old
  * @return std::ostream* old stream
  */
-std::ostream* Debug::changeStream(std::ostream &newStream)
+std::ostream *Debug::changeStream(std::ostream &newStream)
 {
 	std::ostream *temp;
 	stream->flush();
@@ -43,11 +41,11 @@ std::ostream* Debug::changeStream(std::ostream &newStream)
 
 /**
  * @brief Change the errStream
- * 
+ *
  * @param[in,out] newStream stream that will replaced the old
  * @return std::ostream* old errStream
  */
-std::ostream* Debug::changeErrStream(std::ostream &newStream)
+std::ostream *Debug::changeErrStream(std::ostream &newStream)
 {
 	std::ostream *temp;
 	errStream->flush();
@@ -62,13 +60,13 @@ void Debug::changeUseColor(bool val)
 }
 
 /*
-Example will print one on stream, 
+Example will print one on stream,
 two and three will be written in file.txt
-and four will be written on first stream 
+and four will be written on first stream
 
 void example(void)
 {
-Debug::print(ERROR, "one");
+	Debug::print(ERROR, "one");
 	std::ofstream s;
 	s.open("file.txt");
 	std::ostream *t = Debug::changeErrStream(s);

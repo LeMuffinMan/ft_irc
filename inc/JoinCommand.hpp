@@ -5,14 +5,11 @@
 
 class JoinCommand : public ACommand
 {
-//= Variables =//
-protected:
-
-//= Methods =//
+	//= Methods =//
 public:
 	JoinCommand(std::vector<std::string> params);
 	~JoinCommand() {}
-	void execute(Client* executor, Server& server);
+	void execute(Client *executor, Server &server);
 };
 
 #endif // JOIN_COMMAND_HPP

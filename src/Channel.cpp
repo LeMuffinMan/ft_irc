@@ -34,13 +34,12 @@ ChannelModes Channel::getModes() const
 	return this->_mode;
 }
 
-
-bool Channel::isKeySet(const ChannelModes &modes)
+bool Channel::isKeySet(const ChannelModes &modes) const
 {
 	return modes.has_key;
 }
 
-bool Channel::isKeySame(const std::string &key)
+bool Channel::isKeySame(const std::string &key) const
 {
 	return this->_key == key;
 }
@@ -50,7 +49,7 @@ void Channel::setTopic(const std::string &topic)
 	this->_topic = topic;
 }
 
-const std::string& Channel::getTopic() const
+const std::string &Channel::getTopic() const
 {
 	return this->_topic;
 }
@@ -98,16 +97,16 @@ bool Channel::isClientOPChannel(Client *client) const
 	return _operators.find(client) != _operators.end();
 }
 
-Client* Channel::getClientByNickname(const std::string &nickname) const
+Client *Channel::getClientByNickname(const std::string &nickname) const
 {
 	Debug::print(INFO, "Searching for client in channel" + this->_channel_name + "with nickname: " + nickname);
-	for (std::set<Client*>::const_iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+	for (std::set<Client *>::const_iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
 	{
 		if ((*it)->getNickname() == nickname)
 			return *it;
 	}
 	Debug::print(INFO, "Searching for operators in channel" + this->_channel_name + "with nickname: " + nickname);
-	for (std::set<Client*>::const_iterator it = this->_operators.begin(); it != this->_operators.end(); ++it)
+	for (std::set<Client *>::const_iterator it = this->_operators.begin(); it != this->_operators.end(); ++it)
 	{
 		if ((*it)->getNickname() == nickname)
 			return *it;
@@ -115,12 +114,12 @@ Client* Channel::getClientByNickname(const std::string &nickname) const
 	return NULL;
 }
 
-std::set<Client*>& Channel::getClients()
+std::set<Client *> &Channel::getClients()
 {
 	return this->_clients;
 }
 
-std::set<Client*>& Channel::getOperators()
+std::set<Client *> &Channel::getOperators()
 {
 	return this->_operators;
 }
@@ -134,4 +133,3 @@ void Channel::setUserLimit(size_t limit)
 {
 	this->_user_limit = limit;
 }
-
