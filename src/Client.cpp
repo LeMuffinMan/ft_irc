@@ -132,9 +132,9 @@ bool Client::isPasswordCorrect() const
 	return this->_password_correct;
 }
 
-void Client::setPasswordCorrect(bool correct)
+void Client::setPasswordCorrect()
 {
-	this->_password_correct = correct;
+	this->_password_correct = true;
 }
 
 bool Client::isRegistered() const

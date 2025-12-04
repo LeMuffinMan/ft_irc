@@ -31,6 +31,8 @@ echo -e "${YELLOW}ulimit = $(ulimit -n)${NC}"
 
 log "Starting server on port $PORT..."
 if [ "$2" == 1 ]; then
+    make fclean
+    make debug
     $VALGRIND $SERVER "$PORT" "$PASS" > .server.log 2>&1 &
 else
     $SERVER "$PORT" "$PASS" > .server.log 2>&1 &

@@ -67,7 +67,7 @@ public:
 	void setLastSeen(std::time_t last_seen);
 	const std::time_t& getLastSeen() const;
 	bool isPasswordCorrect() const;
-	void setPasswordCorrect(bool correct);
+	void setPasswordCorrect();
 	bool isRegistered() const;
 	void setRegistered(bool registered);
 };

@@ -352,7 +352,8 @@ void Server::is_authentification_complete(int fd)
 		clients[fd].getNickname() != "" && 
 		clients[fd].getUsername() != "") {
 		
-		// this->reply(this->clients[fd], RPL_WELCOME(&this->clients[fd].getNickname(), &this->clients[fd].getUsername(), "127.0.0.1"));
+		Client& client = this->clients[fd];
+		this->reply(&client, RPL_WELCOME(client.getNickname(), client.getUsername(), "127.0.0.1"));
 
 		// LocalUser &current_local_user = this->clients[fd];
 		// Client* old_client = current_local_user.client;

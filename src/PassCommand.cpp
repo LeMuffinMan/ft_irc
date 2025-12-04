@@ -8,12 +8,17 @@ PassCommand::PassCommand(std::vector<std::string> params)
 
 void PassCommand::execute(Client* executor, Server& server)
 {
-	std::vector<int> vec;
+	if (_params.empty())
+	{
+		server.reply(executor, ERR_NEEDMOREPARAMS(executor->getNickname(), "PASS"));
+		return;
+	}
 
-	if (_params.empty() || _params[0].empty())
-		vec.push_back(461); // ERR_NEEDMOREPARAMS
 	if (executor->isRegistered())
-		//462 // ERR_ALREADYREGISTRED
+	{
+		server.reply(executor, ERR_ALREADYREGISTRED(executor->getNickname()));
+		return;
+	}
 
 	if (executor->isPasswordCorrect())
 	{
@@ -22,12 +27,11 @@ void PassCommand::execute(Client* executor, Server& server)
 
 	if (_params[0] == server.getPassword())
 	{
-		// std::cout << "Correct password" << std::endl;
-		executor->setPasswordCorrect(true);
+		executor->setPasswordCorrect();;
 	} else {
-		server.reply(executor, "Invalid password");
+		server.reply(executor, ERR_PASSWDMISMATCH(executor->getNickname()));
+		server.client_kicked(executor->fd);
 		// server.removeLocalUser(executor->_localClient->fd);
-		//464 //ERR_PASSWDMISMATCH
 	}
 	return;
 }
