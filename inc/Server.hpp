@@ -69,6 +69,7 @@ public:
 	int getEpfd() const;
 
 	//Clients managing
+	void client_kicked(int fd);
 	void handle_events(int n, epoll_event events[MAX_EVENTS]);
 	void new_client(int server_fd);
 	void removeLocalUser(int fd);
