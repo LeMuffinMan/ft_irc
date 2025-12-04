@@ -2,10 +2,8 @@
 #include "Debug.hpp"
 #include <cstring>
 
-Channel::Channel(std::string channel_name)
+Channel::Channel(std::string channel_name) : _channel_name(channel_name), _topic(""), _key(""), _mode(), _user_limit(0), _clients(), _operators(), _allowed_clients(), _operators_realnames()
 {
-	this->_channel_name = channel_name;
-	clear();
 }
 
 Channel::~Channel()

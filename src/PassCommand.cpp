@@ -12,10 +12,10 @@ void PassCommand::execute(Client* executor, Server& server)
 
 	if (_params.empty() || _params[0].empty())
 		vec.push_back(461); // ERR_NEEDMOREPARAMS
-	if (executor->_registered)
+	if (executor->isRegistered())
 		//462 // ERR_ALREADYREGISTRED
 
-	if (executor->_password_correct)
+	if (executor->isPasswordCorrect())
 	{
 		return;
 	}
@@ -23,7 +23,7 @@ void PassCommand::execute(Client* executor, Server& server)
 	if (_params[0] == server.getPassword())
 	{
 		// std::cout << "Correct password" << std::endl;
-		executor->_password_correct = true;
+		executor->setPasswordCorrect(true);
 	} else {
 		server.reply(executor, "Invalid password");
 		// server.removeLocalUser(executor->_localClient->fd);

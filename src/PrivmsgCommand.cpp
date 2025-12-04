@@ -12,7 +12,7 @@ void PrivmsgCommand::execute(Client* executor, Server& server)
 	std::vector<int> vec;
 	(void)server;
 
-	if (!executor->_registered)
+	if (!executor->isRegistered())
 		return;
 	if (_params.size() > 2)
 		vec.push_back(407); // ERR_TOOMANYTARGETS

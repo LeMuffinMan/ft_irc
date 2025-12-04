@@ -11,12 +11,12 @@ void UserCommand::execute(Client* executor, Server& server)
 	std::vector<int> vec;
 
 	(void)server;
-	if (!executor->_password_correct)
+	if (!executor->isPasswordCorrect())
 	{
 		vec.push_back(0); // on repond rien, on peut aussi avoir nos propres exit code ?
 		return;
 	}
-	if (executor->_registered)
+	if (executor->isRegistered())
 	{
 		vec.push_back(462); // ERR_ALREADYREGISTRED
 		return;
@@ -30,8 +30,8 @@ void UserCommand::execute(Client* executor, Server& server)
 
 	vec.push_back(0);
 	// std::cout << "New username : " << _params[1] << std::endl;
-	executor->_username = _params[0];
-	executor->_realname = _params[3];
+	executor->setUsername(_params[0]);
+	executor->setRealname(_params[3]);
 
 	return;
 }

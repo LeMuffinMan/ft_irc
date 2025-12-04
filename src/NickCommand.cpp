@@ -11,7 +11,7 @@ void NickCommand::execute(Client* executor, Server& server)
 
 	(void)server;
 	std::vector<int> vec;
-	if (!executor->_password_correct)
+	if (!executor->isPasswordCorrect())
 	{
 		vec.push_back(0); // on fait une erreur ?
 		return;

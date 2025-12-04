@@ -45,6 +45,12 @@ void JoinCommand::execute(Client* executor, Server& server)
 	Channel* channel;
 	for (size_t i = 0; i < channel_names.size(); ++i)
 	{
+		if (channel_names[i].empty() || (channel_names[i][0] != '#' && channel_names[i][0] != '&'))
+		{
+			server.reply(executor, ERR_NOSUCHCHANNEL(executor->getNickname(), channel_names[i]));
+			Debug::print(INFO, "Invalid channel name: " + channel_names[i]);
+			continue;
+		}
 		std::string chan_key;
 		if (channel_keys.size() >= i + 1)
 			chan_key = channel_keys[i];

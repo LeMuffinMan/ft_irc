@@ -126,3 +126,23 @@ const std::time_t& Client::getLastSeen() const
 {
 	return this->_last_seen;
 }
+
+bool Client::isPasswordCorrect() const
+{
+	return this->_password_correct;
+}
+
+void Client::setPasswordCorrect(bool correct)
+{
+	this->_password_correct = correct;
+}
+
+bool Client::isRegistered() const
+{
+	return this->_registered;
+}
+
+void Client::setRegistered(bool registered)
+{
+	this->_registered = registered;
+}

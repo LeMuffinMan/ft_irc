@@ -346,14 +346,14 @@ int Server::read_client_fd(int fd)
 //a mettre en bas de PASS USER et NICK uniquement
 void Server::is_authentification_complete(int fd)
 {
-	if (!this->clients[fd]._registered && 
-		this->clients[fd]._password_correct == true && 
+	if (!this->clients[fd].isRegistered() && 
+		this->clients[fd].isPasswordCorrect() == true && 
 		this->clients[fd].getNickname() != "" && 
 		this->clients[fd].getUsername() != "") {
 		
 		this->send_welcome(fd);
 		std::cout << this->clients[fd].getUsername() << " aka " << this->clients[fd].getNickname() << " successfully connected" << std::endl;
-		this->clients[fd]._registered = true;
+		this->clients[fd].setRegistered(true);
 	}
 }
 
@@ -461,8 +461,8 @@ void Server::RunServer() {
 			break;
 		}
 		handle_events(n, events);
-		// this->check_localUsers_ping(); //si on n'a pas eu de signe d'activite depuis trop longtemps
-		// this->remove_inactive_localUsers(); // remove inactive localUsers after a unanswered ping
+		// this->check_clients_ping(); //si on n'a pas eu de signe d'activite depuis trop longtemps
+		// this->remove_inactive_clients(); // remove inactive clients after a unanswered ping
 	}
 	close(this->_server_socket);
 	close(this->_epfd);
@@ -555,10 +555,10 @@ void Server::remove_inactive_clients()
         int fd = it->first;
         Client& client = it->second;
         now = std::time(NULL);
-        if ((client.timeout > 0 && now > client.timeout) || (!client._registered && client.connection_time + 7 < now))
+        if ((client.timeout > 0 && now > client.timeout) || (!client.isRegistered() && client.connection_time + 7 < now))
         {
             std::stringstream ss;
-            if (client._registered)
+            if (client.isRegistered())
             {
                 // ss << localuser.client->getUsername()
                 // << " aka " << localuser.client->getNickname()
