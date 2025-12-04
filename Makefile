@@ -41,9 +41,7 @@ INC = \
 	PongCommand.hpp \
 	PrivmsgCommand.hpp \
 	Server_utils.h \
-	LocalUser.hpp \
 	Client.hpp \
-	NetworkState.hpp \
 	Channel.hpp \
 	Reply.hpp \
 
@@ -55,6 +53,14 @@ TPP = \
 SRC = \
 	main.cpp \
 	Debug.cpp \
+	utils.cpp \
+	Server.cpp \
+	ServerIRC.cpp \
+	Client.cpp \
+	Channel.cpp \
+	Server_utils.cpp \
+	ACommand.cpp \
+	Signals.cpp \
 	CommandFactory.cpp \
 	InviteCommand.cpp \
 	TopicCommand.cpp \
@@ -64,14 +70,6 @@ SRC = \
 	UserCommand.cpp \
 	PongCommand.cpp \
 	PrivmsgCommand.cpp \
-	utils.cpp \
-	Server.cpp \
-	Client.cpp \
-	NetworkState.cpp \
-	Channel.cpp \
-	Server_utils.cpp \
-	ACommand.cpp \
-	Signals.cpp \
 
 LIBS = \
 
@@ -163,6 +161,7 @@ test: all
 clear: clean
 fclear: fclean
 flcean: fclean
+fclena: fclean
 flcear: fclean
 
 #############################################################################################

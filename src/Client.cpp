@@ -3,33 +3,15 @@
 #include <cstring>
 #include <sstream>
 
-Client::Client() : _localClient(0)
+Client::Client() : _key(""), _nickname(""), _username(""), _realname(""), _host(""), _last_seen(0), _password_correct(false), _registered(false), fd(-1), rbuf(""), wbuf(""), last_ping(0), timeout(0), connection_time(0)
 {
-	this->clear();
+
 }
 
-Client::Client(int fd) : _localClient(0)
-{
-	this->clear();
-	this->_localClient = new LocalUser;
-	this->_localClient->fd = fd;
-	this->_isLocal = true;
-}
-
-Client::Client(LocalUser *localClient) : _localClient(0)
-{
-	this->clear();
-	this->_localClient = localClient;
-	this->_isLocal = true;
-}
-
-Client::Client(Client const &other) : _isLocal(other._isLocal), _key(other._key), _localClient(other._localClient),
-	_nickname(other._nickname), _username(other._username), _realname(other._realname),
-	_mode(other._mode), _host(other._host), _last_seen(other._last_seen),
-	_password_correct(other._password_correct), _registered(other._registered)
+Client::Client(Client const &other) : _key(other._key), _nickname(other._nickname), _username(other._username), _realname(other._realname), _mode(other._mode), _host(other._host), _last_seen(other._last_seen), _password_correct(other._password_correct), _registered(other._registered), fd(other.fd), rbuf(other.rbuf), wbuf(other.wbuf), last_ping(other.last_ping), timeout(other.timeout), connection_time(other.connection_time)
 {
 	// Copy constructor
-};
+}
 
 Client::~Client()
 {
@@ -46,21 +28,6 @@ void Client::clear()
 	this->_last_seen = 0;
 	this->_password_correct = false;
 	this->_registered = false;
-	if (this->_localClient)
-		delete this->_localClient;
-}
-
-void Client::setLocalClient(LocalUser *localClient)
-{
-	if (this->_localClient)
-		delete this->_localClient;
-	this->_localClient = localClient;
-	this->_isLocal = true;
-}
-
-LocalUser* Client::getLocalClient()
-{
-	return this->_localClient;
 }
 
 void Client::printClientInfo()
@@ -68,18 +35,9 @@ void Client::printClientInfo()
 	std::stringstream ss;
 	Debug::print(INFO, "Client Info:");
 	Debug::print(INFO, "Key: " + this->_key);
-	if (this->_isLocal)
-	{
-		Debug::print(INFO, "Type: Local");
-		ss << "\tFD: " << this->_localClient->fd;
-		Debug::print(INFO, ss.str());
-		ss.str("");
-		ss << "\tLocalClient Address: " << this->_localClient;;
-		Debug::print(INFO, ss.str());
-		ss.str("");
-	}
-	else
-		Debug::print(INFO, "Type: Remote");
+	Debug::print(INFO, "Type: Local");
+	ss << "\tFD: " << this->fd;
+	Debug::print(INFO, ss.str());
 	Debug::print(INFO, "Nickname: " + this->_nickname);
 	Debug::print(INFO, "Username: " + this->_username);
 	Debug::print(INFO, "Realname: " + this->_realname);

@@ -3,7 +3,6 @@
 
 #include <string>
 #include <ctime>
-#include "LocalUser.hpp"
 
 struct LocalUser; // Forward declaration
 
@@ -24,10 +23,9 @@ class Client
 {
 //= Variables =//
 private:
-	bool _isLocal;				//!< Flag indicating if user is local
 	std::string _key;			//!< User's key in map
+//= Attributes for Client =//
 public:
-	LocalUser* _localClient;	//!< Pointer to LocalUser if local
 	std::string _nickname;		//!< User's nickname
 	std::string _username;		//!< User's username (ident)
 	std::string _realname;		//!< User's real name
@@ -36,18 +34,21 @@ public:
 	std::time_t _last_seen;		//!< Last seen time
 	bool _password_correct;		//!< Flag indicating if the user has provided the correct password
 	bool _registered;			//!< Flag indicating if the user has provided all the auth info
+//= Attributes for LocalUser =//
+	int fd;              //!< File descriptor for the user's socket connection
+	std::string rbuf;    //!< Read buffer to store incoming data
+	std::string wbuf;    //!< Write buffer to store outgoing data
+	std::time_t last_ping;  //!< Time of the last ping received
+	std::time_t timeout;  //!< Time when the user will timeout if no activity
+	std::time_t connection_time; //!< Time when user connected to server 
 
 //= Methods =//
 public:
 	Client();
-	Client(int fd);
-	Client(LocalUser *localClient);
 	Client(Client const &other);
 	~Client();
 
 	void clear();
-	void setLocalClient(LocalUser *localClient);
-	LocalUser* getLocalClient();
 
 	void printClientInfo();
 

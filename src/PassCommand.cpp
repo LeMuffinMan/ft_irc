@@ -1,5 +1,4 @@
 #include "PassCommand.hpp"
-#include "LocalUser.hpp"
 #include "Server.hpp"
 
 PassCommand::PassCommand(std::vector<std::string> params)

@@ -25,7 +25,7 @@ void PrivmsgCommand::execute(Client* executor, Server& server)
 
 	if (vec.empty())
 	{
-		Client* target = server.getNetwork().getClient(_params[1]);
+		Client* target = server.getClient(_params[1]);
 		if (target)
 		{
 			// reply ici

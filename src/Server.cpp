@@ -25,10 +25,14 @@
 Server::~Server()
 {
 	// delete this->_networkState;
-	for (std::map<int, LocalUser>::iterator it = this->_localUsers.begin(); it != this->_localUsers.end(); ++it)
+	for (std::map<int, Client>::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
 	{
 		close(it->first);
 		// delete it->second.client;
+	}
+	for (std::map<std::string, Channel*>::iterator it = this->channels.begin(); it != this->channels.end(); ++it)
+	{
+		delete it->second;
 	}
 }
 
@@ -55,14 +59,6 @@ std::string format_time() {
 		<< std::setw(2) << std::setfill('0') << minutes << ":"
 		<< std::setw(2) << std::setfill('0') << seconds;
 	return oss.str();
-}
-
-
-
-int Server::init_network(NetworkState &networkState)
-{
-	this->_networkState = &networkState;
-	return 0;
 }
 
 //To documentate
@@ -130,7 +126,7 @@ void Server::disable_epollout(int fd)
 //to doc
 int Server::write_client_fd(int fd)
 {
-	std::string &wbuf = _localUsers[fd].wbuf;
+	std::string &wbuf = clients[fd].wbuf;
 
 	while (!wbuf.empty()) {
 		ssize_t n = send(fd, wbuf.data(), wbuf.size(), 0);
@@ -147,7 +143,7 @@ int Server::write_client_fd(int fd)
 			std::cerr << "send error on fd " << fd << "\n";
 			epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
 			close(fd);
-			_localUsers.erase(fd);
+			clients.erase(fd);
 			return -1;
 		}
 	}
@@ -181,46 +177,16 @@ int Server::init_epoll_event(int client_fd)
 
 void Server::init_localuser(int client_fd)
 {
-	static unsigned int counter = 0;
 	//since we added a client in our epoll, we need a struct to represent it on our server
-	//LocalUser contains the pipes and tools, Client contains its server infos
-	LocalUser c;
-	//the fd makes the link between epoll and our list of client 
+	//LocalUser's Attributes contains the pipes and tools, Client contains its server infos
+	Client c;
 	c.fd = client_fd;
-	//for non blocking or overlap situations, we need 2 I/O buffers for each client
-	c.rbuf = "";  
-	c.wbuf = "";
 	//we want to kick incactives clients
 	c.last_ping = std::time(NULL);
 	c.connection_time = std::time(NULL);
 	c.timeout = -1;
 	// the client object contains 
-    this->_localUsers.insert(std::make_pair(client_fd, c));   
-	Client* client = new Client(client_fd);
-	c.client = client;
-	LocalUser &ref = this->_localUsers[client_fd];   
-	client->setLocalClient(&ref);
-	ref.client = client;
-	unsigned int attempt = 0;
-	do {// workaround to generate a unique username as networkState key needs to be unique, not optimal, we test collision, if it occurs we retry
-		std::stringstream ss;
-		ss << "client_" << std::hex << reinterpret_cast<uintptr_t>(client) << std::hex
-           << "_" << ++counter;
-		std::string str = ss.str();
-		if (this->_networkState->addClient(str, client))
-		{
-			client->setKey(str);
-			break;
-		}
-	} while (attempt++ < 5);
-	if (attempt == 5)
-	{
-		Debug::print(ERROR, "Could not generate unique key for new client, disconnecting");
-		close(client_fd);
-		this->_localUsers.erase(client_fd);
-		delete client;
-		return;
-	}
+    this->clients.insert(std::make_pair(client_fd, c));   
 	std::cout << format_time() << " New client: " << client_fd << std::endl;
 }
 
@@ -254,15 +220,15 @@ void Server::client_quited(int fd)
 	epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
 	close(fd);
 	//we delete in our map the leaving client
-	this->_localUsers.erase(fd);
+	this->clients.erase(fd);
 }
 
 //A remplacer avec un send reply
 void Server::send_welcome(int fd)
 {
 	std::stringstream ss;
-	ss << this->_localUsers[fd].client->getUsername() << " aka " << this->_localUsers[fd].client->getNickname() << " successfully registered" << "\r\n";
-	this->_localUsers[fd].wbuf += ss.str();
+	ss << this->clients[fd].getUsername() << " aka " << this->clients[fd].getNickname() << " successfully registered" << "\r\n";
+	this->clients[fd].wbuf += ss.str();
 	this->enable_epollout(fd);
 	this->write_client_fd(fd);
 }
@@ -308,7 +274,7 @@ std::vector<std::string> Server::get_params(std::string line)
 void Server::removeLocalUser(int fd) {
     close(fd);
 	epoll_ctl(this->getEpfd(), EPOLL_CTL_DEL, fd, NULL);
-    this->_localUsers.erase(fd);   
+    this->clients.erase(fd);
 }
 
 int Server::getEpfd() const {
@@ -318,11 +284,6 @@ int Server::getEpfd() const {
 std::string& Server::getPassword()
 {
 	return this->_password;
-}
-
-NetworkState& Server::getNetwork()
-{
-	return *(this->_networkState);
 }
 
 ACommand* Server::parse_command(std::string line)
@@ -346,18 +307,18 @@ int Server::read_client_fd(int fd)
 	// MSG_DONTWAIT : rend non bloquant et suffisant ?
 	ssize_t r = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
 	
-	if (this->_localUsers[fd].rbuf.size() >= 512) {
+	if (this->clients[fd].rbuf.size() >= 512) {
 		//On peut envoyer un message "not allowed msg > 512"
 
 		//si on veut traiter les 512 premiers octets il faut read ici 
 
 		std::cerr << "Buffer limit reached for fd " << fd << ", cleaning buffer" << std::endl;
-		this->_localUsers[fd].rbuf.clear();
+		this->clients[fd].rbuf.clear();
 		return 0; //1 si on veut lire et traiter les 512 premiers octets
 	}
 
 	if (r > 0) {
-		this->_localUsers[fd].rbuf.append(buf, buf + r); // &buf[r]
+		this->clients[fd].rbuf.append(buf, buf + r); // &buf[r]
 		// std::cout << "Received " << r << " bytes from fd " << fd << std::endl;
 		return 1;
 		
@@ -365,7 +326,7 @@ int Server::read_client_fd(int fd)
 		std::cout << "Client " << fd << " disconnected" << std::endl;
 		epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
 		close(fd);
-		this->_localUsers.erase(fd);
+		this->clients.erase(fd);
 		return 0;
 	} else {
 		//error handling : ici il faut que le parsing attende !
@@ -376,7 +337,7 @@ int Server::read_client_fd(int fd)
 			perror("recv");
 			epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
 			close(fd);
-			this->_localUsers.erase(fd);
+			this->clients.erase(fd);
 			return -1;
 		// }
 	}
@@ -385,47 +346,33 @@ int Server::read_client_fd(int fd)
 //a mettre en bas de PASS USER et NICK uniquement
 void Server::is_authentification_complete(int fd)
 {
-	if (!this->_localUsers[fd].client->_registered && 
-		this->_localUsers[fd].client->_password_correct == true && 
-		this->_localUsers[fd].client->getNickname() != "" && 
-		this->_localUsers[fd].client->getUsername() != "") {
+	if (!this->clients[fd]._registered && 
+		this->clients[fd]._password_correct == true && 
+		this->clients[fd].getNickname() != "" && 
+		this->clients[fd].getUsername() != "") {
 		
 		this->send_welcome(fd);
-		LocalUser &current_local_user = this->_localUsers[fd];
-		Client* old_client = current_local_user.client;
-		current_local_user.client->_registered = true;
-		Client* new_client = new Client(*old_client);
-		new_client->setKey(old_client->getNickname());
-		if (!this->_networkState->addClient(new_client->getNickname(), new_client))
-		{
-			Debug::print(ERROR, "Nickname collision detected during registration for " + new_client->getUsername() + ", must choose another nickname");
-			Debug::print(DEBUG, "Deleting temporary new client " + new_client->getUsername());
-			delete new_client;
-			return;
-		}
-		current_local_user.client = new_client;
-		this->_networkState->removeClient(old_client->getKey());
-		std::cout << current_local_user.client->getUsername() << " aka " << current_local_user.client->getNickname() << " successfully connected" << std::endl;
-		new_client->printClientInfo();
+		std::cout << this->clients[fd].getUsername() << " aka " << this->clients[fd].getNickname() << " successfully connected" << std::endl;
+		this->clients[fd]._registered = true;
 	}
 }
 
 void Server::interpret_msg(int fd)
 {
 	size_t pos;
-	while ((pos = this->_localUsers[fd].rbuf.find("\r\n")) != std::string::npos) {
-		std::string line = this->_localUsers[fd].rbuf.substr(0, pos);
-		this->_localUsers[fd].rbuf.erase(0, pos + 2);
+	while ((pos = this->clients[fd].rbuf.find("\r\n")) != std::string::npos) {
+		std::string line = this->clients[fd].rbuf.substr(0, pos);
+		this->clients[fd].rbuf.erase(0, pos + 2);
 		ACommand* cmd = this->parse_command(line);      
 		//try catch ?
 		if (cmd)
 		{
-			cmd->execute(this->_localUsers[fd].client, *this);
+			cmd->execute(&this->clients[fd], *this);
 			delete cmd;
-			// this->_localUsers[fd].client->printClientInfo();
+			// this->clients[fd].client->printClientInfo();
 		}
 	}
-	this->_localUsers[fd].last_ping = std::time(NULL);
+	this->clients[fd].last_ping = std::time(NULL);
 	this->is_authentification_complete(fd);
 }
 
@@ -529,12 +476,12 @@ bool Server::reply(Client* client, std::string message)
 		Debug::print(ERROR, "No client given");
 		return false;
 	}
-	std::string &wbuf = client->getLocalClient()->wbuf;
+	std::string &wbuf = client->wbuf;
 	if (!message.empty())
 		wbuf.append(message).append("\r\n");
 	while (!wbuf.empty())
 	{
-		ssize_t n = send(client->getLocalClient()->fd, wbuf.c_str(), wbuf.size(), 0);
+		ssize_t n = send(client->fd, wbuf.c_str(), wbuf.size(), 0);
 
 		if (n > 0) {
 			Debug::print(INFO, "Reply to " + client->getNickname() + ": " + wbuf.substr(0, static_cast<size_t>(n - 1)));
@@ -543,16 +490,16 @@ bool Server::reply(Client* client, std::string message)
 		//socket buffer full 
 		else if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
 			Debug::print(INFO, "The message couldn't be send in one try, retrying next time");
-			enable_epollout(client->getLocalClient()->fd);
+			enable_epollout(client->fd);
 			return 0;
 		}
 		else {
+			// FIXME: Need to call client_kicked here !
 			// error or client disconnected
-			std::cerr << "[ERROR] Send error on fd " << client->getLocalClient()->fd << "\n";
-			epoll_ctl(_epfd, EPOLL_CTL_DEL, client->getLocalClient()->fd, NULL);
-			_networkState->removeClient(client->getNickname());
-			close(client->getLocalClient()->fd);
-			_localUsers.erase(client->getLocalClient()->fd);
+			std::cerr << "[ERROR] Send error on fd " << client->fd << "\n";
+			epoll_ctl(_epfd, EPOLL_CTL_DEL, client->fd, NULL);
+			close(client->fd);
+			clients.erase(client->fd);
 			return false;
 		}
 	}
@@ -597,55 +544,40 @@ bool Server::replyChannelOnlyOP(Channel* channel, std::string message)
 	return ret;
 }
 
-bool Server::broadcast(NetworkState& network, std::string message)
-{
-	(void)network;
-	// TODO Nécessite d'avoir une liste de tout les LocalUsers
-	std::cout << "Broadcast message: " << message << std::endl;
-	return true;
-}
-
-bool Server::noticeServers(NetworkState& network, std::string message)
-{
-	(void)network;
-	std::cout << "Notice servers: " << message << std::endl;
-	return true;
-}
-
 //a retester
-void Server::remove_inactive_localUsers()
+void Server::remove_inactive_clients()
 {
 	std::time_t now = std::time(NULL);
 
-    for (std::map<int, LocalUser>::iterator it = this->_localUsers.begin();
-         it != this->_localUsers.end(); )
+    for (std::map<int, Client>::iterator it = this->clients.begin();
+         it != this->clients.end(); )
     {
         int fd = it->first;
-        LocalUser& localuser = it->second;
+        Client& client = it->second;
         now = std::time(NULL);
-        if ((localuser.timeout > 0 && now > localuser.timeout) || (!localuser.client->_registered && localuser.connection_time + 7 < now))
+        if ((client.timeout > 0 && now > client.timeout) || (!client._registered && client.connection_time + 7 < now))
         {
             std::stringstream ss;
-            if (localuser.client->_registered)
+            if (client._registered)
             {
                 // ss << localuser.client->getUsername()
                 // << " aka " << localuser.client->getNickname()
                 // << " timed out\r\n";
-                this->reply(localuser.client, "timed out");
+                this->reply(&client, "timed out");
 
             }
             else {
                 // ss << "Disconnected: timed out" << std::endl;
-                this->reply(localuser.client, "timed out");
+                this->reply(&client, "timed out");
             }
 
-			localuser.wbuf += ss.str();
+			client.wbuf += ss.str();
 			this->enable_epollout(fd);
 			this->write_client_fd(fd);
 
             close(fd);
 	        epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
-            this->_localUsers.erase(it++);   
+            this->clients.erase(it++);   
         }
         else
         {
@@ -656,13 +588,13 @@ void Server::remove_inactive_localUsers()
 
 
 //a retester
-void Server::check_localUsers_ping()
+void Server::check_clients_ping()
 {
-	for (std::map<int, LocalUser>::iterator it = this->_localUsers.begin(); 
-		 it != this->_localUsers.end(); ++it)
+	for (std::map<int, Client>::iterator it = this->clients.begin(); 
+		 it != this->clients.end(); ++it)
 	{
 		int fd = it->first;
-		LocalUser& client = it->second;
+		Client& client = it->second;
 
 		std::time_t now = std::time(NULL);
 		

@@ -2,7 +2,6 @@
 #include <fstream>
 #include "Server.hpp"
 #include "Client.hpp"
-#include "LocalUser.hpp"
 #include "Debug.hpp"
 #include <cstdlib>
 
@@ -24,8 +23,6 @@ int main(int argc, char** argv)
 	}
 	std::string password(argv[2]);
 	Server server(port, password);
-	NetworkState networkState;
-	server.init_network(networkState);
 	server.RunServer();
 	return 0;
 }
