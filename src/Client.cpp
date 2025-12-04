@@ -142,7 +142,7 @@ bool Client::isRegistered() const
 	return this->_registered;
 }
 
-void Client::setRegistered(bool registered)
+void Client::setRegistered()
 {
-	this->_registered = registered;
+	this->_registered = true;
 }

@@ -354,7 +354,7 @@ void Server::is_authentification_complete(int fd)
 		
 		Client& client = this->clients[fd];
 		this->reply(&client, RPL_WELCOME(client.getNickname(), client.getUsername(), "127.0.0.1"));
-
+		client.setRegistered();
 		// LocalUser &current_local_user = this->clients[fd];
 		// Client* old_client = current_local_user.client;
 		// current_local_user.client->_registered = true;
@@ -636,3 +636,34 @@ void Server::check_clients_ping()
 	}
 }
 
+Client* Server::getClient(const std::string& nickname)
+{
+	for (std::map<int, Client>::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
+	{
+		if (it->second.getNickname() == nickname)
+			return &(it->second);
+	}
+	return NULL;
+}
+
+Channel* Server::getChannel(const std::string& channel_name)
+{
+	if (channel_name.empty() || channel_name[0] != '#') {
+		return NULL;
+	}
+	std::map<std::string, Channel*>::iterator it = channels.find(channel_name);
+	if (it != channels.end()) {
+		return it->second;
+	}
+	return NULL;
+}
+
+bool Server::addChannel(const std::string &channel_name)
+{
+	std::map<std::string, Channel*>::iterator it = channels.find(channel_name);
+	if (it == channels.end()) {
+		channels[channel_name] = new Channel(channel_name);
+		return true;
+	}
+	return false;
+}

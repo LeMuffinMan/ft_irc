@@ -8,12 +8,13 @@ KickCommand::KickCommand(std::vector<std::string> params)
 
 void KickCommand::execute(Client* executor, NetworkState& network, Server& server)
 {
-	std::vector<int> vec;
+	if (!executor->_registered)
+		return;
 
 	(void)server;
-	if (_params.size() < 3)
+	if (_params.size() < 2)
 	{
-		vec.push_back(461); // ERR_NEEDMOREPARAMS
+		server.reply(executor, ERR_NEEDMOREPARAMS(executor->_nickname, "KICK"));
 		return;
 	}
 
@@ -30,41 +31,33 @@ void KickCommand::execute(Client* executor, NetworkState& network, Server& serve
 	for (size_t i = count; i < _params.size(); ++i) {
 		if (_params[i][0] == ':')
 		{
-			kick_msg = _params[1];
+			kick_msg = _params[i];
 			break;
 		}
 		users.push_back(_params[i]);
 	}
-	if (users.size() != chans.size())
-	{
-		vec.push_back(476); //ERR_BADCHANMASK;
-		return;
-	}
-
 	for (size_t i = 0; i < users.size(); ++i) {
 		Channel* chan = network->getChannel(chans[i]);
-		if (!chan)
+		if (!chan || chans[i].find('#') == chans.end() && (chans[i].find('&') == chans.end()))
 		{
-			vec.push_back(403); // no such channel
+			server.reply(executor, ERR_NOSUCHCHANNEL(executor->_nickname, _params[i]));
 			continue;
 		}
 		if (!chan->IsClientInChannel(executor->getNickname()))
 		{
-			vec.push_back(442); //ERR_NOTONCHANNEL
+			server.reply(executor, ERR_NOSUCHCHANNEL(executor->_nickname, _params[i]));
 			continue;
 		}
 		if (!chan->IsClientOPChannel(executor->getNickname()))
 		{
-			vec.push_back(482); // ERR_CHANOPRIVSNEEDED (482)
+			server.reply(executor, ERR_CHANOPRIVSNEEDED(executor->_nickname, _params[i]));
 			continue;
 		}
 		if (!chan->IsClientInChannel(users[i]))
 		{
-			vec.push_back(441); //ERR_USERNOTINCHANNEL
+			server.reply(executor, ERR_USERNOTINCHANNEL(executor->_nickname, users[i], chans[i]));
 		}
 
-	if (vec.empty())
-		vec.push_back(0);
 	return;
 }
 

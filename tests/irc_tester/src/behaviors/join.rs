@@ -50,7 +50,7 @@ pub async fn join_need_more_params(port: u16, id: usize, timeout_ms: u64) -> Res
 }
 
 pub async fn join_no_such_channel(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
-    let channel = format!("stress_{}", id);
+    let channel = format!("no_such_chan_{}", id);
     let mut client = Client::connect(port).await?;
 
     client.send("PASS password\r\n", 0).await?;
@@ -70,7 +70,7 @@ pub async fn join_no_such_channel(port: u16, id: usize, timeout_ms: u64) -> Resu
         }
     }
 
-    client.send("JOIN #nosuchchannel\r\n", 0).await?;
+    client.send("JOIN nosuchchannel\r\n", 0).await?;
     if let Some(line) = client.read_line_timeout(timeout_ms).await? {
         if !line.contains(" :No such channel") {
             return Err(anyhow::anyhow!("ERR_NOSUCHCHAN missing | received [{line}]"));

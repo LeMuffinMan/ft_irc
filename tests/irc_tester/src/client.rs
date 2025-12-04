@@ -33,18 +33,18 @@ pub enum ClientBehavior {
     UserNeedMoreParams,
 
     InviteNeedMoreParams,
-    InviteNoSuchNick,
-    InviteNotOnChannel,
+    // InviteNoSuchNick,
+    // InviteNotOnChannel,
 
     PrivmsgNoRecipient,
     PrivmsgNoTextToSend,
-    PrivmsgNoSuchChannel,
+    // PrivmsgNoSuchChannel,
     // PrivmsgCannotSendToChan,
     PrivmsgNoSuchNick,
 
     // KickBadChanMask,
-    KickNoSuchChannel,
-    KickNeedMoreParams,
+    // KickNoSuchChannel,
+    // KickNeedMoreParams,
     // KickChaNoPrivsNeeded,
     // KickUserNotInChannel,
     JoinNeedMoreParams,

@@ -7,17 +7,17 @@ use anyhow::Result;
 //
 
 pub async fn kick_need_more_params(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
-    let nick = format!("stress_{}", id);
+    let nick = format!("kickneedmorep_{}", id);
     let mut client = Client::connect(port).await?;
 
     client.send("PASS password\r\n", 0).await?;
     client
-        .send(&format!("NICK {}_kick_more_params\r\n", nick), 0)
+        .send(&format!("NICK {}\r\n", nick), 0)
         .await?;
     client
         .send(
             &format!(
-                "USER {}_kick_more_params 0 * :kick_need_more_params\r\n",
+                "USER {} 0 * :kick_need_more_params\r\n",
                 nick
             ),
             0,
@@ -29,7 +29,12 @@ pub async fn kick_need_more_params(port: u16, id: usize, timeout_ms: u64) -> Res
             return Err(anyhow::anyhow!("welcome message missing | received [{line}]"));
         }
     }
-
+    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
+        if line.starts_with("PING") {
+            let resp = line.replace("PING", "PONG");
+            client.send(&resp, 0).await?;
+        }
+    }
     client.send("KICK \r\n", 0).await?;
     if let Some(line) = client.read_line_timeout(timeout_ms).await? {
         if !line.contains(" :Not enough parameters") {
@@ -41,16 +46,16 @@ pub async fn kick_need_more_params(port: u16, id: usize, timeout_ms: u64) -> Res
 }
 
 pub async fn kick_no_such_channel(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
-    let channel = format!("stress_{}", id);
+    let channel = format!("Kick_no_such_chan_{}", id);
     let mut client = Client::connect(port).await?;
 
     client.send("PASS password\r\n", 0).await?;
     client
-        .send(&format!("channel {}_kick_ns_chan\r\n", channel), 0)
+        .send(&format!("NICK {}\r\n", channel), 0)
         .await?;
     client
         .send(
-            &format!("USER {}_kick_ns_chan 0 * :kick_ns_chan\r\n", channel),
+            &format!("USER {} 0 * :kick_ns_chan\r\n", channel),
             0,
         )
         .await?;
@@ -58,6 +63,13 @@ pub async fn kick_no_such_channel(port: u16, id: usize, timeout_ms: u64) -> Resu
     if let Some(line) = client.read_line_timeout(timeout_ms).await? {
         if !line.contains("Welcome to the Internet Relay Network") {
             return Err(anyhow::anyhow!("welcome message missing | received [{line}]"));
+        }
+    }
+
+    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
+        if line.starts_with("PING") {
+            let resp = line.replace("PING", "PONG");
+            client.send(&resp, 0).await?;
         }
     }
 

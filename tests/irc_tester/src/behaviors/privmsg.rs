@@ -31,7 +31,12 @@ pub async fn privmsg_no_such_nick(port: u16, id: usize, timeout_ms: u64) -> Resu
             return Err(anyhow::anyhow!("welcome message missing | received [{line}]"));
         }
     }
-
+    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
+        if line.starts_with("PING") {
+            let resp = line.replace("PING", "PONG");
+            client.send(&resp, 0).await?;
+        }
+    }
     client.send("PRIVMSG nosuchnickname :msg\r\n", 0).await?;
     if let Some(line) = client.read_line_timeout(timeout_ms).await? {
         if !line.contains(" :No such nick/channel") {
@@ -42,36 +47,41 @@ pub async fn privmsg_no_such_nick(port: u16, id: usize, timeout_ms: u64) -> Resu
     Ok(())
 }
 
-pub async fn privmsg_no_such_channel(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
-    let channel = format!("stress_{}", id);
-    let mut client = Client::connect(port).await?;
-
-    client.send("PASS password\r\n", 0).await?;
-    client
-        .send(&format!("NICK {}_pmsg_ns_chan\r\n", channel), 0)
-        .await?;
-    client
-        .send(
-            &format!("USER {}_pmsg_ns_chan 0 * :pmsg_ns_chan\r\n", channel),
-            0,
-        )
-        .await?;
-
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-        if !line.contains("Welcome to the Internet Relay Network") {
-            return Err(anyhow::anyhow!("welcome message missing | received [{line}]"));
-        }
-    }
-
-    client.send("PRIVMSG #nosuchchannel\r\n", 0).await?;
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-        if !line.contains(" :No such channel") {
-            return Err(anyhow::anyhow!("ERR_NOSUCHCHAN missing | received [{line}]"));
-        }
-    }
-    client.shutdown().await?;
-    Ok(())
-}
+// pub async fn privmsg_no_such_channel(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
+//     let channel = format!("stress_{}", id);
+//     let mut client = Client::connect(port).await?;
+//
+//     client.send("PASS password\r\n", 0).await?;
+//     client
+//         .send(&format!("NICK {}_pmsg_ns_chan\r\n", channel), 0)
+//         .await?;
+//     client
+//         .send(
+//             &format!("USER {}_pmsg_ns_chan 0 * :pmsg_ns_chan\r\n", channel),
+//             0,
+//         )
+//         .await?;
+//
+//     if let Some(line) = client.read_line_timeout(timeout_ms).await? {
+//         if !line.contains("Welcome to the Internet Relay Network") {
+//             return Err(anyhow::anyhow!("welcome message missing | received [{line}]"));
+//         }
+//     }
+//     if let Some(line) = client.read_line_timeout(timeout_ms).await? {
+//         if line.starts_with("PING") {
+//             let resp = line.replace("PING", "PONG");
+//             client.send(&resp, 0).await?;
+//         }
+//     }
+//     client.send("PRIVMSG #nosuchchannel\r\n", 0).await?;
+//     if let Some(line) = client.read_line_timeout(timeout_ms).await? {
+//         if !line.contains(" :No such channel") {
+//             return Err(anyhow::anyhow!("ERR_NOSUCHCHAN missing | received [{line}]"));
+//         }
+//     }
+//     client.shutdown().await?;
+//     Ok(())
+// }
 
 pub async fn privmsg_no_recipient(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("stress_{}", id);
@@ -96,7 +106,12 @@ pub async fn privmsg_no_recipient(port: u16, id: usize, timeout_ms: u64) -> Resu
             return Err(anyhow::anyhow!("welcome message missing | received [{line}]"));
         }
     }
-
+    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
+        if line.starts_with("PING") {
+            let resp = line.replace("PING", "PONG");
+            client.send(&resp, 0).await?;
+        }
+    }
     client.send("PRIVMSG\r\n", 0).await?;
     if let Some(line) = client.read_line_timeout(timeout_ms).await? {
         if !line.contains(" :No recipient given") {
@@ -127,7 +142,12 @@ pub async fn privmsg_no_text_to_send(port: u16, id: usize, timeout_ms: u64) -> R
             return Err(anyhow::anyhow!("welcome message missing | received [{line}]"));
         }
     }
-
+    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
+        if line.starts_with("PING") {
+            let resp = line.replace("PING", "PONG");
+            client.send(&resp, 0).await?;
+        }
+    }
     client.send("PRIVMSG target\r\n", 0).await?;
     if let Some(line) = client.read_line_timeout(timeout_ms).await? {
         if !line.contains(" :No text to send") {

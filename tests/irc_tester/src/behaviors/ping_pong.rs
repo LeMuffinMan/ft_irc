@@ -61,7 +61,7 @@ pub async fn pong_only(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
 }
 
 pub async fn wrong_pong(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
-    let nick = format!("stress_{}", id);
+    let nick = format!("{}_wrong_pong", id);
     let mut client = Client::connect(port).await?;
 
     client.send("PASS password\r\n", 0).await?;
@@ -76,9 +76,9 @@ pub async fn wrong_pong(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
         }
     }
 
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
+    while let Some(line) = client.read_line_timeout(timeout_ms).await? {
         if line.starts_with("PING") {
-            println!("Sending wrong pong");
+            // println!("Sending wrong pong");
             let resp = "PONG :4242424242\r\n";
             client.send(&resp, 0).await?;
         } else if line.contains("Invalid pong") {

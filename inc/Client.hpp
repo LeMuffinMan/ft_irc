@@ -69,7 +69,7 @@ public:
 	bool isPasswordCorrect() const;
 	void setPasswordCorrect();
 	bool isRegistered() const;
-	void setRegistered(bool registered);
+	void setRegistered();
 };
 
 #endif // CLIENT_HPP

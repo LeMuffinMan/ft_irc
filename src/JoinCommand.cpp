@@ -56,14 +56,12 @@ void JoinCommand::execute(Client* executor, Server& server)
 			chan_key = channel_keys[i];
 		else
 			chan_key = "";
-		// channel = server.getChannel(channel_names[i]);
-		channel = NULL;
+		channel = server.getChannel(channel_names[i]);
 		if (!channel) // Channel does not exist so we create it
 		{
-			// server.addChannel(channel_names[i]);
-			// channel = server.getChannel(channel_names[i]);
-			channel = NULL;
-			// channel->addClient(executor, true); // First user is operator
+			server.addChannel(channel_names[i]);
+			channel = server.getChannel(channel_names[i]);
+			channel->addClient(executor, true); // First user is operator
 			join_message(executor, server, channel_names[i]);
 			continue;
 		}

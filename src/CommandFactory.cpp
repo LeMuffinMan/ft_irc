@@ -22,8 +22,8 @@ command_type CommandFactory::findType(std::string const& command_name) {
 	if (command_name == "PASS") return PASS;
 	if (command_name == "JOIN") return JOIN;
 	if (command_name == "LEAVE") return LEAVE;
-	if (command_name == "SEND_MESSAGE") return SEND_MESSAGE;
-	if (command_name == "PRIVATE_MESSAGE") return PRIVATE_MESSAGE;
+	// if (command_name == "SEND_MESSAGE") return SEND_MESSAGE;
+	if (command_name == "PRIVMSG") return PRIVATE_MESSAGE;
 	if (command_name == "LIST_CHANNELS") return LIST_CHANNELS;
 	if (command_name == "LIST_USERS") return LIST_USERS;
 	if (command_name == "PONG") return PONG;
