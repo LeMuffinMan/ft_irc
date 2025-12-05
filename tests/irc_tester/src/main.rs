@@ -5,10 +5,9 @@ mod client;
 mod tests;
 mod utils;
 use crate::tests::advanced_test::test_behaviors;
-use crate::tests::witness::witness_client;
-use std::sync::Arc;
+use crate::tests::controle::controle_client;
+use crate::tests::controle::no_mdp_chan_client;
 use tests::{advanced_stress_test, connection_stress_test};
-use tokio::sync::Notify;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -21,8 +20,9 @@ async fn main() -> Result<()> {
         .parse()
         .expect("Argument must be a positive integer");
 
-    let stop_signal = Arc::new(Notify::new());
-    let witness_handle = tokio::spawn(witness_client(port, stop_signal.clone()));
+    let controle_handle = tokio::spawn(controle_client(port));
+    let no_mdp_chan_handle = tokio::spawn(no_mdp_chan_client(port));
+    // let mdp_chan_handle = tokio::spawn(mdp_chan_client(port, stop_signal.clone()));
     if mode == 0 {
         let _ = test_behaviors(port, 0).await;
     }
@@ -30,15 +30,13 @@ async fn main() -> Result<()> {
     connection_stress_handle.await??;
     advanced_stress_test(port, num_clients, 0).await?;
 
-    stop_signal.notify_one();
-    witness_handle.await??;
+    controle_handle.abort();
+    no_mdp_chan_handle.abort();
 
     Ok(())
 }
 
 //Todo
-//
-
 //
 //INVITE :
 // - Normal : 2 clients, one inviting in an chan, another not in this chan

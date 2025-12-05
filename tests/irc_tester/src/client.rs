@@ -49,6 +49,7 @@ pub enum ClientBehavior {
     // KickUserNotInChannel,
     JoinNeedMoreParams,
     JoinNoSuchChan,
+    JoinNewChan,
 
     TopicNeedMoreParams,
 }

@@ -57,6 +57,7 @@ async fn run_client(
         ClientBehavior::JoinNeedMoreParams => join_need_more_params(port, id, timeout_ms).await,
         ClientBehavior::JoinNoSuchChan => join_no_such_channel(port, id, timeout_ms).await,
         ClientBehavior::TopicNeedMoreParams => topic_need_more_params(port, id, timeout_ms).await,
+        ClientBehavior::JoinNewChan => join_new_channel(port, id, timeout_ms).await,
     };
 
     let reply_time = Instant::now() - start_time;
@@ -104,6 +105,7 @@ pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
         ClientBehavior::JoinNeedMoreParams,
         ClientBehavior::JoinNoSuchChan,
         ClientBehavior::TopicNeedMoreParams,
+        ClientBehavior::JoinNewChan,
     ];
 
     let mut futures: FuturesUnordered<_> = behaviors

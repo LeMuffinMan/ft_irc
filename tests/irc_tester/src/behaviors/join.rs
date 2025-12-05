@@ -79,3 +79,37 @@ pub async fn join_no_such_channel(port: u16, id: usize, timeout_ms: u64) -> Resu
     client.shutdown().await?;
     Ok(())
 }
+
+
+pub async fn join_new_channel(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
+    let channel = format!("{}_join_new_chan", id);
+    let mut client = Client::connect(port).await?;
+
+    client.send("PASS password\r\n", 0).await?;
+    client
+        .send(&format!("NICK {}_join_new_chan\r\n", channel), 0)
+        .await?;
+    client
+        .send(
+            &format!("USER {} 0 * :join_new_chan\r\n", channel),
+            0,
+        )
+        .await?;
+
+    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
+        if !line.contains("Welcome to the Internet Relay Network") {
+            return Err(anyhow::anyhow!("welcome message missing | received [{line}]"));
+        }
+    }
+
+    client.send("JOIN #newchan\r\n", 0).await?;
+    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
+        if !line.contains("join_new_chan JOIN #newchan") {
+            return Err(anyhow::anyhow!("No confirmation of chan creation | received [{line}]"));
+        }
+    }
+    client.shutdown().await?;
+    Ok(())
+}
+
+
