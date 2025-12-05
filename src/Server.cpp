@@ -15,6 +15,12 @@
 #include "ACommand.hpp"
 #include "CommandFactory.hpp"
 
+// #define USE_FULL_CLIENT
+// #define USE_TESTER
+#ifdef USE_TESTER
+#define USE_FULL_CLIENT
+#endif
+
 Server::~Server()
 {
 	for (std::map<int, Client>::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
@@ -464,8 +470,10 @@ void Server::RunServer()
 			break;
 		}
 		handle_events(n, events);
+		#ifdef USE_FULL_CLIENT
 		this->check_clients_ping();		 // si on n'a pas eu de signe d'activite depuis trop longtemps
 		this->remove_inactive_clients(); // remove inactive localUsers after a unanswered ping
+		#endif
 	}
 	close(this->_server_socket);
 	close(this->_epfd);

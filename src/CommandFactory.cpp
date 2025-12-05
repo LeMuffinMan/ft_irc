@@ -9,6 +9,7 @@
 #include "UserCommand.hpp"
 #include "PongCommand.hpp"
 #include "PrivmsgCommand.hpp"
+#include "ModeCommand.hpp"
 
 CommandFactory::CommandFactory() {}
 CommandFactory::~CommandFactory() {}
@@ -31,9 +32,7 @@ std::vector<std::string> CommandFactory::get_params(std::string line)
 	size_t pos = line.find(' ');
 
 	if (pos == std::string::npos)
-	{
 		return params;
-	}
 
 	std::string remaining = line.substr(pos + 1);
 	std::string after_colon;
@@ -72,7 +71,7 @@ command_type CommandFactory::findType(std::string const &command_name)
 	return UNKNOWN;
 }
 
-// TODO: enum LEAVE, SEND_MESSAGE, LIST_CHANNELS, LIST_USERS, KICK, MODE
+// TODO: enum LEAVE, SEND_MESSAGE, LIST_CHANNELS, LIST_USERS, KICK
 
 ACommand *CommandFactory::createCommand(const std::string &command, const std::vector<std::string> &params)
 {
@@ -95,6 +94,8 @@ ACommand *CommandFactory::createCommand(const std::string &command, const std::v
 		return new PrivmsgCommand(params);
 	case PONG:
 		return new PongCommand(params);
+	case MODE:
+		return new ModeCommand(params);
 	case UNKNOWN:
 	default:
 		return NULL;

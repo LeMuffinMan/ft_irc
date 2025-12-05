@@ -12,6 +12,11 @@ void TopicCommand::execute(Client *executor, Server &server)
 		server.reply(executor, ERR_NEEDMOREPARAMS(executor->getNickname(), "TOPIC"));
 		return;
 	}
+	if (!executor->isRegistered())
+	{
+		server.reply(executor, ERR_NOTREGISTERED(executor->getNickname()));
+		return;
+	}
 	Channel *channel = server.getChannel(_params[0]);
 	if (!channel)
 	{

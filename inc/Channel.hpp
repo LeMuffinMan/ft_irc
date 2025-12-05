@@ -44,14 +44,16 @@ public:
 	void clear();
 	void setModes(ChannelModes modes);
 	ChannelModes getModes() const;
+	void setKey(const std::string &key);
 	bool isKeySet(const ChannelModes &modes) const;
 	bool isKeySame(const std::string &key) const;
 	void setTopic(const std::string &topic);
 	const std::string &getTopic() const;
 
 	bool addClient(Client *client);
-	bool addClient(Client *client, bool is_operator);
 	bool removeClient(Client *client);
+	bool addOperator(Client *client);
+	bool removeOperator(Client *client);
 	bool isClientInChannel(Client *client) const;
 	bool isClientOPChannel(Client *client) const;
 	Client *getClientByNickname(const std::string &nickname) const;

@@ -4,6 +4,7 @@
 
 Channel::Channel(std::string channel_name) : _channel_name(channel_name), _topic(""), _key(""), _mode(), _user_limit(0), _clients(), _operators(), _allowed_clients(), _operators_realnames()
 {
+	std::memset(&this->_mode, 0, sizeof(ChannelModes));
 }
 
 Channel::~Channel()
@@ -44,6 +45,11 @@ bool Channel::isKeySame(const std::string &key) const
 	return this->_key == key;
 }
 
+void Channel::setKey(const std::string &key)
+{
+	this->_key = key;
+}
+
 void Channel::setTopic(const std::string &topic)
 {
 	this->_topic = topic;
@@ -64,26 +70,31 @@ bool Channel::addClient(Client *client)
 	return true;
 }
 
-bool Channel::addClient(Client *client, bool is_operator)
-{
-	if (!is_operator && _mode.is_limited && _clients.size() >= _user_limit)
-		return false;
-	if (isClientInChannel(client))
-		return false;
-	_clients.insert(client);
-	if (is_operator)
-	{
-		_operators.insert(client);
-		this->_operators_realnames.push_back(client->getRealname());
-	}
-	return true;
-}
 
 bool Channel::removeClient(Client *client)
 {
 	if (isClientInChannel(client) == false)
 		return false;
 	_clients.erase(client);
+	return true;
+}
+
+bool Channel::addOperator(Client *client)
+{
+	if (isClientOPChannel(client))
+		return false;
+	if (!isClientInChannel(client))
+		this->addClient(client);
+	_operators.insert(client);
+	this->_operators_realnames.push_back(client->getRealname());
+	return true;
+}
+
+bool Channel::removeOperator(Client *client)
+{
+	if (!isClientOPChannel(client))
+		return false;
+	_operators.erase(client);
 	return true;
 }
 

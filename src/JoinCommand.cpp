@@ -22,8 +22,11 @@ void JoinCommand::execute(Client *executor, Server &server)
 		server.reply(executor, ERR_NEEDMOREPARAMS(executor->getNickname(), "JOIN"));
 		return;
 	}
-	(void)executor;
-	(void)server;
+	if (!executor->isRegistered())
+	{
+		server.reply(executor, ERR_NOTREGISTERED(executor->getNickname()));
+		return;
+	}
 	if (_params[0] == "0")
 	{
 		// Executor wants to leave all channels
@@ -60,14 +63,12 @@ void JoinCommand::execute(Client *executor, Server &server)
 		channel = server.getChannel(channel_names[i]);
 		if (!channel) // Channel does not exist so we create it
 		{
-			server.addChannel(channel_names[i]);
-			channel = server.getChannel(channel_names[i]);\
-			if (!channel)
+			if (!server.addChannel(channel_names[i]) || !(channel = server.getChannel(channel_names[i])))
 			{
-				Debug::print(ERROR, "Failed to create or retrieve channel: " + channel_names[i]);
+				Debug::print(ERROR, "JoinCommand::execute: Unable to create channel " + channel_names[i]);
 				continue;
 			}
-			channel->addClient(executor, true); // First user is operator
+			channel->addOperator(executor); // First user is operator
 			join_message(executor, server, channel_names[i]);
 			continue;
 		}

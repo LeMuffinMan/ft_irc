@@ -12,6 +12,11 @@ void InviteCommand::execute(Client *executor, Server &server)
 		server.reply(executor, ERR_NEEDMOREPARAMS(executor->getNickname(), "INVITE"));
 		return;
 	}
+	if (!executor->isRegistered())
+	{
+		server.reply(executor, ERR_NOTREGISTERED(executor->getNickname()));
+		return;
+	}
 	Client *target = server.getClient(_params[0]);
 	Channel *channel = server.getChannel(_params[1]);
 	if (!target || !channel)
