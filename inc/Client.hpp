@@ -3,6 +3,7 @@
 
 #include <string>
 #include <ctime>
+#include <stdint.h>
 
 struct ClientModes
 {
@@ -37,6 +38,8 @@ public:
 	std::time_t last_ping;		 //!< Time of the last ping received
 	std::time_t timeout;		 //!< Time when the user will timeout if no activity
 	std::time_t connection_time; //!< Time when user connected to server
+	std::string ip_address;		//!< User's IP address
+	uint16_t port;				//!< User's port number
 
 	//= Methods =//
 public:
@@ -45,7 +48,8 @@ public:
 	~Client();
 
 	void clear();
-	void printClientInfo();
+	void printClientIRCInfo();
+	void printClientSocketInfo();
 
 	//= Methods for Client =//
 	void setKey(const std::string &key);

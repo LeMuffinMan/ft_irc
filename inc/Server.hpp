@@ -37,21 +37,19 @@ private:
 	typedef std::map<int, Client>::iterator clientsIterator;
 	typedef std::map<std::string, Channel *>::iterator channelsIterator;
 
-	Server(); // On ne veut pas de serveur sans mdp ni sans port
 public:
 	Server(int port, std::string password);
 	~Server();
 	std::string &getPassword();
-	void RunServer();
+	int RunServer();
 	int init_socket(int port);
-	void init_localuser(int client_fd);
+	void init_localuser(int client_fd, const std::string &ip_str, uint16_t port);
 	int init_epoll_event(int client_fd);
 
 	// I/O
 	int read_client_fd(int fd);
 	void enable_epollout(int fd);
 	void disable_epollout(int fd);
-	int write_client_fd(int fd);
 	int getEpfd() const;
 
 	// Clients managing

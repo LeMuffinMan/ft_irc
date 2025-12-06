@@ -1,4 +1,3 @@
-#include <sys/types.h>
 #include <iomanip>
 #include <sstream>
 #include <ctime>
@@ -43,7 +42,11 @@ Server::Server(int port, std::string password) : _port(port)
 // To documentate
 int Server::init_socket(int port)
 {
+	#ifdef SOCK_NONBLOCK
+	this->_server_socket = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+	#else
 	this->_server_socket = socket(AF_INET, SOCK_STREAM, 0);
+	#endif
 	if (this->_server_socket < 0)
 	{
 		perror("socket");
@@ -78,13 +81,14 @@ int Server::init_socket(int port)
 		close(this->_server_socket);
 		return -1;
 	}
-
+	#ifndef SOCK_NONBLOCK
 	if (make_nonblocking(this->_server_socket) < 0)
 	{
 		perror("make_nonblocking");
 		close(this->_server_socket);
 		return -1;
 	}
+	#endif
 	return this->_server_socket;
 }
 
@@ -108,43 +112,8 @@ void Server::disable_epollout(int fd)
 	epoll_ctl(_epfd, EPOLL_CTL_MOD, fd, &ev);
 }
 
-// to doc
-int Server::write_client_fd(int fd)
-{
-	std::string &wbuf = clients[fd].wbuf;
-
-	while (!wbuf.empty())
-	{
-		ssize_t n = send(fd, wbuf.data(), wbuf.size(), 0);
-
-		if (n > 0)
-		{
-			wbuf.erase(0, static_cast<size_t>(n));
-		}
-		// socket buffer full
-		else if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
-		{
-			return 0;
-		}
-		else
-		{
-			// error or client disconnected
-			std::cerr << "send error on fd " << fd << "\n";
-			epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
-			close(fd);
-			clients.erase(fd);
-			return -1;
-		}
-	}
-	this->disable_epollout(fd);
-	return 0;
-}
-
 int Server::init_epoll_event(int client_fd)
 {
-	// Necessaire ?
-	make_nonblocking(client_fd);
-
 	// each client registered in epoll_ctl must have an event struct associated
 	epoll_event cev;
 	std::memset(&cev, 0, sizeof(cev));
@@ -164,7 +133,7 @@ int Server::init_epoll_event(int client_fd)
 	return 0;
 }
 
-void Server::init_localuser(int client_fd)
+void Server::init_localuser(int client_fd, const std::string &ip_str, uint16_t port)
 {
 	// since we added a client in our epoll, we need a struct to represent it on our server
 	// LocalUser contains the pipes and tools, Client contains its server infos
@@ -176,6 +145,8 @@ void Server::init_localuser(int client_fd)
 	c.last_ping = std::time(NULL);
 	c.connection_time = std::time(NULL);
 	c.timeout = -1;
+	c.ip_address = ip_str;
+	c.port = port;
 	// the client object contains
 	this->clients.insert(std::make_pair(client_fd, c));
 	std::stringstream ss;
@@ -189,7 +160,9 @@ void Server::new_client(int server_fd)
 {
 	while (true)
 	{
-		int client_fd = accept(server_fd, NULL, NULL);
+		sockaddr_in client_addr;
+		socklen_t client_len = sizeof(client_addr);
+		int client_fd = accept(server_fd, reinterpret_cast<sockaddr*>(&client_addr), &client_len);
 		if (client_fd < 0)
 		{
 			if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -201,9 +174,19 @@ void Server::new_client(int server_fd)
 			perror("accept");
 			break;
 		}
+		if (make_nonblocking(client_fd) < 0)	
+		{
+			perror("make_nonblocking client");
+			close(client_fd);
+			continue;
+		}
 		if (init_epoll_event(client_fd))
 			continue;
-		init_localuser(client_fd);
+		char ip_str[INET_ADDRSTRLEN];
+		uint16_t port = ntohs(client_addr.sin_port);
+		inet_ntop(AF_INET, &client_addr.sin_addr, ip_str, sizeof(ip_str));
+		init_localuser(client_fd, ip_str, port);
+		this->clients[client_fd].printClientSocketInfo();
 	}
 }
 
@@ -317,23 +300,9 @@ void Server::is_authentification_complete(int fd)
 		Client &client = this->clients[fd];
 		this->reply(&client, RPL_WELCOME(client.getNickname(), client.getUsername(), "127.0.0.1"));
 		client.setRegistered();
-		// LocalUser &current_local_user = this->clients[fd];
-		// Client* old_client = current_local_user.client;
-		// current_local_user.client->_registered = true;
-		// Client* new_client = new Client(*old_client);
-		// new_client->setKey(old_client->getNickname());
-		// if (!this->_networkState->addClient(new_client->getNickname(), new_client))
-		// {
-		// 	Debug::print(ERROR, "Nickname collision detected during registration for " + new_client->getUsername() + ", must choose another nickname");
-		// 	Debug::print(DEBUG, "Deleting temporary new client " + new_client->getUsername());
-		// 	delete new_client;
-		// 	return;
-		// }
-		// current_local_user.client = new_client;
-		// this->_networkState->removeClient(old_client->getKey());
 		std::stringstream ss;
 		ss << clients[fd].getUsername() << " aka " << clients[fd].getNickname() << " successfully connected";
-		// new_client->printClientInfo();
+		client.printClientIRCInfo();
 		Debug::print(DEBUG, ss.str());
 	}
 }
@@ -385,7 +354,7 @@ void Server::handle_events(int n, epoll_event events[MAX_EVENTS])
 			// ERR : Error on fdSer
 			if (evs & (EPOLLHUP | EPOLLERR))
 			{ // in case of EPOLLHUP / EPOLLRDHUP : we clean our map, but is there any other possibility of client leaving without saying ?
-				std::stringstream ss;
+				// std::stringstream ss;
 				// ss << "EPOLLERR/HUP on fd " << fd;
 				// Debug::print(ERROR, ss.str());
 				this->client_quited(fd);
@@ -394,17 +363,18 @@ void Server::handle_events(int n, epoll_event events[MAX_EVENTS])
 			// RDHUP :  client closed fd, the socket is still alive
 			if (evs & EPOLLRDHUP)
 			{
-				std::stringstream ss;
-				ss << "EPOLLRDHUP on fd " << fd;
+				// std::stringstream ss;
+				// ss << "EPOLLRDHUP on fd " << fd;
 				// Debug::print(INFO, ss.str());
 				this->client_quited(fd);
 				continue;
 			}
 			// EPOLLOUT : We set that flag when we write in a client buffer, we need to send it
-			//  if (evs & EPOLLOUT) {
-			//	std::cout << "L'erreur est bien ici !" << fd << std::endl;
-			//	Server::reply(this->clients[fd], "");
-			//  }
+			if (evs & EPOLLOUT)
+			{
+				if (!this->reply(&this->clients[fd], "")) // empty message to trigger write of wbuf != true)
+					continue;
+			}
 			// EPOLLIN : There is data to read in the fd associated
 			if (evs & EPOLLIN)
 			{
@@ -423,23 +393,16 @@ void Server::handle_events(int n, epoll_event events[MAX_EVENTS])
 					// error handling
 				}
 			}
-			// EPOLLOUT : We set that flag when we write in a client buffer, we need to send it
-			if (evs & EPOLLOUT)
-			{
-				if (this->write_client_fd(fd) < 0)
-					continue;
-			}
 		}
 	}
 }
 
 // revoir ici max event et la logique
-void Server::RunServer()
+int Server::RunServer()
 {
-
 	this->_server_socket = init_socket(this->_port);
 	if (this->_server_socket < 0)
-		exit(EXIT_FAILURE);
+		return EXIT_FAILURE;
 	std::stringstream ss;
 	ss << "Listening on port: " << this->_port;
 	Debug::print(INFO, ss.str());
@@ -455,7 +418,7 @@ void Server::RunServer()
 		perror("epoll_ctl add server");
 		close(this->_server_socket);
 		close(this->_epfd);
-		exit(EXIT_FAILURE);
+		return EXIT_FAILURE;
 	}
 
 	// hash map pour associer chaque client a son fd : acceder a chaque client en utilisant son fd comme cle
@@ -480,4 +443,5 @@ void Server::RunServer()
 	}
 	close(this->_server_socket);
 	close(this->_epfd);
+	return EXIT_SUCCESS;
 }

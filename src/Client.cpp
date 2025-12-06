@@ -3,12 +3,12 @@
 #include <cstring>
 #include <sstream>
 
-Client::Client() : _key(""), _nickname(""), _username(""), _realname(""), _host(""), _last_seen(0), _password_correct(false), _registered(false), fd(-1), rbuf(""), wbuf(""), hasTriggeredEPOLLOUT(false), last_ping(0), timeout(0), connection_time(0)
+Client::Client() : _key(""), _nickname(""), _username(""), _realname(""), _host(""), _last_seen(0), _password_correct(false), _registered(false), fd(-1), rbuf(""), wbuf(""), hasTriggeredEPOLLOUT(false), last_ping(0), timeout(0), connection_time(0), ip_address(""), port(0)
 {
 	std::memset(&_mode, 0, sizeof(ClientModes));
 }
 
-Client::Client(Client const &other) : _key(other._key), _nickname(other._nickname), _username(other._username), _realname(other._realname), _mode(other._mode), _host(other._host), _last_seen(other._last_seen), _password_correct(other._password_correct), _registered(other._registered), fd(other.fd), rbuf(other.rbuf), wbuf(other.wbuf), hasTriggeredEPOLLOUT(other.hasTriggeredEPOLLOUT), last_ping(other.last_ping), timeout(other.timeout), connection_time(other.connection_time)
+Client::Client(Client const &other) : _key(other._key), _nickname(other._nickname), _username(other._username), _realname(other._realname), _mode(other._mode), _host(other._host), _last_seen(other._last_seen), _password_correct(other._password_correct), _registered(other._registered), fd(other.fd), rbuf(other.rbuf), wbuf(other.wbuf), hasTriggeredEPOLLOUT(other.hasTriggeredEPOLLOUT), last_ping(other.last_ping), timeout(other.timeout), connection_time(other.connection_time), ip_address(other.ip_address), port(other.port)
 {
 	// Copy constructor
 }
@@ -32,15 +32,13 @@ void Client::clear()
 	this->_registered = false;
 }
 
-void Client::printClientInfo()
+void Client::printClientIRCInfo()
 {
 	std::stringstream ss;
 	Debug::print(INFO, "Client Info:");
 	Debug::print(INFO, "Key: " + this->_key);
-	Debug::print(INFO, "Type: Local");
-	ss << "\tFD: " << this->fd;
+	ss << "Type: Local FD: " << this->fd;
 	Debug::print(INFO, ss.str());
-	ss.str("");
 	Debug::print(INFO, "Nickname: " + this->_nickname);
 	Debug::print(INFO, "Username: " + this->_username);
 	Debug::print(INFO, "Realname: " + this->_realname);
@@ -50,6 +48,7 @@ void Client::printClientInfo()
 		mode_flags |= 0x01;
 	if (this->_mode.is_operator)
 		mode_flags |= 0x02;
+	ss.str("");
 	ss << "Mode: " << mode_flags;
 	Debug::print(INFO, ss.str());
 	ss.str("");
@@ -57,6 +56,13 @@ void Client::printClientInfo()
 	Debug::print(INFO, ss.str());
 	Debug::print(INFO, "Password Correct: " + std::string(this->_password_correct ? "true" : "false"));
 	Debug::print(INFO, "Registered: " + std::string(this->_registered ? "true" : "false"));
+}
+
+void Client::printClientSocketInfo()
+{
+	std::stringstream ss;
+	Debug::print(INFO, "Client Socket Info:");
+	Debug::print(INFO, "Key: " + this->_key);
 	if (this->rbuf.find("\r\n") != std::string::npos)
 		Debug::print(INFO, "RBUF: " + this->rbuf.substr(0, this->rbuf.size() - 2));
 	else
@@ -65,6 +71,11 @@ void Client::printClientInfo()
 		Debug::print(INFO, "WBUF: " + this->wbuf.substr(0, this->wbuf.size() - 2));
 	else
 		Debug::print(INFO, "WBUF: " + this->wbuf);
+	Debug::print(INFO, "Has Triggered EPOLLOUT: " + std::string(this->hasTriggeredEPOLLOUT ? "true" : "false"));
+	Debug::print(INFO, "IP Address: " + this->ip_address);
+	ss.str("");
+	ss << "Port: " << this->port;
+	Debug::print(INFO, ss.str());
 	Debug::print(INFO, "End of Client Info");
 }
 
