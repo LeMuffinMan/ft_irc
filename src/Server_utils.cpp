@@ -41,3 +41,24 @@ std::string format_time(void)
 		<< std::setw(2) << std::setfill('0') << seconds;
 	return oss.str();
 }
+
+std::string format_date(void)
+{
+    std::time_t now = std::time(NULL);
+    const int timezone_offset = 3600;
+    now += timezone_offset;
+    
+    std::tm* timeinfo = std::gmtime(&now);
+    
+    const char* days[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+    const char* months[] = {"January", "February", "March", "April", "May", "June", 
+                           "July", "August", "September", "October", "November", "December"};
+    
+    std::ostringstream oss;
+    oss << days[timeinfo->tm_wday] << " " 
+        << months[timeinfo->tm_mon] << " " 
+        << timeinfo->tm_mday << " " 
+        << (timeinfo->tm_year + 1900);
+    
+    return oss.str();
+}

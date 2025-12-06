@@ -20,22 +20,12 @@ enum command_type
 	USER,
 	PASS,
 	JOIN,
-	LEAVE,
-	SEND_MESSAGE,
 	PRIVATE_MESSAGE,
-	LIST_CHANNELS,
-	LIST_USERS,
 	PONG,
 	PART,
 	QUIT,
+	TIME,
 	UNKNOWN
-};
-
-enum param_type
-{
-	BOOL_PARAM,
-	INT_PARAM,
-	STRING_PARAM
 };
 
 class ACommand

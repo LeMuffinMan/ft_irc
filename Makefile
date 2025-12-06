@@ -43,6 +43,7 @@ INC = \
 	ModeCommand.hpp \
 	PartCommand.hpp \
 	QuitCommand.hpp \
+	TimeCommand.hpp \
 	Server_utils.h \
 	Client.hpp \
 	Channel.hpp \
@@ -69,6 +70,7 @@ SRC = \
 	ModeCommand.cpp \
 	PartCommand.cpp \
 	QuitCommand.cpp \
+	TimeCommand.cpp \
 	utils.cpp \
 	Server.cpp \
 	ServerIRC.cpp \
