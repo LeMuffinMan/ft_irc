@@ -167,6 +167,7 @@ test: all
 # Aliases
 clear: clean
 fclear: fclean
+fclena: fclean
 flcean: fclean
 flcear: fclean
 

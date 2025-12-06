@@ -35,48 +35,43 @@ void Client::clear()
 void Client::printClientIRCInfo()
 {
 	std::stringstream ss;
-	Debug::print(INFO, "Client Info:");
-	Debug::print(INFO, "Key: " + this->_key);
-	ss << "Type: Local FD: " << this->fd;
-	Debug::print(INFO, ss.str());
-	Debug::print(INFO, "Nickname: " + this->_nickname);
-	Debug::print(INFO, "Username: " + this->_username);
-	Debug::print(INFO, "Realname: " + this->_realname);
-	Debug::print(INFO, "Host: " + this->_host);
+	ss << "Client IRC Info:"
+	   << "\n\tKey: " << this->_key
+	   << "\n\tType: Local FD: " << this->fd
+	   << "\n\tNickname: " << this->_nickname
+	   << "\n\tUsername: " << this->_username
+	   << "\n\tRealname: " << this->_realname
+	   << "\n\tHost: " << this->_host;
 	int mode_flags = 0;
 	if (this->_mode.is_invisible)
 		mode_flags |= 0x01;
 	if (this->_mode.is_operator)
 		mode_flags |= 0x02;
-	ss.str("");
-	ss << "Mode: " << mode_flags;
+	ss << "\n\tMode: " << mode_flags
+	   << "\n\tLast Seen: " << this->_last_seen
+	   << "\n\tPassword Correct: " << std::string(this->_password_correct ? "true" : "false")
+	   << "\n\tRegistered: " << std::string(this->_registered ? "true" : "false")
+	   << "\n\tEnd of Client Info";
 	Debug::print(INFO, ss.str());
-	ss.str("");
-	ss << "Last Seen: " << this->_last_seen;
-	Debug::print(INFO, ss.str());
-	Debug::print(INFO, "Password Correct: " + std::string(this->_password_correct ? "true" : "false"));
-	Debug::print(INFO, "Registered: " + std::string(this->_registered ? "true" : "false"));
 }
 
 void Client::printClientSocketInfo()
 {
 	std::stringstream ss;
-	Debug::print(INFO, "Client Socket Info:");
-	Debug::print(INFO, "Key: " + this->_key);
+	ss << "Client Socket Info:"
+	   << "\n\tKey: " << this->_key;
 	if (this->rbuf.find("\r\n") != std::string::npos)
-		Debug::print(INFO, "RBUF: " + this->rbuf.substr(0, this->rbuf.size() - 2));
+		ss << "\n\tRBUF: " << this->rbuf.substr(0, this->rbuf.size() - 2);
 	else
-		Debug::print(INFO, "RBUF: " + this->rbuf);
+		ss << "\n\tRBUF: " << this->rbuf;
 	if (this->rbuf.find("\r\n") != std::string::npos)
-		Debug::print(INFO, "WBUF: " + this->wbuf.substr(0, this->wbuf.size() - 2));
+		ss << "\n\tWBUF: " << this->wbuf.substr(0, this->wbuf.size() - 2);
 	else
-		Debug::print(INFO, "WBUF: " + this->wbuf);
-	Debug::print(INFO, "Has Triggered EPOLLOUT: " + std::string(this->hasTriggeredEPOLLOUT ? "true" : "false"));
-	Debug::print(INFO, "IP Address: " + this->ip_address);
-	ss.str("");
-	ss << "Port: " << this->port;
+		ss << "\n\tWBUF: " << this->wbuf;
+	ss << "\n\tHas Triggered EPOLLOUT: " << std::string(this->hasTriggeredEPOLLOUT ? "true" : "false")
+	   << "\n\tIP Address: " << this->ip_address
+	   << "\n\tPort: " << this->port;
 	Debug::print(INFO, ss.str());
-	Debug::print(INFO, "End of Client Info");
 }
 
 void Client::setKey(const std::string &key)
