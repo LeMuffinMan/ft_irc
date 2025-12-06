@@ -40,7 +40,7 @@ void JoinCommand::execute(Client *executor, Server &server)
 	char del = ',';
 	while (getline(ss_1, channel_name, del))
 		channel_names.push_back(channel_name);
-	if (_params.size() > 2)
+	if (_params.size() >= 2)
 	{
 		std::stringstream ss_2(_params[1]);
 		while (getline(ss_2, channel_key, del))
