@@ -41,6 +41,7 @@ INC = \
 	PongCommand.hpp \
 	PrivmsgCommand.hpp \
 	ModeCommand.hpp \
+	PartCommand.hpp \
 	Server_utils.h \
 	Client.hpp \
 	Channel.hpp \
@@ -65,6 +66,7 @@ SRC = \
 	PongCommand.cpp \
 	PrivmsgCommand.cpp \
 	ModeCommand.cpp \
+	PartCommand.cpp \
 	utils.cpp \
 	Server.cpp \
 	ServerIRC.cpp \

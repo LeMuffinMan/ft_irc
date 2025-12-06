@@ -34,6 +34,8 @@ private:
 	int _server_socket;
 	int _epfd;
 	std::map<std::string, Channel *> channels; //!< Map of channel name to Channel pointers
+	typedef std::map<int, Client>::iterator clientsIterator;
+	typedef std::map<std::string, Channel *>::iterator channelsIterator;
 
 	Server(); // On ne veut pas de serveur sans mdp ni sans port
 public:

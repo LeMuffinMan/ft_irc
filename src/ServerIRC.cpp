@@ -12,6 +12,8 @@ bool Server::reply(Client *client, std::string message)
 		Debug::print(ERROR, "No client given");
 		return false;
 	}
+	if (client->hasTriggeredEPOLLOUT)
+		disable_epollout(client->fd);
 	std::string &wbuf = client->wbuf;
 	if (!message.empty())
 		wbuf.append(message).append("\r\n");
@@ -34,10 +36,10 @@ bool Server::reply(Client *client, std::string message)
 		else
 		{
 			// error or client disconnected -> Un client qu'on a deja kick
-			std::cerr << "[ERROR] Send error on fd " << client->fd << "\n";
-			epoll_ctl(_epfd, EPOLL_CTL_DEL, client->fd, NULL);
-			close(client->fd);
-			clients.erase(client->fd);
+			std::stringstream ss;
+			ss << "Disconnected: send error on fd(" << client->fd << ") with errno(" << errno << ")";
+			Debug::print(ERROR, ss.str());
+			removeLocalUser(client->fd);
 			return false;
 		}
 	}
@@ -86,7 +88,7 @@ void Server::remove_inactive_clients()
 {
 	std::time_t now = std::time(NULL);
 	std::vector<int> to_erase;
-	for (std::map<int, Client>::iterator it = this->clients.begin();
+	for (clientsIterator it = this->clients.begin();
 		 it != this->clients.end(); it++)
 	{
 		// if (!it->second)
@@ -118,7 +120,7 @@ void Server::remove_inactive_clients()
 
 void Server::check_clients_ping()
 {
-	for (std::map<int, Client>::iterator it = this->clients.begin();
+	for (clientsIterator it = this->clients.begin();
 		 it != this->clients.end(); ++it)
 	{
 		// if (!it->second)
@@ -145,7 +147,7 @@ void Server::check_clients_ping()
 
 Client *Server::getClient(const std::string &nickname)
 {
-	for (std::map<int, Client>::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
+	for (clientsIterator it = this->clients.begin(); it != this->clients.end(); ++it)
 	{
 		if (it->second.getNickname() == nickname)
 			return &(it->second);

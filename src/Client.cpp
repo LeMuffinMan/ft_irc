@@ -3,11 +3,12 @@
 #include <cstring>
 #include <sstream>
 
-Client::Client() : _key(""), _nickname(""), _username(""), _realname(""), _host(""), _last_seen(0), _password_correct(false), _registered(false), fd(-1), rbuf(""), wbuf(""), last_ping(0), timeout(0), connection_time(0)
+Client::Client() : _key(""), _nickname(""), _username(""), _realname(""), _host(""), _last_seen(0), _password_correct(false), _registered(false), fd(-1), rbuf(""), wbuf(""), hasTriggeredEPOLLOUT(false), last_ping(0), timeout(0), connection_time(0)
 {
+	std::memset(&_mode, 0, sizeof(ClientModes));
 }
 
-Client::Client(Client const &other) : _key(other._key), _nickname(other._nickname), _username(other._username), _realname(other._realname), _mode(other._mode), _host(other._host), _last_seen(other._last_seen), _password_correct(other._password_correct), _registered(other._registered), fd(other.fd), rbuf(other.rbuf), wbuf(other.wbuf), last_ping(other.last_ping), timeout(other.timeout), connection_time(other.connection_time)
+Client::Client(Client const &other) : _key(other._key), _nickname(other._nickname), _username(other._username), _realname(other._realname), _mode(other._mode), _host(other._host), _last_seen(other._last_seen), _password_correct(other._password_correct), _registered(other._registered), fd(other.fd), rbuf(other.rbuf), wbuf(other.wbuf), hasTriggeredEPOLLOUT(other.hasTriggeredEPOLLOUT), last_ping(other.last_ping), timeout(other.timeout), connection_time(other.connection_time)
 {
 	// Copy constructor
 }
@@ -23,6 +24,8 @@ void Client::clear()
 	this->_username.clear();
 	this->_realname.clear();
 	this->_host.clear();
+	this->rbuf.clear();
+	this->wbuf.clear();
 	memset(&this->_mode, 0, sizeof(ClientModes));
 	this->_last_seen = 0;
 	this->_password_correct = false;
@@ -37,6 +40,7 @@ void Client::printClientInfo()
 	Debug::print(INFO, "Type: Local");
 	ss << "\tFD: " << this->fd;
 	Debug::print(INFO, ss.str());
+	ss.str("");
 	Debug::print(INFO, "Nickname: " + this->_nickname);
 	Debug::print(INFO, "Username: " + this->_username);
 	Debug::print(INFO, "Realname: " + this->_realname);
@@ -53,6 +57,15 @@ void Client::printClientInfo()
 	Debug::print(INFO, ss.str());
 	Debug::print(INFO, "Password Correct: " + std::string(this->_password_correct ? "true" : "false"));
 	Debug::print(INFO, "Registered: " + std::string(this->_registered ? "true" : "false"));
+	if (this->rbuf.find("\r\n") != std::string::npos)
+		Debug::print(INFO, "RBUF: " + this->rbuf.substr(0, this->rbuf.size() - 2));
+	else
+		Debug::print(INFO, "RBUF: " + this->rbuf);
+	if (this->rbuf.find("\r\n") != std::string::npos)
+		Debug::print(INFO, "WBUF: " + this->wbuf.substr(0, this->wbuf.size() - 2));
+	else
+		Debug::print(INFO, "WBUF: " + this->wbuf);
+	Debug::print(INFO, "End of Client Info");
 }
 
 void Client::setKey(const std::string &key)

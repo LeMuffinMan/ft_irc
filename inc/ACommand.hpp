@@ -26,6 +26,7 @@ enum command_type
 	LIST_CHANNELS,
 	LIST_USERS,
 	PONG,
+	PART,
 	UNKNOWN
 };
 

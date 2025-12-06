@@ -10,6 +10,7 @@
 #include "PongCommand.hpp"
 #include "PrivmsgCommand.hpp"
 #include "ModeCommand.hpp"
+#include "PartCommand.hpp"
 
 CommandFactory::CommandFactory() {}
 CommandFactory::~CommandFactory() {}
@@ -68,6 +69,7 @@ command_type CommandFactory::findType(std::string const &command_name)
 	if (command_name == "LIST_CHANNELS") return LIST_CHANNELS;
 	if (command_name == "LIST_USERS") return LIST_USERS;
 	if (command_name == "PONG") return PONG;
+	if (command_name == "PART") return PART;
 	return UNKNOWN;
 }
 
@@ -96,6 +98,8 @@ ACommand *CommandFactory::createCommand(const std::string &command, const std::v
 		return new PongCommand(params);
 	case MODE:
 		return new ModeCommand(params);
+	case PART:
+		return new PartCommand(params);
 	case UNKNOWN:
 	default:
 		return NULL;

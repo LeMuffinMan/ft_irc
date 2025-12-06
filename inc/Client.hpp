@@ -33,6 +33,7 @@ public:
 	int fd;						 //!< File descriptor for the user's socket connection
 	std::string rbuf;			 //!< Read buffer to store incoming data
 	std::string wbuf;			 //!< Write buffer to store outgoing data
+	bool hasTriggeredEPOLLOUT; //!< Flag indicating if EPOLLOUT is triggered
 	std::time_t last_ping;		 //!< Time of the last ping received
 	std::time_t timeout;		 //!< Time when the user will timeout if no activity
 	std::time_t connection_time; //!< Time when user connected to server

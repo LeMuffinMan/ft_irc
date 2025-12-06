@@ -23,10 +23,13 @@
 
 Server::~Server()
 {
-	for (std::map<int, Client>::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
+	for (clientsIterator it = this->clients.begin(); it != this->clients.end(); ++it)
 	{
 		close(it->first);
-		// delete it->second.client;
+	}
+	for (channelsIterator it = this->channels.begin(); it != this->channels.end(); ++it)
+	{
+		delete it->second;
 	}
 }
 
