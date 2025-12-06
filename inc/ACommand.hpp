@@ -27,6 +27,7 @@ enum command_type
 	LIST_USERS,
 	PONG,
 	PART,
+	QUIT,
 	UNKNOWN
 };
 

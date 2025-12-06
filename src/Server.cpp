@@ -195,7 +195,7 @@ void Server::client_kicked(int fd)
 	std::stringstream ss;
 	ss << "Client kicked: " << fd;
 	Debug::print(INFO, ss.str());
-	this->removeLocalUser(fd);
+	this->removeClient(fd);
 }
 
 void Server::client_quited(int fd) // leaved plutot que quited
@@ -203,19 +203,21 @@ void Server::client_quited(int fd) // leaved plutot que quited
 	std::stringstream ss;
 	ss << "Client left: " << fd;
 	Debug::print(INFO, ss.str());
-	this->removeLocalUser(fd);
+	this->removeClient(fd);
 }
 
-void Server::removeLocalUser(int fd)
+void Server::removeClient(int fd)
 {
-	epoll_ctl(this->getEpfd(), EPOLL_CTL_DEL, fd, NULL);
+	epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
 	close(fd);
 	this->clients.erase(fd);
 }
 
-int Server::getEpfd() const
+void Server::removeClient(Client *client)
 {
-	return _epfd;
+	if (!client)
+		return;
+	removeClient(client->fd);
 }
 
 std::string &Server::getPassword()
@@ -436,6 +438,7 @@ int Server::RunServer()
 			break;
 		}
 		handle_events(n, events);
+		deleteUnusedChannels();
 		#ifdef USE_FULL_CLIENT
 		this->check_clients_ping();		 // si on n'a pas eu de signe d'activite depuis trop longtemps
 		this->remove_inactive_clients(); // remove inactive localUsers after a unanswered ping

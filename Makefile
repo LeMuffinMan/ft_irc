@@ -42,6 +42,7 @@ INC = \
 	PrivmsgCommand.hpp \
 	ModeCommand.hpp \
 	PartCommand.hpp \
+	QuitCommand.hpp \
 	Server_utils.h \
 	Client.hpp \
 	Channel.hpp \
@@ -67,6 +68,7 @@ SRC = \
 	PrivmsgCommand.cpp \
 	ModeCommand.cpp \
 	PartCommand.cpp \
+	QuitCommand.cpp \
 	utils.cpp \
 	Server.cpp \
 	ServerIRC.cpp \

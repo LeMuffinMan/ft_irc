@@ -39,7 +39,7 @@ bool Server::reply(Client *client, std::string message)
 			std::stringstream ss;
 			ss << "Disconnected: send error on fd(" << client->fd << ") with errno(" << errno << ")";
 			Debug::print(ERROR, ss.str());
-			removeLocalUser(client->fd);
+			removeClient(client);
 			return false;
 		}
 	}
@@ -115,7 +115,7 @@ void Server::remove_inactive_clients()
 		}
 	}
 	for (std::vector<int>::iterator it = to_erase.begin(); it != to_erase.end(); it++)
-		removeLocalUser(*it);
+		removeClient(*it);
 }
 
 void Server::check_clients_ping()
@@ -180,4 +180,42 @@ bool Server::addChannel(const std::string &channel_name)
 		return true;
 	}
 	return false;
+}
+
+bool Server::removeChannel(const std::string &channel_name)
+{
+	if (channel_name.empty() || channel_name[0] != '#')
+		return false;
+	std::map<std::string, Channel *>::iterator it = channels.find(channel_name);
+	if (it != channels.end())
+	{
+		delete it->second;
+		channels.erase(it);
+		return true;
+	}
+	return false;
+}
+
+void Server::deleteUnusedChannels()
+{
+	static std::time_t last = std::time(NULL);
+	std::time_t now = std::time(NULL);
+
+	if (now - last < FLUSH_CHANNEL_INTERVAL)
+		return;
+	last = now;
+	std::vector<std::string> to_delete;
+	for (channelsIterator it = channels.begin(); it != channels.end(); ++it)
+	{
+		Channel *channel = it->second;
+		if (channel->getClients().empty())
+		{
+			to_delete.push_back(it->first);
+		}
+	}
+	for (size_t i = 0; i < to_delete.size(); ++i)
+	{
+		Debug::print(INFO, "Deleting unused channel: " + to_delete[i]);
+		removeChannel(to_delete[i]);
+	}
 }

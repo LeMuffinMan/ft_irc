@@ -16,7 +16,7 @@ void PongCommand::execute(Client *executor, Server &server)
 	if (executor->last_ping != std::atol(_params[0].c_str()))
 	{
 		server.reply(executor, "Invalid pong");
-		server.removeLocalUser(executor->fd);
+		server.removeClient(executor->fd);
 		return;
 	}
 	std::time_t now = std::time(NULL);

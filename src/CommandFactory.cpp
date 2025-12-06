@@ -11,6 +11,7 @@
 #include "PrivmsgCommand.hpp"
 #include "ModeCommand.hpp"
 #include "PartCommand.hpp"
+#include "QuitCommand.hpp"
 
 CommandFactory::CommandFactory() {}
 CommandFactory::~CommandFactory() {}
@@ -70,6 +71,7 @@ command_type CommandFactory::findType(std::string const &command_name)
 	if (command_name == "LIST_USERS") return LIST_USERS;
 	if (command_name == "PONG") return PONG;
 	if (command_name == "PART") return PART;
+	if (command_name == "QUIT") return QUIT;
 	return UNKNOWN;
 }
 
@@ -100,6 +102,8 @@ ACommand *CommandFactory::createCommand(const std::string &command, const std::v
 		return new ModeCommand(params);
 	case PART:
 		return new PartCommand(params);
+	case QUIT:
+		return new QuitCommand(params);
 	case UNKNOWN:
 	default:
 		return NULL;
