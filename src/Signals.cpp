@@ -20,6 +20,7 @@ int signal_init(void)
 	action_receive.sa_flags = SA_SIGINFO | SA_RESTART;
 	sigaction(SIGINT, &action_receive, NULL);
 	signal(SIGQUIT, SIG_IGN);
+	signal(SIGPIPE, SIG_IGN);
 	return (0);
 }
 
@@ -37,7 +38,7 @@ void signal_handler(int sig, siginfo_t *info, void *context)
 {
 	(void)info;
 	(void)context;
-	if (sig == SIGINT || sig == SIGQUIT)
+	if (sig == SIGINT)
 	{
 		g_sig = sig;
 		return;

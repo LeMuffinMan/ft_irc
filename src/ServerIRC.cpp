@@ -20,24 +20,32 @@ bool Server::reply(Client *client, std::string message)
 	while (!wbuf.empty())
 	{
 		ssize_t n = send(client->fd, wbuf.c_str(), wbuf.size(), 0);
-
+		int error = errno;
 		if (n > 0)
 		{
 			Debug::print(INFO, "Reply to " + client->getNickname() + ": " + wbuf.substr(0, static_cast<size_t>(n - 1)));
 			wbuf.erase(0, static_cast<size_t>(n));
 		}
-		// socket buffer full
-		else if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+		else if (n < 0)
 		{
-			Debug::print(INFO, "The message couldn't be send in one try, retrying next time");
-			enable_epollout(client->fd);
-			return 0;
+			if (error == EAGAIN || error == EWOULDBLOCK)
+			{
+				Debug::print(INFO, "The message couldn't be send in one try, retrying next time");
+				enable_epollout(client->fd);
+				return 0;
+			}
+			else if (error == EPIPE)
+			{
+				Debug::print(WARNING, "SIGPIPE received while sending message to client " + client->getNickname());
+				removeClient(client);			
+				return false;
+			}
 		}
-		else
+		else // n == 0
 		{
-			// error or client disconnected -> Un client qu'on a deja kick
+			// error as send shouldn't return 0 or client disconnected?
 			std::stringstream ss;
-			ss << "Disconnected: send error on fd(" << client->fd << ") with errno(" << errno << ")";
+			ss << "Disconnected: send error on fd(" << client->fd << ") with errno(" << error << ")";
 			Debug::print(ERROR, ss.str());
 			removeClient(client);
 			return false;
