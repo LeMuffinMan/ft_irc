@@ -156,13 +156,13 @@ void Server::init_localuser(int client_fd, const std::string &ip_str, uint16_t p
 
 // for each call to accept with our server fd, if there is a client to register, it will returns a > 0 fd
 // We register all clients available with the true loop, and break only in case of error, or when there is no client to register
-void Server::new_client(int server_fd)
+void Server::new_client()
 {
 	while (true)
 	{
 		sockaddr_in client_addr;
 		socklen_t client_len = sizeof(client_addr);
-		int client_fd = accept(server_fd, reinterpret_cast<sockaddr*>(&client_addr), &client_len);
+		int client_fd = accept(_server_socket, reinterpret_cast<sockaddr*>(&client_addr), &client_len);
 		if (client_fd < 0)
 		{
 			if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -348,7 +348,7 @@ void Server::handle_events(int n, epoll_event events[MAX_EVENTS])
 
 		if (fd == this->_server_socket)
 		{
-			this->new_client(this->_server_socket);
+			this->new_client();
 		}
 		else
 		{

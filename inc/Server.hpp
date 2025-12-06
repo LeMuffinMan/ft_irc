@@ -55,7 +55,7 @@ public:
 	// Clients managing
 	void client_kicked(int fd);
 	void handle_events(int n, epoll_event events[MAX_EVENTS]);
-	void new_client(int server_fd);
+	void new_client();
 	void removeClient(int fd);
 	void removeClient(Client *client);
 	void client_quited(int fd);
