@@ -1,4 +1,5 @@
 #include "PrivmsgCommand.hpp"
+#include <sstream>
 #include "Server.hpp"
 
 PrivmsgCommand::PrivmsgCommand(std::vector<std::string> params)
@@ -6,7 +7,6 @@ PrivmsgCommand::PrivmsgCommand(std::vector<std::string> params)
 	_params = params;
 }
 
-// supporter l;envoie a des channels, si operator ?
 void PrivmsgCommand::execute(Client *executor, Server &server)
 {
 	std::vector<int> vec;
@@ -16,7 +16,7 @@ void PrivmsgCommand::execute(Client *executor, Server &server)
 		return;
 	if (_params.size() > 2)
 	{
-		// server.reply(executor, ERR_TOOMANYTARGETS(executor->getNickname(), _params[0], 407, abort ?))
+		server.reply(executor, ERR_TOOMANYTARGETS(executor->getNickname(), _params[0], 407, abort ?))
 		return;
 	}
 	if (_params.empty())
@@ -43,20 +43,22 @@ void PrivmsgCommand::execute(Client *executor, Server &server)
 			server.reply(executor, ERR_CANNOTSENDTOCHAN(executor->getNickname(), _params[0]));
 			return;
 		}
-
-		// reply channel ici
+		std::stringstream ss;
+		ss << executor->getRealname() << " " << "PRIVMSG " << target->getName() << " :" << _params[1];
+		server.replyChannel(target, ss.str());
 		return;
 	}
 	else
 	{
-
 		Client *target = server.getClient(_params[0]);
 
 		if (!target)
 		{
 			server.reply(executor, ERR_NOSUCHNICK(executor->getNickname(), _params[0]));
 		}
-		// reply au user ici
+		std::stringstream ss;
+		ss << executor->getRealname() << " " << "PRIVMSG " << target->getNickname()  << " :" << _params[1];
+		server.reply(target, ss.str());
 		return;
 	}
 }

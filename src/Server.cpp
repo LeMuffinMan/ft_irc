@@ -151,7 +151,7 @@ void Server::init_localuser(int client_fd, const std::string &ip_str, uint16_t p
 	this->clients.insert(std::make_pair(client_fd, c));
 	std::stringstream ss;
 	ss << "New client: " << client_fd;
-	Debug::print(DEBUG, ss.str());
+	// Debug::print(DEBUG, ss.str());
 }
 
 // for each call to accept with our server fd, if there is a client to register, it will returns a > 0 fd
@@ -441,8 +441,8 @@ int Server::RunServer()
 		handle_events(n, events);
 		deleteUnusedChannels();
 		#ifdef USE_FULL_CLIENT
-		this->check_clients_ping();		 // si on n'a pas eu de signe d'activite depuis trop longtemps
-		this->remove_inactive_clients(); // remove inactive localUsers after a unanswered ping
+		// this->check_clients_ping();		 // si on n'a pas eu de signe d'activite depuis trop longtemps
+		// this->remove_inactive_clients(); // remove inactive localUsers after a unanswered ping
 		#endif
 	}
 	close(this->_server_socket);
