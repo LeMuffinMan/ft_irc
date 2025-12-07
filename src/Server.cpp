@@ -16,9 +16,9 @@
 
 // #define USE_FULL_CLIENT
 // #define USE_TESTER
-// #ifdef USE_TESTER
+#ifdef USE_TESTER
 #define USE_FULL_CLIENT
-// #endif
+#endif
 
 Server::~Server()
 {
@@ -302,7 +302,6 @@ void Server::is_authentification_complete(int fd)
 	{
 
 		Client &client = this->clients[fd];
-// :niiiick!~u@46.231.218.157 PRIVMSG nicccck :coucou
 		std::stringstream ss;
 		ss << client.getNickname() << "!~" << client.getUsername() << "@" << client.getIp(); 
 		client.setHost(ss.str());
@@ -446,8 +445,8 @@ int Server::RunServer()
 		handle_events(n, events);
 		deleteUnusedChannels();
 		#ifdef USE_FULL_CLIENT
-		// this->check_clients_ping();		 // si on n'a pas eu de signe d'activite depuis trop longtemps
-		// this->remove_inactive_clients(); // remove inactive localUsers after a unanswered ping
+		this->check_clients_ping();		 // si on n'a pas eu de signe d'activite depuis trop longtemps
+		this->remove_inactive_clients(); // remove inactive localUsers after a unanswered ping
 		#endif
 	}
 	close(this->_server_socket);
