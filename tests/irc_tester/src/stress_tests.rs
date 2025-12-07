@@ -61,7 +61,7 @@ pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
         ClientBehavior::PrivmsgNoSuchNick,
         ClientBehavior::KickNeedMoreParams,
         // ClientBehavior::KickBadChanMask,
-        // ClientBehavior::KickNoSuchChannel, //a revoir
+        ClientBehavior::KickNoSuchChannel, //a revoir
         // ClientBehavior::KickChaNoPrivsNeeded,
         // ClientBehavior::KickUserNotInChannel,
         ClientBehavior::JoinNeedMoreParams,

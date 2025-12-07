@@ -16,9 +16,9 @@
 
 // #define USE_FULL_CLIENT
 // #define USE_TESTER
-#ifdef USE_TESTER
+// #ifdef USE_TESTER
 #define USE_FULL_CLIENT
-#endif
+// #endif
 
 Server::~Server()
 {

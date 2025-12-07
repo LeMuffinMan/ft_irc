@@ -69,6 +69,9 @@ void KickCommand::execute(Client* executor, Server& server)
 	for (size_t i = 0; i < users.size(); ++i) {
 		Client* target = server.getClient(users[i]);
 		Channel* chan = server.getChannel(chans[i]);
+		if (!chan) {
+			continue;
+		}
 		if (!chan->isClientInChannel(target))
 		{
 			server.reply(executor, ERR_USERNOTINCHANNEL(executor->getNickname(), users[i], chans[i]));

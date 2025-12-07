@@ -1,7 +1,5 @@
-use crate::behaviors::*;
-// use crate::client::behaviors::*;
-use crate::behavior::nick::*;
-use crate::behavior::protocol::*;
+use crate::behaviors::nick::*;
+use crate::behaviors::protocol::*;
 use crate::behaviors::invite::*;
 use crate::behaviors::join::*;
 use crate::behaviors::kick::*;
@@ -68,7 +66,7 @@ pub enum ClientBehavior {
 
     //kick
     // KickBadChanMask,
-    // KickNoSuchChannel, // -> segfault : isClientInChannel Channel.cpp 108 (invalid read of size)
+    KickNoSuchChannel, // -> segfault : isClientInChannel Channel.cpp 108 (invalid read of size)
     KickNeedMoreParams,
     // KickChaNoPrivsNeeded,
     // KickUserNotInChannel,
@@ -137,7 +135,8 @@ impl BehaviorHandler for ClientBehavior {
             PrivmsgNoSuchNick => |p, id, t| Box::pin(privmsg_no_such_nick(p, id, t)),
 
             KickNeedMoreParams => |p, id, t| Box::pin(kick_need_more_params(p, id, t)),
-            // KickNoSuchChannel => |p, id, t| Box::pin(kick_no_such_channel(p, id, t)),
+            KickNoSuchChannel => |p, id, t| Box::pin(kick_no_such_channel(p, id, t)),
+
             JoinNeedMoreParams => |p, id, t| Box::pin(join_need_more_params(p, id, t)),
             JoinNoSuchChan => |p, id, t| Box::pin(join_no_such_channel(p, id, t)),
             JoinNewChan => |p, id, t| Box::pin(join_new_channel(p, id, t)),
