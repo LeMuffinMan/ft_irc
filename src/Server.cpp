@@ -133,8 +133,7 @@ int Server::init_epoll_event(int client_fd)
 	return 0;
 }
 
-//to rename client
-void Server::init_localuser(int client_fd, const std::string &ip_str, uint16_t port)
+void Server::initClient(int client_fd, const std::string &ip_str, uint16_t port)
 {
 	// since we added a client in our epoll, we need a struct to represent it on our server
 	// LocalUser contains the pipes and tools, Client contains its server infos
@@ -150,8 +149,8 @@ void Server::init_localuser(int client_fd, const std::string &ip_str, uint16_t p
 	c.port = port;
 	// the client object contains
 	this->clients.insert(std::make_pair(client_fd, c));
-	std::stringstream ss;
-	ss << "New client: " << client_fd;
+	// std::stringstream ss;
+	// ss << "New client: " << client_fd;
 	// Debug::print(DEBUG, ss.str());
 }
 
@@ -186,7 +185,7 @@ void Server::new_client()
 		char ip_str[INET_ADDRSTRLEN];
 		uint16_t port = ntohs(client_addr.sin_port);
 		inet_ntop(AF_INET, &client_addr.sin_addr, ip_str, sizeof(ip_str));
-		init_localuser(client_fd, ip_str, port);
+		initClient(client_fd, ip_str, port);
 		this->clients[client_fd].printClientSocketInfo();
 	}
 }
