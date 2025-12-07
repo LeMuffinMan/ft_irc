@@ -7,6 +7,7 @@
 #include <sys/epoll.h>
 #include <netinet/in.h>
 
+#include "Signals.hpp"
 #include "ACommand.hpp"
 #include "Client.hpp"
 #include "Channel.hpp"
@@ -20,11 +21,6 @@ const int MAX_EVENTS = 64; // Faire une taille dynamique (au fil de l'eau -> vec
 #define PING_TIMEOUT 3
 
 class ACommand;
-extern sig_atomic_t g_sig;
-
-int signal_init(void);
-void reset_signal_default(void);
-void ignore_signal(void);
 
 class Server
 {

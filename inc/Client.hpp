@@ -19,7 +19,6 @@ class Client
 {
 	//= Variables =//
 private:
-	std::string _key; //!< User's key in map
 	//= Attributes for Client =//
 	std::string _nickname; //!< User's nickname
 	std::string _username; //!< User's username (ident)
@@ -48,8 +47,10 @@ public:
 	~Client();
 
 	void clear();
+	void printClientInfo();
 	void printClientIRCInfo();
 	void printClientSocketInfo();
+	void printConnInfo();
 
 	//= Methods for Client =//
 	void setKey(const std::string &key);

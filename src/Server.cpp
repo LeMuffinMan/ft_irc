@@ -1,13 +1,14 @@
 #include <iomanip>
 #include <sstream>
 #include <ctime>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <netdb.h>
 
 #include "Server_utils.h"
 #include "Server.hpp"
@@ -42,45 +43,74 @@ Server::Server(int port, std::string password) : _port(port)
 // To documentate
 int Server::init_socket(int port)
 {
+	struct addrinfo hints;
+    struct addrinfo *result, *rp;
+
+	memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+    hints.ai_socktype = SOCK_STREAM; /* Stream socket */
+    hints.ai_flags = AI_PASSIVE;    /* For wildcard IP address */
+    hints.ai_protocol = 0;          /* Any protocol */
+    hints.ai_canonname = NULL;
+    hints.ai_addr = NULL;
+    hints.ai_next = NULL;
+
+{
+		int getaddrinfo_ret;
+		std::stringstream ss;
+
+		ss << port;
+		getaddrinfo_ret = getaddrinfo(NULL, ss.str().c_str(), &hints, &result);
+    if (getaddrinfo_ret != 0) {
+		ss.str("");
+		ss << "getaddrinfo: " << gai_strerror(getaddrinfo_ret);
+        Debug::print(ERROR, ss.str());
+		return -1;
+	}
+}
+	for (rp = result; rp != NULL; rp = rp->ai_next)
+	{
 	#ifdef SOCK_NONBLOCK
-	this->_server_socket = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+		this->_server_socket = socket(rp->ai_family, rp->ai_socktype | SOCK_NONBLOCK, rp->ai_protocol);
 	#else
-	this->_server_socket = socket(AF_INET, SOCK_STREAM, 0);
+		this->_server_socket = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 	#endif
-	if (this->_server_socket < 0)
-	{
-		perror("socket");
-		return -1;
-	}
+		if (this->_server_socket == -1)
+		{
+			perror("socket");
+			if (rp->ai_next != NULL)
+				Debug::print(WARNING, "Could not create socket, trying next...");
+			else
+				Debug::print(ERROR, "Could not create socket, no more options left.");
+			continue;
+		}
 
-	int opt = 1;
-	if (setsockopt(this->_server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-	{
-		perror("setsockopt");
-		close(this->_server_socket);
-		return -1;
-	}
+		int opt = 1;
+		if (setsockopt(this->_server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+		{
+			perror("setsockopt");
+			close(this->_server_socket);
+			freeaddrinfo(result);
+			return -1;
+		}
 
-	sockaddr_in sin;
-	::memset(&sin, 0, sizeof(sin));
-
-	sin.sin_family = AF_INET;
-	sin.sin_addr.s_addr = htonl(INADDR_ANY);
-
-	sin.sin_port = htons(static_cast<uint16_t>(port));
-
-	if (bind(this->_server_socket, reinterpret_cast<const sockaddr *>(&sin), sizeof(sin)) < 0)
-	{
+		if (bind(this->_server_socket, rp->ai_addr, rp->ai_addrlen) == 0)
+			break; /* Success */
 		perror("bind");
 		close(this->_server_socket);
-		return -1;
-	}
-	if (listen(this->_server_socket, SOMAXCONN) < 0)
+		if (rp->ai_next != NULL)
+			Debug::print(WARNING, "Could not bind socket, trying next...");
+		else
+			Debug::print(ERROR, "Could not bind socket, no more options left.");
+    }
+
+    if (rp == NULL) /* No address succeeded */
 	{
-		perror("listen");
-		close(this->_server_socket);
-		return -1;
-	}
+		freeaddrinfo(result);
+		Debug::print(ERROR, "Couldn't find a valid address\n");
+		return (-1);
+    }
+	freeaddrinfo(result); /* No longer needed */
 	#ifndef SOCK_NONBLOCK
 	if (make_nonblocking(this->_server_socket) < 0)
 	{
@@ -89,6 +119,12 @@ int Server::init_socket(int port)
 		return -1;
 	}
 	#endif
+	if (listen(this->_server_socket, SOMAXCONN) < 0)
+	{
+		perror("listen");
+		close(this->_server_socket);
+		return -1;
+	}
 	return this->_server_socket;
 }
 

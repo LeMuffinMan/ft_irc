@@ -3,12 +3,12 @@
 #include <cstring>
 #include <sstream>
 
-Client::Client() : _key(""), _nickname(""), _username(""), _realname(""), _host(""), _last_seen(0), _password_correct(false), _registered(false), fd(-1), rbuf(""), wbuf(""), hasTriggeredEPOLLOUT(false), last_ping(0), timeout(0), connection_time(0), _ip_address(""), port(0)
+Client::Client() : _nickname(""), _username(""), _realname(""), _host(""), _last_seen(0), _password_correct(false), _registered(false), fd(-1), rbuf(""), wbuf(""), hasTriggeredEPOLLOUT(false), last_ping(0), timeout(0), connection_time(0), _ip_address(""), port(0)
 {
 	std::memset(&_mode, 0, sizeof(ClientModes));
 }
 
-Client::Client(Client const &other) : _key(other._key), _nickname(other._nickname), _username(other._username), _realname(other._realname), _mode(other._mode), _host(other._host), _last_seen(other._last_seen), _password_correct(other._password_correct), _registered(other._registered), fd(other.fd), rbuf(other.rbuf), wbuf(other.wbuf), hasTriggeredEPOLLOUT(other.hasTriggeredEPOLLOUT), last_ping(other.last_ping), timeout(other.timeout), connection_time(other.connection_time), _ip_address(other._ip_address), port(other.port)
+Client::Client(Client const &other) : _nickname(other._nickname), _username(other._username), _realname(other._realname), _mode(other._mode), _host(other._host), _last_seen(other._last_seen), _password_correct(other._password_correct), _registered(other._registered), fd(other.fd), rbuf(other.rbuf), wbuf(other.wbuf), hasTriggeredEPOLLOUT(other.hasTriggeredEPOLLOUT), last_ping(other.last_ping), timeout(other.timeout), connection_time(other.connection_time), _ip_address(other._ip_address), port(other.port)
 {
 	// Copy constructor
 }
@@ -19,7 +19,6 @@ Client::~Client()
 
 void Client::clear()
 {
-	this->_key.clear();
 	this->_nickname.clear();
 	this->_username.clear();
 	this->_realname.clear();
@@ -36,7 +35,7 @@ void Client::printClientIRCInfo()
 {
 	std::stringstream ss;
 	ss << "Client IRC Info:"
-	   << "\n\tKey: " << this->_key
+	   << "\n\tKey: " << this->fd
 	   << "\n\tType: Local FD: " << this->fd
 	   << "\n\tNickname: " << this->_nickname
 	   << "\n\tUsername: " << this->_username
@@ -55,11 +54,27 @@ void Client::printClientIRCInfo()
 	Debug::print(INFO, ss.str());
 }
 
+void Client::printClientInfo()
+{
+	this->printClientIRCInfo();
+	this->printClientSocketInfo();
+}
+
+void Client::printConnInfo()
+{
+	std::stringstream ss;
+	ss << "Client Connection Info:"
+	   << "\n\tKey: " << this->fd
+	   << "\n\tIP Address: " << this->_ip_address
+	   << "\n\tPort: " << this->port;
+	Debug::print(INFO, ss.str());
+}
+
 void Client::printClientSocketInfo()
 {
 	std::stringstream ss;
 	ss << "Client Socket Info:"
-	   << "\n\tKey: " << this->_key;
+	   << "\n\tKey: " << this->fd;
 	if (this->rbuf.find("\r\n") != std::string::npos)
 		ss << "\n\tRBUF: " << this->rbuf.substr(0, this->rbuf.size() - 2);
 	else
@@ -72,16 +87,6 @@ void Client::printClientSocketInfo()
 	   << "\n\tIP Address: " << this->_ip_address
 	   << "\n\tPort: " << this->port;
 	Debug::print(INFO, ss.str());
-}
-
-void Client::setKey(const std::string &key)
-{
-	this->_key = key;
-}
-
-const std::string &Client::getKey() const
-{
-	return this->_key;
 }
 
 void Client::setNickname(const std::string &nickname)
