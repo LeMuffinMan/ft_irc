@@ -16,7 +16,7 @@ void PrivmsgCommand::execute(Client *executor, Server &server)
 		return;
 	if (_params.size() > 2)
 	{
-		server.reply(executor, ERR_TOOMANYTARGETS(executor->getNickname(), _params[0], 407, abort ?))
+		server.reply(executor, ERR_TOOMANYTARGETS(executor->getNickname(), _params[0], "407"));
 		return;
 	}
 	if (_params.empty())
@@ -44,7 +44,7 @@ void PrivmsgCommand::execute(Client *executor, Server &server)
 			return;
 		}
 		std::stringstream ss;
-		ss << executor->getRealname() << " " << "PRIVMSG " << target->getName() << " :" << _params[1];
+		ss << ":" << executor->getHost() << " " << "PRIVMSG " << target->getName() << " :" << _params[1];
 		server.replyChannel(target, ss.str());
 		return;
 	}
@@ -55,9 +55,12 @@ void PrivmsgCommand::execute(Client *executor, Server &server)
 		if (!target)
 		{
 			server.reply(executor, ERR_NOSUCHNICK(executor->getNickname(), _params[0]));
+			return;
 		}
 		std::stringstream ss;
-		ss << executor->getRealname() << " " << "PRIVMSG " << target->getNickname()  << " :" << _params[1];
+		ss << ":" << executor->getHost() << " " << "PRIVMSG "
+			<< target->getNickname()  << " :" 
+			<< _params[1];
 		server.reply(target, ss.str());
 		return;
 	}

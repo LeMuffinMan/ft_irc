@@ -3,12 +3,12 @@
 #include <cstring>
 #include <sstream>
 
-Client::Client() : _key(""), _nickname(""), _username(""), _realname(""), _host(""), _last_seen(0), _password_correct(false), _registered(false), fd(-1), rbuf(""), wbuf(""), hasTriggeredEPOLLOUT(false), last_ping(0), timeout(0), connection_time(0), ip_address(""), port(0)
+Client::Client() : _key(""), _nickname(""), _username(""), _realname(""), _host(""), _last_seen(0), _password_correct(false), _registered(false), fd(-1), rbuf(""), wbuf(""), hasTriggeredEPOLLOUT(false), last_ping(0), timeout(0), connection_time(0), _ip_address(""), port(0)
 {
 	std::memset(&_mode, 0, sizeof(ClientModes));
 }
 
-Client::Client(Client const &other) : _key(other._key), _nickname(other._nickname), _username(other._username), _realname(other._realname), _mode(other._mode), _host(other._host), _last_seen(other._last_seen), _password_correct(other._password_correct), _registered(other._registered), fd(other.fd), rbuf(other.rbuf), wbuf(other.wbuf), hasTriggeredEPOLLOUT(other.hasTriggeredEPOLLOUT), last_ping(other.last_ping), timeout(other.timeout), connection_time(other.connection_time), ip_address(other.ip_address), port(other.port)
+Client::Client(Client const &other) : _key(other._key), _nickname(other._nickname), _username(other._username), _realname(other._realname), _mode(other._mode), _host(other._host), _last_seen(other._last_seen), _password_correct(other._password_correct), _registered(other._registered), fd(other.fd), rbuf(other.rbuf), wbuf(other.wbuf), hasTriggeredEPOLLOUT(other.hasTriggeredEPOLLOUT), last_ping(other.last_ping), timeout(other.timeout), connection_time(other.connection_time), _ip_address(other._ip_address), port(other.port)
 {
 	// Copy constructor
 }
@@ -69,7 +69,7 @@ void Client::printClientSocketInfo()
 	else
 		ss << "\n\tWBUF: " << this->wbuf;
 	ss << "\n\tHas Triggered EPOLLOUT: " << std::string(this->hasTriggeredEPOLLOUT ? "true" : "false")
-	   << "\n\tIP Address: " << this->ip_address
+	   << "\n\tIP Address: " << this->_ip_address
 	   << "\n\tPort: " << this->port;
 	Debug::print(INFO, ss.str());
 }
@@ -162,4 +162,14 @@ bool Client::isRegistered() const
 void Client::setRegistered()
 {
 	this->_registered = true;
+}
+
+void Client::setIp(const std::string &ip)
+{
+	this->_ip_address = ip;
+}
+
+const std::string &Client::getIp() const
+{
+	return this->_ip_address;
 }

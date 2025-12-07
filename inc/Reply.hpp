@@ -9,7 +9,7 @@ Command Responses (001-399)
 ============================================================================
 */
 
-#define RPL_WELCOME(nick, user, host) "001 " + nick + " :Welcome to the Internet Relay Network " + nick + "!" + user + "@" + host
+#define RPL_WELCOME(nick, host) "001 " + nick + " :Welcome to the Internet Relay Network " + host
 #define RPL_YOURHOST(nick, servername, version) "002 " + nick + " :Your host is " + servername + ", running version " + version
 #define RPL_CREATED(nick, date) "003 " + nick + " :This server was created " + date
 #define RPL_MYINFO(nick, servername, version, usermodes, chanmodes) "004 " + nick + " " + servername + " " + version + " " + usermodes + " " + chanmodes

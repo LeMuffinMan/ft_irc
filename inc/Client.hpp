@@ -38,7 +38,7 @@ public:
 	std::time_t last_ping;		 //!< Time of the last ping received
 	std::time_t timeout;		 //!< Time when the user will timeout if no activity
 	std::time_t connection_time; //!< Time when user connected to server
-	std::string ip_address;		//!< User's IP address
+	std::string _ip_address;		//!< User's IP address
 	uint16_t port;				//!< User's port number
 
 	//= Methods =//
@@ -70,6 +70,9 @@ public:
 	void setPasswordCorrect();
 	bool isRegistered() const;
 	void setRegistered();
+	void setIp(const std::string &ip);
+	const std::string &getIp() const;
+
 };
 
 #endif // CLIENT_HPP

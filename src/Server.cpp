@@ -133,6 +133,7 @@ int Server::init_epoll_event(int client_fd)
 	return 0;
 }
 
+//to rename client
 void Server::init_localuser(int client_fd, const std::string &ip_str, uint16_t port)
 {
 	// since we added a client in our epoll, we need a struct to represent it on our server
@@ -145,7 +146,7 @@ void Server::init_localuser(int client_fd, const std::string &ip_str, uint16_t p
 	c.last_ping = std::time(NULL);
 	c.connection_time = std::time(NULL);
 	c.timeout = -1;
-	c.ip_address = ip_str;
+	c._ip_address = ip_str;
 	c.port = port;
 	// the client object contains
 	this->clients.insert(std::make_pair(client_fd, c));
@@ -301,9 +302,13 @@ void Server::is_authentification_complete(int fd)
 	{
 
 		Client &client = this->clients[fd];
-		this->reply(&client, RPL_WELCOME(client.getNickname(), client.getUsername(), "127.0.0.1"));
-		client.setRegistered();
+// :niiiick!~u@46.231.218.157 PRIVMSG nicccck :coucou
 		std::stringstream ss;
+		ss << client.getNickname() << "!~" << client.getUsername() << "@" << client.getIp(); 
+		client.setHost(ss.str());
+		ss.str("");
+		this->reply(&client, RPL_WELCOME(client.getNickname(), client.getHost()));
+		client.setRegistered();
 		ss << clients[fd].getUsername() << " aka " << clients[fd].getNickname() << " successfully connected";
 		client.printClientIRCInfo();
 		Debug::print(DEBUG, ss.str());

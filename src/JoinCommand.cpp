@@ -93,11 +93,15 @@ void JoinCommand::execute(Client *executor, Server &server)
 			}
 			channel->addClient(executor);
 			join_message(executor, server, channel_names[i]);
-			server.reply(executor, RPL_TOPIC(executor->getNickname(), channel_names[i], channel->getTopic()));
+			if (!channel->getTopic().empty()) {
+				server.reply(executor, RPL_TOPIC(executor->getNickname(), channel_names[i], channel->getTopic()));
+			}
 			continue;
 		}
 		channel->addClient(executor);
 		join_message(executor, server, channel_names[i]);
-		server.reply(executor, RPL_TOPIC(executor->getNickname(), channel_names[i], channel->getTopic()));
+		if (!channel->getTopic().empty()) {
+			server.reply(executor, RPL_TOPIC(executor->getNickname(), channel_names[i], channel->getTopic()));
+		}
 	}
 }
