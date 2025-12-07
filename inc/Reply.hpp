@@ -131,7 +131,7 @@ Error Replies (400-599)
 #define ERR_CANNOTSENDTOCHAN(nick, channel) "404 " + nick + " " + channel + " :Cannot send to channel"
 #define ERR_TOOMANYCHANNELS(nick, channel) "405 " + nick + " " + channel + " :You have joined too many channels"
 #define ERR_WASNOSUCHNICK(nick, target) "406 " + nick + " " + target + " :There was no such nickname"
-#define ERR_TOOMANYTARGETS(nick, target, errorcode, abort) "407 " + nick + " " + target + " :" + errorcode + " recipients. " + abort
+#define ERR_TOOMANYTARGETS(nick, target, errorcode) "407 " + nick + " " + target + " :" + errorcode + " recipients."
 #define ERR_NOSUCHSERVICE(nick, service) "408 " + nick + " " + service + " :No such service"
 #define ERR_NOORIGIN(nick) "409 " + nick + " :No origin specified"
 
