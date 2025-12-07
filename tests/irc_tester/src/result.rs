@@ -1,4 +1,4 @@
-use crate::client::ClientBehavior;
+use crate::behavior::ClientBehavior;
 use tokio::time::Duration;
 
 #[derive(Debug)]

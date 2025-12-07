@@ -1,10 +1,7 @@
 use crate::client::Client;
 use anyhow::Result;
 
-//- normal : rejoindre un canal en le creant
-//- normal : rejoindre un canal existant, avec un user dedans
-//
-//      Waiting MODE 
+//      Waiting MODE
 //          ERR_INVITEONLYCHAN
 //          ERR_BADCHANNELKEY
 //          ERR_CHANNELISFULL
@@ -14,102 +11,142 @@ use anyhow::Result;
 //
 //          ERR_TOOMANYCHANNELS
 //
+//
+//avec MODE :
+// ClientBehavior::JoinInviteOnlyChannel => join_invite_only_channel(port, id, timeout_ms).await,
+// ClientBehavior::JoinBadChannelKey => join_bad_channel_key(port, id, timeout_ms).await,
+// ClientBehavior::JoinChannelIsFull => join_channel_is_full(port, id, timeout_ms).await,
 
 pub async fn join_need_more_params(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
-    let nick = format!("stress_{}", id);
+    let nick = format!("{}_join_more_params", id);
     let mut client = Client::connect(port).await?;
-
-    client.send("PASS password\r\n", 0).await?;
+    client.authenticate(nick, timeout_ms).await?;
     client
-        .send(&format!("NICK {}_join_more_params\r\n", nick), 0)
-        .await?;
-    client
-        .send(
-            &format!(
-                "USER {}_join_more_params 0 * :join_need_more_params\r\n",
-                nick
-            ),
-            0,
+        .try_expect(
+            "JOIN \r\n",
+            " :Not enough parameters",
+            "ERR_NEEDMOREPARAMS missing",
+            timeout_ms,
         )
         .await?;
-
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-        if !line.contains("Welcome to the Internet Relay Network") {
-            return Err(anyhow::anyhow!("welcome message missing | received [{line}]"));
-        }
-    }
-
-    client.send("JOIN \r\n", 0).await?;
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-        if !line.contains(" :Not enough parameters") {
-            return Err(anyhow::anyhow!("Err_NEEDMOREPARAMS missing | received [{line}]"));
-        }
-    }
     client.shutdown().await?;
     Ok(())
 }
 
 pub async fn join_no_such_channel(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
-    let channel = format!("no_such_chan_{}", id);
+    let nick = format!("{}_no_such_chan", id);
     let mut client = Client::connect(port).await?;
-
-    client.send("PASS password\r\n", 0).await?;
+    client.authenticate(nick, timeout_ms).await?;
     client
-        .send(&format!("NICK {}_join_ns_chan\r\n", channel), 0)
-        .await?;
-    client
-        .send(
-            &format!("USER {}_join_ns_chan 0 * :join_ns_chan\r\n", channel),
-            0,
+        .try_expect(
+            "JOIN nosuchchannel\r\n",
+            " :No such channel",
+            "ERR_NOSUCHCHAN missing",
+            timeout_ms,
         )
         .await?;
-
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-        if !line.contains("Welcome to the Internet Relay Network") {
-            return Err(anyhow::anyhow!("welcome message missing | received [{line}]"));
-        }
-    }
-
-    client.send("JOIN nosuchchannel\r\n", 0).await?;
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-        if !line.contains(" :No such channel") {
-            return Err(anyhow::anyhow!("ERR_NOSUCHCHAN missing | received [{line}]"));
-        }
-    }
     client.shutdown().await?;
     Ok(())
 }
-
 
 pub async fn join_new_channel(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
-    let channel = format!("{}_join_new_chan", id);
+    let nick = format!("{}_join_new_chan", id);
     let mut client = Client::connect(port).await?;
-
-    client.send("PASS password\r\n", 0).await?;
+    client.authenticate(nick, timeout_ms).await?;
     client
-        .send(&format!("NICK {}_join_new_chan\r\n", channel), 0)
-        .await?;
-    client
-        .send(
-            &format!("USER {} 0 * :join_new_chan\r\n", channel),
-            0,
+        .try_expect(
+            "JOIN #newchan\r\n",
+            "join_new_chan JOIN #newchan",
+            "No confirmation of chan creation",
+            timeout_ms,
         )
         .await?;
-
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-        if !line.contains("Welcome to the Internet Relay Network") {
-            return Err(anyhow::anyhow!("welcome message missing | received [{line}]"));
-        }
-    }
-
-    client.send("JOIN #newchan\r\n", 0).await?;
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-        if !line.contains("join_new_chan JOIN #newchan") {
-            return Err(anyhow::anyhow!("No confirmation of chan creation | received [{line}]"));
-        }
-    }
     client.shutdown().await?;
     Ok(())
 }
 
+pub async fn join_not_registered(port: u16, _id: usize, timeout_ms: u64) -> Result<()> {
+    let mut client = Client::connect(port).await?;
+    client.send("PASS password\r\n", 0).await?;
+    client
+        .try_expect(
+            "JOIN #newchan\r\n",
+            " :You have not registered",
+            "ERR_NOTREGISTERED missing",
+            timeout_ms,
+        )
+        .await?;
+    client.shutdown().await?;
+    Ok(())
+}
 
+pub async fn join_existing_chan(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
+    let nick = format!("{}_join_exis_chan", id);
+    let mut client = Client::connect(port).await?;
+    client.authenticate(nick, timeout_ms).await?;
+    client
+        .try_expect(
+            "JOIN #newchan\r\n",
+            "JOIN #newchan",
+            "Failed to join an existing chan without pw ",
+            timeout_ms,
+        )
+        .await?;
+    client.shutdown().await?;
+    Ok(())
+}
+
+pub async fn join_existing_multi_chan(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
+    let nick = format!("{}_join_multi", id);
+    let mut client = Client::connect(port).await?;
+    client.authenticate(nick, timeout_ms).await?;
+    client
+        .try_expect(
+            "JOIN #newchan{},#secondnewchan{}\r\n",
+            "JOIN #newchan",
+            "Failed to join first chan ",
+            timeout_ms,
+        )
+        .await?;
+    client
+        .expect(
+            "JOIN #secondnewchan{}",
+            "Failed to join second chan ",
+            timeout_ms,
+        )
+        .await?;
+    client.shutdown().await?;
+    Ok(())
+}
+
+pub async fn join_existing_chan_mdp(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
+    let nick = format!("{}_join_mdp_chan", id);
+    let mut client = Client::connect(port).await?;
+    client.authenticate(nick, timeout_ms).await?;
+    client
+        .try_expect(
+            "JOIN #mdp_chan chan\r\n",
+            "JOIN #mdp_chan",
+            "Failed to join chan_with_mdp ",
+            timeout_ms,
+        )
+        .await?;
+    client.shutdown().await?;
+    Ok(())
+}
+
+pub async fn join_invite_only_chan(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
+    let nick = format!("{}_join_inviteO_chan", id);
+    let mut client = Client::connect(port).await?;
+    client.authenticate(nick, timeout_ms).await?;
+    client
+        .try_expect(
+            "JOIN #invite_chan chan\r\n",
+            " :Cannot join channel (+i)",
+            "ERR_INVITEONLYCHAN missing ",
+            timeout_ms,
+        )
+        .await?;
+    client.shutdown().await?;
+    Ok(())
+}

@@ -49,6 +49,7 @@ public:
 	bool isKeySame(const std::string &key) const;
 	void setTopic(const std::string &topic);
 	const std::string &getTopic() const;
+	const std::string &getName() const;
 
 	bool addClient(Client *client);
 	bool removeClient(Client *client);

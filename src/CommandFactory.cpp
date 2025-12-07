@@ -6,6 +6,7 @@
 #include "TopicCommand.hpp"
 #include "PassCommand.hpp"
 #include "NickCommand.hpp"
+#include "KickCommand.hpp"
 #include "UserCommand.hpp"
 #include "PongCommand.hpp"
 #include "PrivmsgCommand.hpp"
@@ -89,6 +90,8 @@ ACommand *CommandFactory::createCommand(const std::string &command, const std::v
 		return new JoinCommand(params);
 	case NICK:
 		return new NickCommand(params);
+	case KICK:
+		return new KickCommand(params);
 	case USER:
 		return new UserCommand(params);
 	case PASS:

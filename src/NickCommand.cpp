@@ -59,7 +59,3 @@ void NickCommand::execute(Client *executor, Server &server)
 	executor->setNickname(_params[0]);
 	return;
 }
-
-// ERR_NICKCOLLISION-> netword seulement
-// ERR_UNAVAILRESOURCE	-> admin / root ...
-// ERR_RESTRICTED -> pour un statut de guest

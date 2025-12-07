@@ -40,6 +40,7 @@ INC = \
 	UserCommand.hpp \
 	PongCommand.hpp \
 	PrivmsgCommand.hpp \
+	KickCommand.hpp \
 	ModeCommand.hpp \
 	PartCommand.hpp \
 	QuitCommand.hpp \
@@ -67,6 +68,7 @@ SRC = \
 	UserCommand.cpp \
 	PongCommand.cpp \
 	PrivmsgCommand.cpp \
+	KickCommand.cpp \
 	ModeCommand.cpp \
 	PartCommand.cpp \
 	QuitCommand.cpp \
@@ -164,9 +166,18 @@ re:
 CLIENTS ?= 1000
 LEAKS ?= 0
 STRESS ?= 0
+LOG ?= 0
+BEH ?= 0
+#PORT?=6667
 
-test: all
-	./tests/scripts/run.sh $(CLIENTS) $(LEAKS) $(STRESS)
+test:
+ifeq ($(LEAKS),1)
+	$(MAKE) fclean
+	@$(MAKE) $(NAME) CXXFLAGS="$(CXXFLAGS_DEBUG) -D USE_TESTER=1"
+else
+	@$(MAKE) $(NAME)
+endif
+	./tests/run.sh $(CLIENTS) $(LEAKS) $(STRESS) $(LOG) $(BEH)
 
 # Aliases
 clear: clean

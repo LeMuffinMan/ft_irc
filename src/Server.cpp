@@ -211,6 +211,7 @@ void Server::removeClient(int fd)
 	epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
 	close(fd);
 	this->clients.erase(fd);
+	// this->clients[fd].printClientInfo();
 }
 
 void Server::removeClient(Client *client)

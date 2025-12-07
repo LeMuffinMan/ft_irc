@@ -5,15 +5,9 @@ use tokio::time::{Duration, timeout};
 pub async fn legit_ignore_pong(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("stress_{}", id);
     let mut client = Client::connect(port).await?;
-
-    client.send("PASS password\r\n", 0).await?;
-    client.send(&format!("NICK {}\r\n", nick), 0).await?;
-    client
-        .send(&format!("USER {} 0 * :LegitIgnorePong\r\n", nick), 0)
-        .await?;
-
     let total_timeout = Duration::from_secs(20);
 
+    client.authenticate(nick, timeout_ms).await?;
     let result = timeout(total_timeout, async {
         loop {
             match client.read_line_timeout(timeout_ms).await? {
@@ -29,7 +23,6 @@ pub async fn legit_ignore_pong(port: u16, id: usize, timeout_ms: u64) -> Result<
         }
     })
     .await;
-
     match result {
         Ok(inner) => inner,
         Err(_) => Err(anyhow::anyhow!("Timeout 20s waiting for server kick")),
@@ -63,18 +56,7 @@ pub async fn pong_only(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
 pub async fn wrong_pong(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("{}_wrong_pong", id);
     let mut client = Client::connect(port).await?;
-
-    client.send("PASS password\r\n", 0).await?;
-    client.send(&format!("NICK {}\r\n", nick), 0).await?;
-    client
-        .send(&format!("USER {} 0 * :WrongPong\r\n", nick), 0)
-        .await?;
-
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-        if !line.contains("Welcome to the Internet Relay Network") {
-            return Err(anyhow::anyhow!("welcome message missing | received [{line}]"));
-        }
-    }
+    client.authenticate(nick, timeout_ms).await?;
 
     while let Some(line) = client.read_line_timeout(timeout_ms).await? {
         if line.starts_with("PING") {

@@ -11,11 +11,12 @@ void UserCommand::execute(Client *executor, Server &server)
 	(void)server;
 	if (!executor->isPasswordCorrect())
 	{
-		// mdp not first
+		server.reply(executor, "PASS must be first");
+		server.client_kicked(executor->fd);
 		return;
 	}
 
-	if (_params.size() < 4) // on veut 0 et * quand meme ?
+	if (_params.size() < 4)
 	{
 		server.reply(executor, ERR_NEEDMOREPARAMS(executor->getNickname(), "USER"));
 		return;
@@ -26,11 +27,7 @@ void UserCommand::execute(Client *executor, Server &server)
 		server.reply(executor, ERR_ALREADYREGISTRED(executor->getNickname()));
 		return;
 	}
-	// on accepte deux username identique ?
-
-	// std::cout << "New username : " << _params[1] << std::endl;
 	executor->setUsername(_params[0]);
 	executor->setRealname(_params[3]);
-
 	return;
 }

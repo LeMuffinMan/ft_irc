@@ -5,29 +5,17 @@ pub async fn nick_normal_claim_and_change(port: u16, id: usize, timeout_ms: u64)
     let nick = format!("nick_change_{}", id);
     let mut client = Client::connect(port).await?;
 
-    client.send("PASS password\r\n", 0).await?;
+    client.authenticate(nick, timeout_ms).await?;
     client
-        .send(&format!("NICK {}\r\n", nick), 0)
+        .try_expect(
+            &format!("NICK {}_claimed\r\n", id),
+            "updated his nickname to",
+            "Failed to update nickname ",
+            timeout_ms,
+        )
         .await?;
-    client
-        .send(&format!("USER {} 0 * :NoNick\r\n", nick), 0)
-        .await?;
-
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-        if !line.contains("Welcome to the Internet Relay Network") {
-            return Err(anyhow::anyhow!("Welcome message missing | received [{line}]"));
-        }
-    }
-
-    client
-        .send(&format!("NICK {}_claimed\r\n", nick), 0)
-        .await?;
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-        if !line.contains("updated his nickname to") {
-            return Err(anyhow::anyhow!("failed to update nickname | received [{line}]"));
-        }
-    }
     client.shutdown().await?;
+
     Ok(())
 }
 
@@ -35,28 +23,31 @@ pub async fn nick_no_nickname_given(port: u16, id: usize, timeout_ms: u64) -> Re
     let nick = format!("nonickgiven_{}", id);
     let mut client = Client::connect(port).await?;
 
-    client.send("PASS password\r\n", 0).await?;
+    client.authenticate(nick, timeout_ms).await?;
     client
-        .send(&format!("NICK {}\r\n", nick), 0)
+        .try_expect(
+            "NICK\r\n",
+            "No nickname given",
+            "Failed to reject update ",
+            timeout_ms,
+        )
         .await?;
-    client
-        .send(&format!("USER {} 0 * :NoNick\r\n", nick), 0)
-        .await?;
-
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-        if !line.contains("Welcome to the Internet Relay Network") {
-            return Err(anyhow::anyhow!("Welcome message missing | received [{line}]"));
-        }
-    }
-
-    client.send("NICK\r\n", 0).await?;
-    if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-        if !line.contains("No nickname given") {
-            return Err(anyhow::anyhow!("failed to reject update | received [{line}]"));
-        }
-    }
     client.shutdown().await?;
+
     Ok(())
 }
 
+pub async fn nick_already_in_use(port: u16, _id: usize, timeout_ms: u64) -> Result<()> {
+    let mut client = Client::connect(port).await?;
+    client
+        .try_expect(
+            "PASS password\r\nNICK reserved_nick\r\n",
+            "Nickname is already in use",
+            "ERR_NICKALREADYINUSE missing ",
+            timeout_ms,
+        )
+        .await?;
+    client.shutdown().await?;
 
+    Ok(())
+}

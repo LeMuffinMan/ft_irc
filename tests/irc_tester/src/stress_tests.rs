@@ -1,3 +1,8 @@
+use crate::behavior::BehaviorHandler;
+use crate::behavior::ClientBehavior;
+use crate::client::Client;
+use crate::result::ClientResult;
+
 use anyhow::Result;
 use futures::stream::{FuturesUnordered, StreamExt};
 use rand::Rng;
@@ -5,66 +10,21 @@ use rand::prelude::IndexedRandom;
 use rand::rng;
 use tokio::time::{Duration, Instant};
 
-use crate::behaviors::*;
-use crate::client::ClientBehavior;
-use crate::utils::ClientResult;
-
-async fn run_client(
+pub async fn run_client(
     port: u16,
     id: usize,
     behavior: ClientBehavior,
     timeout_ms: u64,
 ) -> ClientResult {
-    let start_time = Instant::now();
-    let result: anyhow::Result<()> = match behavior {
-        ClientBehavior::NormalConnection => normal_connection(port, false, id).await,
-        ClientBehavior::WrongPassword => normal_connection_wrong_password(port, false).await,
-        ClientBehavior::FragmentedMessages => fragmented_messages(port, false, id).await,
-        ClientBehavior::LowBandwidth => low_bandwidth(port, false, id).await,
-        ClientBehavior::PassNotFirst => pass_not_first(port, id, timeout_ms).await,
-        ClientBehavior::LegitDisconnect => legit_disconnect(port, id, timeout_ms).await,
-        ClientBehavior::LegitIgnorePong => legit_ignore_pong(port, id, timeout_ms).await,
-        ClientBehavior::StartIgnoreAll => start_ignore_all(port, id, timeout_ms).await,
-        ClientBehavior::PongOnly => pong_only(port, id, timeout_ms).await,
-        ClientBehavior::WrongPong => wrong_pong(port, id, timeout_ms).await,
-        ClientBehavior::PongWithoutConnect => pong_without_connect(port, timeout_ms).await,
-        ClientBehavior::ContinuousNoise => continuous_noise(port, timeout_ms).await,
-        ClientBehavior::TooLongMessage => too_long_message(port, timeout_ms).await,
-        ClientBehavior::NickNormalClaimAndChange => {
-            nick_normal_claim_and_change(port, id, timeout_ms).await
-        }
-        ClientBehavior::NickNoNicknameGiven => nick_no_nickname_given(port, id, timeout_ms).await,
-        ClientBehavior::PassAlreadyRregistered => {
-            pass_already_registered(port, id, timeout_ms).await
-        }
-        ClientBehavior::PassNeedMoreParams => pass_need_more_params(port, id, timeout_ms).await,
-        ClientBehavior::UserAlreadyRegistered => {
-            user_already_registered(port, id, timeout_ms).await
-        }
-        ClientBehavior::UserNeedMoreParams => user_need_more_params(port, id, timeout_ms).await,
-        ClientBehavior::InviteNeedMoreParams => invite_need_more_params(port, id, timeout_ms).await,
-        // ClientBehavior::InviteNoSuchNick => invite_no_such_nick(port, id, timeout_ms).await, //
-        // il nous faut un channel valide pour rejeter nick mais valider chan
-        // ClientBehavior::InviteNotOnChannel => invite_not_on_channel(port, id, timeout_ms).await,
-        // idem, il nous faut un channel surlequel le client n'est pas 
-        ClientBehavior::PrivmsgNoRecipient => privmsg_no_recipient(port, id, timeout_ms).await,
-        ClientBehavior::PrivmsgNoTextToSend => privmsg_no_text_to_send(port, id, timeout_ms).await,
-        // ClientBehavior::PrivmsgNoSuchChannel => privmsg_no_such_channel(port, id, timeout_ms).await,
-        // ClientBehavior::PrivmsgCannotSendToChan => privmsg_cannot_send_to_chan(port, id, timeout_ms).await,
-        ClientBehavior::PrivmsgNoSuchNick => privmsg_no_such_nick(port, id, timeout_ms).await,
-        // ClientBehavior::KickNeedMoreParams => kick_need_more_params(port, id, timeout_ms).await,
-        // ClientBehavior::KickNoSuchChannel => kick_no_such_channel(port, id, timeout_ms).await,
-        ClientBehavior::JoinNeedMoreParams => join_need_more_params(port, id, timeout_ms).await,
-        ClientBehavior::JoinNoSuchChan => join_no_such_channel(port, id, timeout_ms).await,
-        ClientBehavior::TopicNeedMoreParams => topic_need_more_params(port, id, timeout_ms).await,
-        ClientBehavior::JoinNewChan => join_new_channel(port, id, timeout_ms).await,
-    };
 
-    let reply_time = Instant::now() - start_time;
-    // println!("reply time = {}ms", reply_time.as_millis());
+    let handler = behavior.handler();
+    let start = Instant::now();
+    let result = handler(port, id, timeout_ms).await;
+    let reply = Instant::now() - start;
+
     match result {
-        Ok(_) => ClientResult::success(id, behavior, reply_time),
-        Err(e) => ClientResult::failure(id, behavior, format!("{}", e), reply_time),
+        Ok(_) => ClientResult::success(id, behavior, reply),
+        Err(e) => ClientResult::failure(id, behavior, e.to_string(), reply),
     }
 }
 
@@ -76,7 +36,6 @@ pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
         ClientBehavior::PongOnly,
         ClientBehavior::WrongPong,
         ClientBehavior::PongWithoutConnect,
-        ClientBehavior::NormalConnection,
         ClientBehavior::WrongPassword,
         ClientBehavior::FragmentedMessages,
         ClientBehavior::LowBandwidth,
@@ -84,28 +43,43 @@ pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
         ClientBehavior::TooLongMessage,
         ClientBehavior::NickNormalClaimAndChange,
         ClientBehavior::NickNoNicknameGiven,
+        ClientBehavior::NickAlreadyInUse,
         ClientBehavior::PassAlreadyRregistered,
-        ClientBehavior::PassNeedMoreParams, // should be kicked
-        ClientBehavior::PassNotFirst,       // should be kicked
+        ClientBehavior::PassNeedMoreParams,
+        ClientBehavior::PassNotFirst,
         ClientBehavior::UserAlreadyRegistered,
         ClientBehavior::UserNeedMoreParams,
         ClientBehavior::InviteNeedMoreParams,
-        // ClientBehavior::InviteNoSuchNick, //need a valid chan
-        // ClientBehavior::InviteNotOnChannel, //idem
+        ClientBehavior::InviteNoSuchNick,
+        ClientBehavior::InviteNotOnChannel,
+        ClientBehavior::InviteNoPriv,
+        ClientBehavior::InviteNotRegistered,
         ClientBehavior::PrivmsgNoRecipient,
         ClientBehavior::PrivmsgNoTextToSend,
         // ClientBehavior::PrivmsgNoSuchChannel, //revooir ce test
         // ClientBehavior::PrivmsgCannotSendToChan,
         ClientBehavior::PrivmsgNoSuchNick,
-        // ClientBehavior::KickNeedMoreParams, // je capte pas pk ca mrche pas
+        ClientBehavior::KickNeedMoreParams,
         // ClientBehavior::KickBadChanMask,
-        // ClientBehavior::KickNoSuchChannel, //a revoir 
+        // ClientBehavior::KickNoSuchChannel, //a revoir
         // ClientBehavior::KickChaNoPrivsNeeded,
         // ClientBehavior::KickUserNotInChannel,
         ClientBehavior::JoinNeedMoreParams,
         ClientBehavior::JoinNoSuchChan,
-        ClientBehavior::TopicNeedMoreParams,
         ClientBehavior::JoinNewChan,
+        ClientBehavior::JoinNotRegistered,
+        ClientBehavior::JoinInviteOnlyChannel,
+        ClientBehavior::JoinExistingMutliChan,
+        ClientBehavior::JoinExistingChan,
+        ClientBehavior::JoinExistingChanMdp,
+        // ClientBehavior::JoinBadChannelKey,
+        // ClientBehavior::JoinChannelIsFull,
+        ClientBehavior::TopicNeedMoreParams,
+        ClientBehavior::TopicNotOnChannel,
+        ClientBehavior::TopicNoTopic,
+        // ClientBehavior::TopicRpl,
+        // ClientBehavior::TopicNoPriv,
+        // ClientBehavior::TopicNoChanModes,
     ];
 
     let mut futures: FuturesUnordered<_> = behaviors
@@ -145,7 +119,6 @@ pub async fn advanced_stress_test(port: u16, num_clients: usize, timeout_ms: u64
 
     let behaviors = vec![
         ClientBehavior::LegitDisconnect,
-        ClientBehavior::NormalConnection,
         // ClientBehavior::WrongPassword, //should be kicked
         // ClientBehavior::FragmentedMessages,
         // ClientBehavior::LowBandwidth,
@@ -230,5 +203,65 @@ pub async fn advanced_stress_test(port: u16, num_clients: usize, timeout_ms: u64
         ko_count
     );
 
+    Ok(())
+}
+
+pub async fn connection_stress_test(port: u16, num_clients: usize, timeout_ms: u64) -> Result<()> {
+    println!(
+        "Starting connection stress test with {} clients...",
+        num_clients
+    );
+
+    let start = Instant::now();
+    let mut handles = Vec::with_capacity(num_clients);
+
+    for i in 0..num_clients {
+        let handle = tokio::spawn(async move {
+            let nick = format!("stress_{}", i);
+            let mut client = match Client::connect(port).await {
+                Ok(c) => c,
+                Err(_) => return Err(anyhow::anyhow!("Failed to connect")),
+            };
+
+            let messages = vec![
+                "PASS password\r\n".to_string(),
+                format!("NICK {}_stress_connection\r\n", nick),
+                format!("USER {} 0 * :stress user\r\n", nick),
+            ];
+
+            for msg in messages {
+                client.send(&msg, 0).await?;
+            }
+
+            if let Some(line) = client.read_line_timeout(timeout_ms).await? {
+                if line.contains("Welcome to the Internet Relay Network") {
+                    return Ok(());
+                }
+            }
+            Err(anyhow::anyhow!("Failed to register client"))
+        });
+        handles.push(handle);
+    }
+
+    let mut ok_count = 0;
+    let mut ko_count = 0;
+
+    for handle in handles {
+        match handle.await {
+            Ok(Ok(_)) => ok_count += 1,
+            _ => ko_count += 1,
+        }
+    }
+
+    let total_duration = start.elapsed();
+    println!(
+        "\nConnection stress test finished: {} \x1b[32mOK\x1b[0m, {} \x1b[31mKO\x1b[0m",
+        ok_count, ko_count
+    );
+    println!("Total time: {:?}", total_duration);
+    println!(
+        "Time per client: {:?}\n",
+        total_duration / num_clients as u32
+    );
     Ok(())
 }

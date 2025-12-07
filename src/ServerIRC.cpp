@@ -117,7 +117,9 @@ void Server::remove_inactive_clients()
 			else
 			{
 				// ss << "Disconnected: timed out" << std::endl;
-				this->reply(&client, "timed out");
+				// client.printClientInfo();
+				if (clients.find(it->first) != clients.end() && clients[it->first].fd > 0) //fixed l'erreur sur timed out fd = -1
+					this->reply(&client, "timed out");
 			}
 			to_erase.push_back(it->first);
 		}

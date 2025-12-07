@@ -31,8 +31,6 @@ echo -e "${YELLOW}ulimit = $(ulimit -n)${NC}"
 
 log "Starting server on port $PORT..."
 if [ "$2" == 1 ]; then
-    make fclean
-    make debug
     $VALGRIND $SERVER "$PORT" "$PASS" > .server.log 2>&1 &
 else
     $SERVER "$PORT" "$PASS" > .server.log 2>&1 &
@@ -50,13 +48,6 @@ else
     cat .server.log
     exit 1
 fi
-START_TIME=$(date +%s)
-
-if command -v kitty &>/dev/null; then
-    kitty --title "IRC Server Log" watch -n 0.1 tail -45 .server.log 2> /dev/null &
-    KITTY_PID=$!
-fi
-
 
 sleep 1
 
@@ -64,10 +55,18 @@ log "Building Rust tester..."
 (
     cd "$CLIENT_DIR"
     cargo build --release
-)
+) || exit 1
 
+KITTY_PID=0
+if command -v kitty &>/dev/null && [ "$4" = 1 ]; then
+    kitty --title "IRC Server Log" watch -n 0.1 tail -45 .server.log 2> /dev/null &
+    KITTY_PID=$!
+fi
+
+START_TIME=$(date +%s)
 log "Starting Rust tester..."
-"$CLIENT_DIR/target/release/irc_tester" "$1" "$3"
+
+"$CLIENT_DIR/target/release/irc_tester" "$1" "$3" "$5"
 
 echo "Killing server PID: $SERVER_PID"
 kill $SERVER_PID
@@ -78,30 +77,34 @@ EVENTS=$(cat .server.log | wc -l)
 
 ulimit -n 1024
 
-log "======= Server log ======="
+log "============== Server log =============="
 # verbose mode
-errors_total=$(grep -c "ERROR" .server.log)
-errors_unique=$(grep "ERROR" .server.log | sort | uniq | wc -l)
-pings=$(grep -c "PING" .server.log)
-pongs=$(grep -c "PONG" .server.log)
-connections=$(grep -c "New client" .server.log)
-registrations=$(grep -c "Welcome to the Internet Relay Network" .server.log)
-timedout=$(grep -c "timed out" .server.log)
+ERRORS_TOTAL=$(grep -c "ERROR" .server.log)
+ERRORS_UNIQUE=$(grep "ERROR" .server.log | sort | uniq | wc -l)
+PINGS=$(grep -c "PING" .server.log)
+PONGS=$(grep -c "PONG" .server.log)
+CONNECTIONS=$(grep -c "New client" .server.log)
+REGISTRATIONS=$(grep -c "Welcome to the Internet Relay Network" .server.log)
+TIMEDOUT=$(grep -c "timed out" .server.log)
+
+EVENTS=${EVENTS:-0}
+ELAPSED=${ELAPSED:-1}
+EVENTS_PER_SECS=$(( EVENTS / ELAPSED ))
 
 printf "%-25s : %5s\n" "Time elapsed": "${ELAPSED}s"
-printf "%-25s : %5d (%d/s)\n" "Events" "${EVENTS}" "$((EVENTS / ELAPSED))"
+printf "%-25s : %5d (%d/s)\n" "Events" "${EVENTS}" "$EVENTS_PER_SECS"
 echo
-printf "%-25s : %5d (unique: %d)\n" "Errors" "$errors_total" "$errors_unique"
+printf "%-25s : %5d (unique: %d)\n" "Errors" "$ERRORS_TOTAL" "$ERRORS_UNIQUE"
 if [[ $errors_unique -gt 0 ]]; then
-    grep "ERROR" .server.log | sort | uniq -c | while read count msg; do
-        printf "%s x %5d\n" "$msg" "$count" 
+    grep "ERROR" .server.log |  awk '{$1=""; sub(/^ /, ""); print}' | sort | uniq -c | while read count msg; do
+        printf "%s x %5d\n" "$MSG" "$COUNT" 
     done
 fi
 # printf "%-25s : %5d\n" "Pings sent" "$pings"
 # printf "%-25s : %5d\n" "Pongs received" "$pongs"
-printf "%-25s : %5d (%d/s)\n" "Connections" "$connections" "$((connections / ELAPSED))"
-printf "%-25s : %5d (%d/s)\n" "Registrations" "$registrations" "$((registrations / ELAPSED))"
-printf "%-25s : %5d (%d/s)\n" "Timed out" "$timedout" "$((timedout / ELAPSED))"
+printf "%-25s : %5d (%d/s)\n" "Connections" "$CONNECTIONS" "$((CONNECTIONS / ELAPSED))"
+printf "%-25s : %5d (%d/s)\n" "Registrations" "$REGISTRATIONS" "$((REGISTRATIONS / ELAPSED))"
+printf "%-25s : %5d (%d/s)\n" "Timed out" "$TIMEDOUT" "$((TIMEDOUT / ELAPSED))"
 echo
 
 if [[ -n "$KITTY_PID" ]]; then

@@ -60,6 +60,11 @@ const std::string &Channel::getTopic() const
 	return this->_topic;
 }
 
+const std::string &Channel::getName() const
+{
+	return this->_channel_name;
+}
+
 bool Channel::addClient(Client *client)
 {
 	if (_mode.is_limited && _clients.size() >= _user_limit)
