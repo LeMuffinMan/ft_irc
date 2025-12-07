@@ -171,7 +171,7 @@ Channel *Server::getChannel(const std::string &channel_name)
 	{
 		return NULL;
 	}
-	std::map<std::string, Channel *>::iterator it = channels.find(channel_name);
+	channelsIterator it = channels.find(channel_name);
 	if (it != channels.end())
 	{
 		return it->second;
@@ -183,7 +183,7 @@ bool Server::addChannel(const std::string &channel_name)
 {
 	if (channel_name.empty() || channel_name[0] != '#')
 		return false;
-	std::map<std::string, Channel *>::iterator it = channels.find(channel_name);
+	channelsIterator it = channels.find(channel_name);
 	if (it == channels.end())
 	{
 		channels.insert(std::make_pair(channel_name, new Channel(channel_name)));
@@ -196,7 +196,7 @@ bool Server::removeChannel(const std::string &channel_name)
 {
 	if (channel_name.empty() || channel_name[0] != '#')
 		return false;
-	std::map<std::string, Channel *>::iterator it = channels.find(channel_name);
+	channelsIterator it = channels.find(channel_name);
 	if (it != channels.end())
 	{
 		delete it->second;

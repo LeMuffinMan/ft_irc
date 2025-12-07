@@ -24,9 +24,14 @@ void InviteCommand::execute(Client *executor, Server &server)
 	}
 	Client *target = server.getClient(_params[0]);
 	Channel *channel = server.getChannel(_params[1]);
-	if (!target || !channel)
+	if (!target)
 	{
-		server.reply(executor, ERR_NOSUCHNICK(executor->getNickname(), _params[1]));
+		server.reply(executor, ERR_NOSUCHNICK(executor->getNickname(), _params[0]));
+		return;
+	}
+	if (!channel)
+	{
+		server.reply(executor, ERR_NOSUCHCHANNEL(executor->getNickname(), _params[1]));
 		return;
 	}
 	if (!channel->isClientInChannel(executor))
