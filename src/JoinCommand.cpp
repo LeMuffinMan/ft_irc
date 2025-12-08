@@ -8,8 +8,7 @@ JoinCommand::JoinCommand(std::vector<std::string> params)
 
 static void join_message(Client *executor, Server &server, const std::string &channel_name)
 {
-	std::string join_msg = ":" + executor->getNickname() + " JOIN " + channel_name;
-	server.reply(executor, join_msg);
+	server.reply(executor, ":" + executor->getNickname() + " JOIN " + channel_name);
 }
 
 // TODO: ERR_TOOMANYCHANNELS and ERR_UNAVAILRESOURCE and ERR_BADCHANMASK ??
@@ -27,9 +26,9 @@ void JoinCommand::execute(Client *executor, Server &server)
 		server.reply(executor, ERR_NOTREGISTERED(executor->getNickname()));
 		return;
 	}
-	if (_params[0] == "0")
+	if (_params[0] == "0") // Executor wants to leave all channels
 	{
-		// Executor wants to leave all channels
+		server.removeClientFromAllChannels(executor);
 		return;
 	}
 	std::vector<std::string> channel_names;
@@ -76,7 +75,15 @@ void JoinCommand::execute(Client *executor, Server &server)
 			continue; // Already in channel : ignore?
 		if (channel->getModes().is_invite_only)
 		{
-			server.reply(executor, ERR_INVITEONLYCHAN(executor->getNickname(), channel_names[i]));
+			if (!channel->isClientInAllowList(executor))
+				server.reply(executor, ERR_INVITEONLYCHAN(executor->getNickname(), channel_names[i]));
+			else
+			{
+				channel->addClient(executor);
+				server.reply(executor, ":" + executor->getNickname() + " JOIN " + channel_name[i]);
+				if (!channel->getTopic().empty())
+					server.reply(executor, RPL_TOPIC(executor->getNickname(), channel_names[i], channel->getTopic()));
+			}
 			continue;
 		}
 		if (channel->isKeySet(channel->getModes()))
@@ -92,16 +99,14 @@ void JoinCommand::execute(Client *executor, Server &server)
 				continue;
 			}
 			channel->addClient(executor);
-			join_message(executor, server, channel_names[i]);
-			if (!channel->getTopic().empty()) {
+			server.reply(executor, ":" + executor->getNickname() + " JOIN " + channel_name[i]);
+			if (!channel->getTopic().empty())
 				server.reply(executor, RPL_TOPIC(executor->getNickname(), channel_names[i], channel->getTopic()));
-			}
 			continue;
 		}
 		channel->addClient(executor);
-		join_message(executor, server, channel_names[i]);
-		if (!channel->getTopic().empty()) {
+		server.reply(executor, ":" + executor->getNickname() + " JOIN " + channel_name[i]);
+		if (!channel->getTopic().empty())
 			server.reply(executor, RPL_TOPIC(executor->getNickname(), channel_names[i], channel->getTopic()));
-		}
 	}
 }

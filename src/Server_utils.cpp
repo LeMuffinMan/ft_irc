@@ -42,6 +42,7 @@ std::string format_time(void)
 	return oss.str();
 }
 
+// TODO: strftime from ctime could be used instead
 std::string format_date(void)
 {
     std::time_t now = std::time(NULL);

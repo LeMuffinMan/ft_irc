@@ -9,7 +9,7 @@ void InviteCommand::execute(Client *executor, Server &server)
 {
 	if (!executor->isRegistered())
 	{
-		server.reply(executor, ERR_NOTREGISTERED(executor->getNickname()));	
+		server.reply(executor, ERR_NOTREGISTERED(executor->getNickname()));
 		return;
 	}
 	if (_params.size() < 2)
@@ -53,7 +53,7 @@ void InviteCommand::execute(Client *executor, Server &server)
 				// RPL_AWAY : hors scope : commande AWAY
 				return;
 			}
-			channel->addClient(target);
+			channel->addClientToAllowList(target);
 			server.reply(executor, RPL_INVITING(executor->getNickname(), _params[1], _params[0]));
 			return;
 		}
@@ -70,7 +70,7 @@ void InviteCommand::execute(Client *executor, Server &server)
 			// RPL_AWAY : same
 			return;
 		}
-		channel->addClient(target);
+		channel->addClientToAllowList(target);
 		server.reply(executor, RPL_INVITING(executor->getNickname(), _params[1], _params[0]));
 		return;
 	}

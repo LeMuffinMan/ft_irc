@@ -24,18 +24,20 @@ struct ChannelModes
 class Channel
 {
 	//= Variables =//
+public:
+	typedef std::set<Client *> clientsType;	  //!< Type for clients set
+	typedef std::set<Client *> operatorsType; //!< Type for clients set
 private:
 	std::string _channel_name; //!< Channel's name
 	std::string _topic;		   //!< Channel's topic
 	std::string _key;		   //!< Channel's key (password)
 	ChannelModes _mode;
-	size_t _user_limit;							   //!< Maximum number of users allowed in the channel
-	std::set<Client *> _clients;				   //!< Set of current Client pointers
-	std::set<Client *> _operators;				   //!< Set of current channel operators pointers
-	std::vector<std::string> _allowed_clients;	   //!< List of allowed client realnames
-	std::vector<std::string> _operators_realnames; //!< List of operator realnames
+	size_t _user_limit;				  //!< Maximum number of users allowed in the channel
+	clientsType _clients;			  //!< Set of current Client pointers
+	operatorsType _operators;		  //!< Set of current channel operators pointers
+	clientsType _allowed_clients;	  //!< List of allowed clients
+	operatorsType _allowed_operators; //!< List of allowed operators
 
-public:
 	//= Methods =//
 public:
 	Channel(std::string channel_name);
@@ -53,9 +55,12 @@ public:
 
 	bool addClient(Client *client);
 	bool removeClient(Client *client);
+	bool addClientToAllowList(Client *client);
+	bool removeClientFromAllowList(Client *client);
 	bool addOperator(Client *client);
 	bool removeOperator(Client *client);
 	bool isClientInChannel(Client *client) const;
+	bool isClientInAllowList(Client *client) const;
 	bool isClientOPChannel(Client *client) const;
 	Client *getClientByNickname(const std::string &nickname) const;
 	std::set<Client *> &getClients();

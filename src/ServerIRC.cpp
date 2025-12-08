@@ -37,7 +37,7 @@ bool Server::reply(Client *client, std::string message)
 			else if (error == EPIPE)
 			{
 				Debug::print(WARNING, "SIGPIPE received while sending message to client " + client->getNickname());
-				removeClient(client);			
+				removeClient(client);
 				return false;
 			}
 		}
@@ -62,7 +62,7 @@ bool Server::replyChannel(Channel *channel, std::string message)
 		return false;
 	}
 	bool ret = true;
-	for (std::set<Client *>::iterator it = channel->getClients().begin(); it != channel->getClients().end(); ++it)
+	for (Channel::clientsType::iterator it = channel->getClients().begin(); it != channel->getClients().end(); ++it)
 	{
 		if (!reply(*it, message))
 		{
@@ -81,7 +81,7 @@ bool Server::replyChannelOnlyOP(Channel *channel, std::string message)
 		return false;
 	}
 	bool ret = true;
-	for (std::set<Client *>::iterator it = channel->getOperators().begin(); it != channel->getOperators().end(); ++it)
+	for (Channel::clientsType::iterator it = channel->getOperators().begin(); it != channel->getOperators().end(); ++it)
 	{
 		if (!reply(*it, message))
 		{
@@ -96,7 +96,7 @@ void Server::remove_inactive_clients()
 {
 	std::time_t now = std::time(NULL);
 	std::vector<int> to_erase;
-	for (clientsIterator it = this->clients.begin();
+	for (clientsType::iterator it = this->clients.begin();
 		 it != this->clients.end(); it++)
 	{
 		// if (!it->second)
@@ -118,7 +118,7 @@ void Server::remove_inactive_clients()
 			{
 				// ss << "Disconnected: timed out" << std::endl;
 				// client.printClientInfo();
-				if (clients.find(it->first) != clients.end() && clients[it->first].fd > 0) //fixed l'erreur sur timed out fd = -1
+				if (clients.find(it->first) != clients.end() && clients[it->first].fd > 0) // fixed l'erreur sur timed out fd = -1
 					this->reply(&client, "timed out");
 			}
 			to_erase.push_back(it->first);
@@ -130,7 +130,7 @@ void Server::remove_inactive_clients()
 
 void Server::check_clients_ping()
 {
-	for (clientsIterator it = this->clients.begin();
+	for (clientsType::iterator it = this->clients.begin();
 		 it != this->clients.end(); ++it)
 	{
 		// if (!it->second)
@@ -157,7 +157,7 @@ void Server::check_clients_ping()
 
 Client *Server::getClient(const std::string &nickname)
 {
-	for (clientsIterator it = this->clients.begin(); it != this->clients.end(); ++it)
+	for (clientsType::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
 	{
 		if (it->second.getNickname() == nickname)
 			return &(it->second);
@@ -171,7 +171,7 @@ Channel *Server::getChannel(const std::string &channel_name)
 	{
 		return NULL;
 	}
-	channelsIterator it = channels.find(channel_name);
+	channelsType::iterator it = channels.find(channel_name);
 	if (it != channels.end())
 	{
 		return it->second;
@@ -183,7 +183,7 @@ bool Server::addChannel(const std::string &channel_name)
 {
 	if (channel_name.empty() || channel_name[0] != '#')
 		return false;
-	channelsIterator it = channels.find(channel_name);
+	channelsType::iterator it = channels.find(channel_name);
 	if (it == channels.end())
 	{
 		channels.insert(std::make_pair(channel_name, new Channel(channel_name)));
@@ -192,11 +192,26 @@ bool Server::addChannel(const std::string &channel_name)
 	return false;
 }
 
+void Server::removeClientFromAllChannels(Client *client)
+{
+	if (!client)
+		return;
+	for (channelsType::iterator it = channels.begin(); it != channels.end(); ++it)
+	{
+		Channel *channel = it->second;
+		if (channel->removeClient(client)) // if succeed, client was in channel and is now removed
+		{
+			this->reply(client, ":" + client->getNickname() + " PART " + channel->getName());
+			Debug::print(INFO, "Client " + client->getNickname() + " removed from channel " + channel->getName());
+		}
+	}
+}
+
 bool Server::removeChannel(const std::string &channel_name)
 {
 	if (channel_name.empty() || channel_name[0] != '#')
 		return false;
-	channelsIterator it = channels.find(channel_name);
+	channelsType::iterator it = channels.find(channel_name);
 	if (it != channels.end())
 	{
 		delete it->second;
@@ -215,7 +230,7 @@ void Server::deleteUnusedChannels()
 		return;
 	last = now;
 	std::vector<std::string> to_delete;
-	for (channelsIterator it = channels.begin(); it != channels.end(); ++it)
+	for (channelsType::iterator it = channels.begin(); it != channels.end(); ++it)
 	{
 		Channel *channel = it->second;
 		if (channel->getClients().empty())
