@@ -5,6 +5,15 @@ InviteCommand::InviteCommand(std::vector<std::string> params)
 	_params = params;
 }
 
+/**
+ * @brief Execute the INVITE command.
+ * Invite a user to a channel.
+ * Ex: INVITE user #channel
+ * The user receives an invitation to join the specified channel.
+ *
+ * @param[in,out] executor client executing the command
+ * @param[in,out] server server instance
+ */
 void InviteCommand::execute(Client *executor, Server &server)
 {
 	if (!executor->isRegistered())

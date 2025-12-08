@@ -5,6 +5,17 @@ TopicCommand::TopicCommand(std::vector<std::string> params)
 	_params = params;
 }
 
+/**
+ * @brief Execute the TOPIC command.
+ * Sets or retrieves the topic of the specified channel.
+ * Ex: TOPIC #channel
+ * -> retrieves the topic
+ * Ex: TOPIC #channel :New topic
+ * -> sets the topic
+ *
+ * @param[in,out] executor client executing the command
+ * @param[in,out] server server instance
+ */
 void TopicCommand::execute(Client *executor, Server &server)
 {
 	if (_params.size() < 1)

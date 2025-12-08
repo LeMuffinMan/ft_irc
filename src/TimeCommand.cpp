@@ -6,9 +6,18 @@ TimeCommand::TimeCommand(std::vector<std::string> params)
 	_params = params;
 }
 
-void TimeCommand::execute(Client* executor, Server& server)
+/**
+ * @brief Execute the TIME command.
+ * Ex: TIME
+ * Returns the current server time.
+ *
+ * @param[in,out] executor client executing the command
+ * @param[in,out] server server instance
+ */
+void TimeCommand::execute(Client *executor, Server &server)
 {
-	if (_params.size() >= 1) {
+	if (_params.size() >= 1)
+	{
 		server.reply(executor, "Time command does not take any parameters");
 		return;
 	}

@@ -14,6 +14,15 @@ static void join_message(Client *executor, Server &server, const std::string &ch
 // TODO: ERR_TOOMANYCHANNELS and ERR_UNAVAILRESOURCE and ERR_BADCHANMASK ??
 // TODO: ban handling : ERR_BANNEDFROMCHAN
 
+/**
+ * @brief Execute the JOIN command.
+ * Join the channels with optional keys.
+ * Ex: JOIN #channel1,#channel2 key1,key2
+ * Tries to join #channel1 with key1 and #channel2 with key2
+ *
+ * @param[in,out] executor client executing the command
+ * @param[in,out] server server instance
+ */
 void JoinCommand::execute(Client *executor, Server &server)
 {
 	if (_params.size() < 1)

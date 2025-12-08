@@ -6,9 +6,19 @@ ModeCommand::ModeCommand(std::vector<std::string> params)
 	_params = params;
 }
 
-void ModeCommand::execute(Client* executor, Server& server)
+/**
+ * @brief Execute the MODE command.
+ * Either changes user modes or channel modes based on the parameters.
+ * Ex: MODE #channel +o user -> channel mode change
+ * Ex: MODE user +i -> user mode change
+ *
+ * @param[in,out] executor client executing the command
+ * @param[in,out] server server instance
+ */
+void ModeCommand::execute(Client *executor, Server &server)
 {
-	if (_params.size() < 2) {
+	if (_params.size() < 2)
+	{
 		server.reply(executor, ERR_NEEDMOREPARAMS(executor->getNickname(), "MODE"));
 		return;
 	}
@@ -17,15 +27,25 @@ void ModeCommand::execute(Client* executor, Server& server)
 		server.reply(executor, ERR_NOTREGISTERED(executor->getNickname()));
 		return;
 	}
-	if (_params[0][0] != '#' && _params[0][0] != '&') //Param is not a channel
+	if (_params[0][0] != '#' && _params[0][0] != '&') // Param is not a channel
 		executeUserMode(executor, server);
 	else
 		executeChannelMode(executor, server);
 }
 
-void ModeCommand::executeUserMode(Client* executor, Server& server)
+/**
+ * @brief Execute user mode changes.
+ * Ex: MODE user2 +i
+ * on user user2, add invisible mode
+ * Current supported modes:
+ * none
+ *
+ * @param[in,out] executor client executing the command
+ * @param[in,out] server server instance
+ */
+void ModeCommand::executeUserMode(Client *executor, Server &server)
 {
-	Client* target = server.getClient(_params[0]);
+	Client *target = server.getClient(_params[0]);
 	if (target != executor)
 	{
 		server.reply(executor, ERR_USERSDONTMATCH(executor->getNickname()));
@@ -39,9 +59,27 @@ void ModeCommand::executeUserMode(Client* executor, Server& server)
 	// TODO: not explicitly required by subject !!
 }
 
-void ModeCommand::executeChannelMode(Client* executor, Server& server)
+/**
+ * @brief Execute channel mode changes.
+ * Change the modes of a channel.
+ * Ex: MODE #channel +o user
+ * on channel #channel, add operator status to user
+ * Current supported modes:
+ * +o : operator status
+ * +i : invite only
+ * +t : topic set by operator only
+ * +k : key (password)
+ * +l : user limit
+ *
+ * Input can be :
+ * MODE #channel +o user1 -i +k key1 -l 10
+ *
+ * @param[in,out] executor client executing the command
+ * @param[in,out] server server instance
+ */
+void ModeCommand::executeChannelMode(Client *executor, Server &server)
 {
-	Channel* channel = server.getChannel(_params[0]);
+	Channel *channel = server.getChannel(_params[0]);
 	if (!channel)
 	{
 		server.reply(executor, ERR_NOSUCHCHANNEL(executor->getNickname(), _params[0]));
@@ -139,4 +177,3 @@ void ModeCommand::executeChannelMode(Client* executor, Server& server)
 		}
 	}
 }
-
