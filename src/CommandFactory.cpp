@@ -18,19 +18,29 @@
 CommandFactory::CommandFactory() {}
 CommandFactory::~CommandFactory() {}
 
-std::string CommandFactory::get_command(std::string line)
+/**
+ * @brief Extract the command name from a command line.
+ * 
+ * @param[in] line full command line as a string
+ * @return std::string 
+ */
+std::string CommandFactory::get_command(const std::string &line)
 {
 	size_t pos = line.find(' ');
 	if (pos == std::string::npos)
-	{
 		return line;
-	}
 	return line.substr(0, pos);
 }
 
-std::vector<std::string> CommandFactory::get_params(std::string line)
+/**
+ * @brief Extract parameters from a command line.
+ * 
+ * @param[in] line full command line as a string
+ * @return std::vector<std::string> 
+ */
+std::vector<std::string> CommandFactory::get_params(const std::string &line)
 {
-	std::vector<std::string> params;
+	std::vector<std::string> params(1);
 	std::string last_param;
 
 	size_t pos = line.find(' ');
@@ -57,7 +67,29 @@ std::vector<std::string> CommandFactory::get_params(std::string line)
 	return params;
 }
 
-command_type CommandFactory::findType(std::string const &command_name)
+/**
+ * @brief Find and create a command object from a command line.
+ * 
+ * @param[in] line full command line as a string
+ * @return ACommand* pointer to the created command object, or NULL if command is invalid
+ */
+ACommand *CommandFactory::findAndCreateCommand(const std::string &line)
+{
+	Debug::print(DEBUG, "Parsing command: [" + line + "]");
+	std::string cmd = CommandFactory::get_command(line);
+	if (cmd.empty())
+		return NULL;
+	std::vector<std::string> params = CommandFactory::get_params(line);
+	return CommandFactory::createCommand(cmd, params);
+}
+
+/**
+ * @brief Find the command type based on the command name.
+ * 
+ * @param[in] command_name command name as a string
+ * @return command_type corresponding command type enum value
+ */
+command_type CommandFactory::findType(const std::string &command_name)
 {
 	if (command_name == "INVITE") return INVITE;
 	if (command_name == "KICK") return KICK;
@@ -75,8 +107,13 @@ command_type CommandFactory::findType(std::string const &command_name)
 	return UNKNOWN;
 }
 
-// TODO: enum LEAVE, SEND_MESSAGE, LIST_CHANNELS, LIST_USERS, KICK
-
+/**
+ * @brief Create a command object based on the command type.
+ * 
+ * @param[in] command command name as a string
+ * @param[in] params parameters for the command
+ * @return ACommand* pointer to the created command object, or NULL if unknown command
+ */
 ACommand *CommandFactory::createCommand(const std::string &command, const std::vector<std::string> &params)
 {
 	command_type cmdType = CommandFactory::findType(command);
