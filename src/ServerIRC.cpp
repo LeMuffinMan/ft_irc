@@ -110,7 +110,6 @@ bool Server::replyChannelOnlyOP(Channel *channel, std::string message)
 	return ret;
 }
 
-// J'ai toujours des chars en trop apres les timeouts dans les logs server
 /**
  * @brief Remove inactive clients from the server
  * 

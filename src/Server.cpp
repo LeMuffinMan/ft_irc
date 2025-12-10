@@ -195,16 +195,10 @@ int Server::make_fd_nonblocking(int fd)
  */
 int Server::init_epoll_event(int client_fd)
 {
-	// each client registered in epoll_ctl must have an event struct associated
 	epoll_event cev;
 	std::memset(&cev, 0, sizeof(cev));
-	// theses flags define what we want to trigger epoll_wait :
-	// In case of data to read or
-	// if client closed its writing end (fragmented msgs)
 	cev.events = EPOLLIN | EPOLLRDHUP;
-	// we bind this new client event struct, with the client fd
 	cev.data.fd = client_fd;
-	// adding our new fd, and the event struct to our epoll, with the events we just set
 	if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, client_fd, &cev) < 0)
 	{
 		perror("epoll_ctl add client");
@@ -318,7 +312,6 @@ int Server::read_client_fd(int fd)
 {
 	char buf[4096];
 
-	// MSG_DONTWAIT : rend non bloquant et suffisant ?
 	ssize_t r = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
 
 	if (r >= 512)
@@ -350,17 +343,11 @@ int Server::read_client_fd(int fd)
 	}
 	else
 	{
-		// error handling : ici il faut que le parsing attende !
-		// Ces flags sont importants si on utilise EPOLET, sans, c'est peut etre superflu
-		//  if (errno == EAGAIN || errno == EWOULDBLOCK) {
-		//	   return 2; // 1 -> 2
-		//  } else {
 		perror("recv");
 		epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
 		close(fd);
 		this->clients.erase(fd);
 		return -1;
-		// }
 	}
 }
 
@@ -445,7 +432,6 @@ void Server::interpret_msg(int fd)
  */
 void Server::handle_events(int n, epoll_event events[MAX_EVENTS])
 {
-	// for each event received during epoll_wait
 	for (int i = 0; i < n; ++i)
 	{
 		int fd = events[i].data.fd;
@@ -529,8 +515,7 @@ int Server::RunServer()
 	}
 	// doc
 	epoll_event ev;
-	ev.events = EPOLLIN | EPOLLRDHUP; // RDHUP pour détecter fermeture distante
-									  // EPOLLET permet de rendre les sockets non bloquants ?;
+	ev.events = EPOLLIN | EPOLLRDHUP; 
 	ev.data.fd = this->_server_socket;
 	if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, this->_server_socket, &ev) < 0)
 	{
@@ -543,11 +528,10 @@ int Server::RunServer()
 	epoll_event events[MAX_EVENTS];
 	while (g_sig == 0)
 	{
-		// we check for events from our localUsers fd registered
-		int n = epoll_wait(this->_epfd, events, MAX_EVENTS, 100); // timeout 100ms
+		int n = epoll_wait(this->_epfd, events, MAX_EVENTS, 100); // timeout 100ms -> Max event ??
 		if (n < 0)
 		{
-			if (errno == EINTR) // signal interrompt
+			if (errno == EINTR) 
 			{
 				Debug::print(WARNING, "epoll_wait interrupted by signal, closing...");
 				break;

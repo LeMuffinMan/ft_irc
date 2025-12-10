@@ -6,6 +6,15 @@ UserCommand::UserCommand(std::vector<std::string> params)
 	_params = params;
 }
 
+/**
+ * @brief Execute the User command.
+ * User can claim a username, to identify itself on channels and server, 
+ * Ex : User username hostname servername :realname
+ *
+ */
+
+
+
 void UserCommand::execute(Client *executor, Server &server)
 {
 	if (!executor->isPasswordCorrect())

@@ -6,6 +6,12 @@ PassCommand::PassCommand(std::vector<std::string> params)
 	_params = params;
 }
 
+/**
+ * @brief Execute the Pass command.
+ * Allow user to input a password for the server.
+ * Ex: PASS password
+ *
+ */
 void PassCommand::execute(Client *executor, Server &server)
 {
 	if (_params.empty())

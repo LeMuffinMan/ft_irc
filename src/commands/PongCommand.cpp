@@ -7,7 +7,13 @@ PongCommand::PongCommand(std::vector<std::string> params)
 {
 	_params = params;
 }
-
+/**
+ * @brief Execute the PONG command.
+ * Keep track of user activity to kick inactive users.
+ * The server sent a Ping command with a timestamp to a client, 
+ * and expect a pong answer with the same timestamp as proof of activity
+ *
+ */
 void PongCommand::execute(Client *executor, Server &server)
 {
 	(void)server;

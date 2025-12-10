@@ -20,10 +20,13 @@ static std::vector<std::string> split_param(std::string params)
   return vec;
 }
 
-// _params[0] -> #a,#b,#c 
-// _params[1] -> nick,nick,nick
-// _params[2] -> msg si il y en a un 
-
+/**
+ * @brief Execute the Kick command.
+ * Kick a user from a channel.
+ * Ex: KICK #channel user :msg
+ * The targeted user leaves the channel.
+ *
+ */
 void KickCommand::execute(Client* executor, Server& server)
 {
 	if (!executor->isRegistered())

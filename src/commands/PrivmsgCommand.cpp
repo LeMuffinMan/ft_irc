@@ -2,7 +2,14 @@
 #include <sstream>
 #include "Server.hpp"
 
-// ERR_CANNOTSENDTOCHAN
+/**
+ * @brief Execute the Privmsg command.
+ * Users commuinicate using Primsg, directly to user sharing the same server, 
+ * or channl, or on an entire channel.
+ * Ex : Privmsg target_nickname :msg
+ * 		: Privmsg #channl :msg
+ *
+ */
 
 PrivmsgCommand::PrivmsgCommand(std::vector<std::string> params)
 {

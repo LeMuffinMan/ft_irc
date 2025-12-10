@@ -8,6 +8,13 @@ NickCommand::NickCommand(std::vector<std::string> params)
 	_params = params;
 }
 
+/**
+ * @brief Execute the Nick command.
+ * Allow user to claim a nickname.
+ * Ex: NICK john_doe
+ * User can appears under its nickname in channels.
+ *
+ */
 void NickCommand::execute(Client *executor, Server &server)
 {
 
