@@ -16,9 +16,9 @@
 
 // #define USE_FULL_CLIENT
 // #define USE_TESTER
-#ifdef USE_TESTER
-#define USE_FULL_CLIENT
-#endif
+// #ifdef USE_TESTER
+// #define USE_FULL_CLIENT
+// #endif
 
 Server::~Server()
 {
@@ -227,9 +227,9 @@ void Server::initClient(int client_fd, const std::string &ip_str, uint16_t port)
 	c._ip_address = ip_str;
 	c.port = port;
 	this->clients.insert(std::make_pair(client_fd, c));
-	// std::stringstream ss;
-	// ss << "New client: " << client_fd;
-	// Debug::print(DEBUG, ss.str());
+	std::stringstream ss;
+	ss << "New client: " << client_fd;
+	Debug::print(DEBUG, ss.str());
 }
 
 /**
@@ -267,7 +267,7 @@ void Server::new_client()
 		uint16_t port = ntohs(client_addr.sin_port);
 		inet_ntop(AF_INET, &client_addr.sin_addr, ip_str, sizeof(ip_str));
 		initClient(client_fd, ip_str, port);
-		this->clients[client_fd].printClientSocketInfo();
+		// this->clients[client_fd].printClientSocketInfo();
 	}
 }
 
@@ -389,7 +389,7 @@ void Server::is_authentification_complete(int fd)
 		client.setRegistered();
 		ss << clients[fd].getHost() << " successfully connected";
 		Debug::print(DEBUG, ss.str());
-		client.printClientIRCInfo();
+		// client.printClientIRCInfo();
 	}
 }
 
@@ -417,11 +417,12 @@ void Server::interpret_msg(int fd)
 		}
 		else
 		{
+			if (line.empty()) //if client send 'nothing', just ignore
+				continue;
 			std::stringstream ss;
 			ss << "[" << line << "]"
 			   << " from client " << fd
 			   << " received";
-
 			Debug::print(INFO, ss.str());
 		}
 	}

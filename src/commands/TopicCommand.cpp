@@ -18,6 +18,11 @@ TopicCommand::TopicCommand(std::vector<std::string> params)
  */
 void TopicCommand::execute(Client *executor, Server &server)
 {
+	if (!executor->isRegistered())
+	{
+		server.reply(executor, ERR_NOTREGISTERED(executor->getNickname()));
+		return;
+	}
 	if (_params.size() < 1)
 	{
 		server.reply(executor, ERR_NEEDMOREPARAMS(executor->getNickname(), "TOPIC"));

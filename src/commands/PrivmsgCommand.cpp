@@ -2,6 +2,8 @@
 #include <sstream>
 #include "Server.hpp"
 
+// ERR_CANNOTSENDTOCHAN
+
 PrivmsgCommand::PrivmsgCommand(std::vector<std::string> params)
 {
 	_params = params;
@@ -13,7 +15,10 @@ void PrivmsgCommand::execute(Client *executor, Server &server)
 	(void)server;
 
 	if (!executor->isRegistered())
+	{
+		server.reply(executor, ERR_NOTREGISTERED(executor->getNickname()));
 		return;
+	}
 	if (_params.size() > 2)
 	{
 		server.reply(executor, ERR_TOOMANYTARGETS(executor->getNickname(), _params[0], "407"));
@@ -40,6 +45,11 @@ void PrivmsgCommand::execute(Client *executor, Server &server)
 		}
 		if (!target->isClientInChannel(executor))
 		{
+					// Sent to a user who is either (a) not on a channel
+					//       which is mode +n or (b) not a chanop (or mode +v) on
+					//       a channel which has mode +m set or where the user is
+					//       banned and is trying to send a PRIVMSG message to
+					//       that channel.
 			server.reply(executor, ERR_CANNOTSENDTOCHAN(executor->getNickname(), _params[0]));
 			return;
 		}

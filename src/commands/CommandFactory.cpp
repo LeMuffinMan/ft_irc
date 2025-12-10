@@ -75,7 +75,7 @@ std::vector<std::string> CommandFactory::get_params(const std::string &line)
  */
 ACommand *CommandFactory::findAndCreateCommand(const std::string &line)
 {
-	Debug::print(DEBUG, "Parsing command: [" + line + "]");
+	// Debug::print(DEBUG, "Parsing command: [" + line + "]");
 	std::string cmd = CommandFactory::get_command(line);
 	if (cmd.empty())
 		return NULL;

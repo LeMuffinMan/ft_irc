@@ -8,3 +8,6 @@ pub mod privmsg;
 pub mod protocol;
 pub mod topic;
 pub mod user;
+pub mod mode;
+pub mod time;
+pub mod part;

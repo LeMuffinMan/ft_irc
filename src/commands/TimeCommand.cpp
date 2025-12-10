@@ -16,6 +16,11 @@ TimeCommand::TimeCommand(std::vector<std::string> params)
  */
 void TimeCommand::execute(Client *executor, Server &server)
 {
+	if (!executor->isRegistered())
+	{
+		server.reply(executor, ERR_NOTREGISTERED(executor->getNickname()));
+		return;
+	}
 	if (_params.size() >= 1)
 	{
 		server.reply(executor, "Time command does not take any parameters");

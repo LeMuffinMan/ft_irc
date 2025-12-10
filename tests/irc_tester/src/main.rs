@@ -29,6 +29,8 @@ async fn main() -> Result<()> {
     let no_mdp_chan_handle = tokio::spawn(no_mdp_chan_client(port, timeout));
     let mdp_chan_handle = tokio::spawn(mdp_chan_client(port, timeout));
     let invite_chan_handle = tokio::spawn(invite_chan_client(port, timeout));
+    let privmsg_client_nick_handle = tokio::spawn(privmsg_client_nick(port, timeout));
+    let privmsg_client_chan_handle = tokio::spawn(privmsg_client_chan(port, timeout));
 
     if stress_mode == 0 {
         let _ = test_behaviors(port, 0).await;
@@ -43,34 +45,18 @@ async fn main() -> Result<()> {
     no_mdp_chan_handle.abort();
     mdp_chan_handle.abort();
     invite_chan_handle.abort();
+    privmsg_client_chan_handle.abort();
+    privmsg_client_nick_handle.abort();
 
     Ok(())
 }
 
 //Todo
 //
-//INVITE :
-// - Normal : 2 clients, one inviting in an chan, another not in this chan
-// - RPL_INVITING
-// - CHANOPRIVSNEEDED
-// - Not registered
-//
-
-//
 //KICK :
-//- Normal : kick user
-//- Normal : kick user :msg
-//- Normal : chan user
-//- Normal : chan user :msg
-//- Normal : chan chan ... user user ...
-//- Normal : chan chan ... user user ... :msg
-//- @ -> as not operator
-//- NEEDMOREPARAMS
 //- BADCHANMASK
-//- NO SUCH CHAN
 //- USERNOTONCHAN
 //- USERNOTINCHAN
-//- Not registered
 //-
 // MODE:
 // - ERR_NEEDMOREPARAMS
@@ -79,7 +65,6 @@ async fn main() -> Result<()> {
 // -RPL_UMODEIS
 //
 // PART:
-// - ERR_NEEDMOREPARAMS
 // - ERR_NOSUCHCHANNEL
 // - ERR_NOTONCHANNEL
 //

@@ -52,14 +52,19 @@ pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
         ClientBehavior::InviteNeedMoreParams,
         ClientBehavior::InviteNoSuchNick,
         ClientBehavior::InviteNotOnChannel,
-        ClientBehavior::InviteNoPriv,
         ClientBehavior::InviteNotRegistered,
         ClientBehavior::PrivmsgNoRecipient,
         ClientBehavior::PrivmsgNoTextToSend,
-        // ClientBehavior::PrivmsgNoSuchChannel, //revooir ce test
+        ClientBehavior::PrivmsgNoSuchChannel,
+        ClientBehavior::PrivmsgToNick,
+        ClientBehavior::PrivmsgToChan,
         // ClientBehavior::PrivmsgCannotSendToChan,
         ClientBehavior::PrivmsgNoSuchNick,
+        ClientBehavior::PrivmsgNotRegistered,
+        ClientBehavior::PrivmsgTooManyTargets,
+        ClientBehavior::PrivmsgToNickNotSharingChan,
         ClientBehavior::KickNeedMoreParams,
+        ClientBehavior::KickNotRegistered,
         // ClientBehavior::KickBadChanMask,
         ClientBehavior::KickNoSuchChannel, //a revoir
         // ClientBehavior::KickChaNoPrivsNeeded,
@@ -75,11 +80,24 @@ pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
         // ClientBehavior::JoinBadChannelKey,
         // ClientBehavior::JoinChannelIsFull,
         ClientBehavior::TopicNeedMoreParams,
+        ClientBehavior::TopicNotRegistered,
         ClientBehavior::TopicNotOnChannel,
         ClientBehavior::TopicNoTopic,
         // ClientBehavior::TopicRpl,
         // ClientBehavior::TopicNoPriv,
         // ClientBehavior::TopicNoChanModes,
+        ClientBehavior::ModeNeedMoreParams,
+        ClientBehavior::ModeNotRegistered,
+
+        ClientBehavior::PartNeedMoreParams,
+        ClientBehavior::PartNotRegistered,
+
+        ClientBehavior::TimeWithParams,
+        ClientBehavior::TimeCheckTimeZone,
+        ClientBehavior::TimeNotRegistered,
+
+        ClientBehavior::InviteModeIJoin,
+        ClientBehavior::KickPriv,
     ];
 
     let mut futures: FuturesUnordered<_> = behaviors

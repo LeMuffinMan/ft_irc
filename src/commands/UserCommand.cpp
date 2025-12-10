@@ -8,7 +8,6 @@ UserCommand::UserCommand(std::vector<std::string> params)
 
 void UserCommand::execute(Client *executor, Server &server)
 {
-	(void)server;
 	if (!executor->isPasswordCorrect())
 	{
 		server.reply(executor, "PASS must be first");

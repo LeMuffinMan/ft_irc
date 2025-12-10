@@ -1,4 +1,7 @@
 use crate::behaviors::nick::*;
+use crate::behaviors::part::*;
+use crate::behaviors::time::*;
+use crate::behaviors::mode::*;
 use crate::behaviors::protocol::*;
 use crate::behaviors::invite::*;
 use crate::behaviors::join::*;
@@ -54,20 +57,25 @@ pub enum ClientBehavior {
     InviteNeedMoreParams,
     InviteNoSuchNick,
     InviteNotOnChannel,
-    InviteNoPriv,
     InviteNotRegistered,
 
     //privmsg
     PrivmsgNoRecipient,
     PrivmsgNoTextToSend,
-    // PrivmsgNoSuchChannel,
+    PrivmsgNoSuchChannel,
     // PrivmsgCannotSendToChan,
     PrivmsgNoSuchNick,
+    PrivmsgToNick,
+    PrivmsgToChan,
+    PrivmsgTooManyTargets,
+    PrivmsgToNickNotSharingChan,
+    PrivmsgNotRegistered,
 
     //kick
     // KickBadChanMask,
-    KickNoSuchChannel, // -> segfault : isClientInChannel Channel.cpp 108 (invalid read of size)
+    KickNoSuchChannel,
     KickNeedMoreParams,
+    KickNotRegistered,
     // KickChaNoPrivsNeeded,
     // KickUserNotInChannel,
 
@@ -85,11 +93,25 @@ pub enum ClientBehavior {
 
     //topic
     TopicNeedMoreParams,
+    TopicNotRegistered,
     TopicNotOnChannel,
     TopicNoTopic,
     // TopicRpl,
     // TopicNoPriv,
     // TopicNoChanModes,
+    //
+    ModeNeedMoreParams,
+    ModeNotRegistered,
+
+    PartNeedMoreParams,
+    PartNotRegistered,
+
+    TimeWithParams,
+    TimeCheckTimeZone,
+    TimeNotRegistered,
+
+    InviteModeIJoin,
+    KickPriv,
 }
 
 impl BehaviorHandler for ClientBehavior {
@@ -97,7 +119,6 @@ impl BehaviorHandler for ClientBehavior {
         use ClientBehavior::*;
 
         match self {
-            // connection
             FragmentedMessages => |p, id, _| Box::pin(fragmented_messages(p, false, id)),
             LowBandwidth => |p, id, _| Box::pin(low_bandwidth(p, false, id)),
             LegitDisconnect => |p, id, t| Box::pin(legit_disconnect(p, id, t)),
@@ -125,17 +146,22 @@ impl BehaviorHandler for ClientBehavior {
             InviteNeedMoreParams => |p, id, t| Box::pin(invite_need_more_params(p, id, t)),
             InviteNoSuchNick => |p, id, t| Box::pin(invite_no_such_nick(p, id, t)), //
             InviteNotOnChannel => |p, id, t| Box::pin(invite_not_on_channel(p, id, t)),
-            InviteNoPriv => |p, id, t| Box::pin(invite_no_priv(p, id, t)),
             InviteNotRegistered => |p, id, t| Box::pin(invite_not_registered(p, id, t)),
 
             PrivmsgNoRecipient => |p, id, t| Box::pin(privmsg_no_recipient(p, id, t)),
             PrivmsgNoTextToSend => |p, id, t| Box::pin(privmsg_no_text_to_send(p, id, t)),
-            // PrivmsgNoSuchChannel => |p, id, t| Box::pin(privmsg_no_such_channel(p, id, t)),
+            PrivmsgNoSuchChannel => |p, id, t| Box::pin(privmsg_no_such_channel(p, id, t)),
             // PrivmsgCannotSendToChan => |p, id, t| Box::pin(privmsg_cannot_send_to_chan(p, id, t)),
             PrivmsgNoSuchNick => |p, id, t| Box::pin(privmsg_no_such_nick(p, id, t)),
+            PrivmsgToNick => |p, id, t| Box::pin(privmsg_to_nick(p, id, t)),
+            PrivmsgToChan => |p, id, t| Box::pin(privmsg_to_chan(p, id, t)),
+            PrivmsgTooManyTargets => |p, id, t| Box::pin(privmsg_too_many_targets(p, id, t)),
+            PrivmsgToNickNotSharingChan => |p, id, t| Box::pin(privmsg_to_nick_not_sharing_chan(p, id, t)),
+            PrivmsgNotRegistered => |p, id, t| Box::pin(privmsg_not_registered(p, id, t)),
 
             KickNeedMoreParams => |p, id, t| Box::pin(kick_need_more_params(p, id, t)),
             KickNoSuchChannel => |p, id, t| Box::pin(kick_no_such_channel(p, id, t)),
+            KickNotRegistered => |p, id, t| Box::pin(kick_not_registered(p, id, t)),
 
             JoinNeedMoreParams => |p, id, t| Box::pin(join_need_more_params(p, id, t)),
             JoinNoSuchChan => |p, id, t| Box::pin(join_no_such_channel(p, id, t)),
@@ -148,11 +174,26 @@ impl BehaviorHandler for ClientBehavior {
             // JoinBadChannelKey => |p, id, t| Box::pin(join_bad_channel_key(p, id, t)),
             // JoinChannelIsFull => |p, id, t| Box::pin(join_channel_is_full(p, id, t)),
             TopicNeedMoreParams => |p, id, t| Box::pin(topic_need_more_params(p, id, t)),
+            TopicNotRegistered => |p, id, t| Box::pin(topic_not_registered(p, id, t)),
             TopicNotOnChannel => |p, id, t| Box::pin(topic_not_on_chan(p, id, t)),
             TopicNoTopic => |p, id, t| Box::pin(topic_no_topic(p, id, t)),
             // TopicRpl => |p, id, t| Box::pin(topic_reply(p, id, t)),
             // TopicNoPriv => |p, id, t| Box::pin(topic_no_priv(p, id, t)),
             // TopicNoChanModes => |p, id, t| Box::pin(topic_no_chan_modes(p, id, t)),
+            //
+            ModeNeedMoreParams => |p, id, t| Box::pin(mode_need_more_params(p, id, t)),
+            ModeNotRegistered => |p, id, t| Box::pin(mode_not_registered(p, id, t)),
+
+            PartNeedMoreParams => |p, id, t| Box::pin(part_need_more_params(p, id, t)),
+            PartNotRegistered => |p, id, t| Box::pin(part_not_registered(p, id, t)),
+            
+            TimeWithParams => |p, id, t| Box::pin(time_with_params(p, id, t)),
+            TimeCheckTimeZone => |p, id, t| Box::pin(time_check_answer(p, id, t)),
+            TimeNotRegistered => |p, id, t| Box::pin(time_not_registered(p, id, t)),
+
+
+            KickPriv => |p, id, t| Box::pin(kick_priviledges(p, id, t)),
+            InviteModeIJoin => |p, id, t| Box::pin(invite_mode_i_join(p, id, t)),
         }
     }
 }

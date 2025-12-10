@@ -90,7 +90,7 @@ pub async fn invite_chan_client(port: u16, timeout_ms: u64) -> Result<()> {
     }
 }
 
-pub async fn privmsg_client(port: u16, timeout_ms: u64) -> Result<()> {
+pub async fn privmsg_client_chan(port: u16, timeout_ms: u64) -> Result<()> {
     let mut client = Client::connect(port).await?;
     let nick = "invite_chan_client".to_string();
 
@@ -106,7 +106,7 @@ pub async fn privmsg_client(port: u16, timeout_ms: u64) -> Result<()> {
                 }
                 else {
                     //checker si chan / user -> repondre ne fct
-                    let _ = client.send(&format!("PRIVMSG #privmsg_chan :{l}"), 0).await;
+                    let _ = client.send(&format!("{l}"), 0).await;
                 }
             }
             _ => {
@@ -115,3 +115,32 @@ pub async fn privmsg_client(port: u16, timeout_ms: u64) -> Result<()> {
         }
     }
 }
+
+
+pub async fn privmsg_client_nick(port: u16, timeout_ms: u64) -> Result<()> {
+    let mut client = Client::connect(port).await?;
+    let nick = "privmsg_nick_client".to_string();
+
+    client.authenticate(nick, timeout_ms).await?;
+    client.send("JOIN #privmsg_nick\r\n", 0).await?;
+
+    loop {
+        match client.read_line_timeout(1000).await {
+            Ok(Some(l)) => {
+                if l.starts_with("PING") {
+                    let resp = l.replace("PING", "PONG");
+                    client.send(&resp, 0).await?;
+                }
+                else {
+                    //checker si chan / user -> repondre ne fct
+                    let _ = client.send(&format!("{l}"), 0).await;
+                }
+            }
+            _ => {
+                sleep(Duration::from_millis(50)).await;
+            }
+        }
+    }
+}
+
+

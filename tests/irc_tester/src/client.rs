@@ -22,7 +22,10 @@ impl Client {
     ) -> Result<()> {
         self.send(cmd, 0).await?;
         if let Some(line) = self.read_line_timeout(timeout_ms).await? {
-            if !line.contains(expect) {
+            if line.starts_with("PING") {
+                let resp = line.replace("PING", "PONG");
+                self.send(&resp, 0).await?;
+            } else if !line.contains(expect) {
                 return Err(anyhow::anyhow!("{} | Received [{}]", error, line));
             }
         }
