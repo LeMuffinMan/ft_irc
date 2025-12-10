@@ -25,6 +25,7 @@ Server::~Server()
 	for (clientsType::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
 	{
 		close(it->first);
+		delete it->second;
 	}
 	for (channelsType::iterator it = this->channels.begin(); it != this->channels.end(); ++it)
 	{
@@ -219,13 +220,13 @@ int Server::init_epoll_event(int client_fd)
 void Server::initClient(int client_fd, const std::string &ip_str, uint16_t port)
 {
 	// since we added a client in our epoll, we need a struct to represent it on our server
-	Client c;
-	c.fd = client_fd;			   // the fd makes the link between epoll and our list of client, it is the key in our map
-	c.last_ping = std::time(NULL); // we want to kick incactives clients, so we store the time of the last ping received
-	c.connection_time = c.last_ping;
-	c.timeout = -1;
-	c._ip_address = ip_str;
-	c.port = port;
+	Client *c = new Client();
+	c->fd = client_fd;			   // the fd makes the link between epoll and our list of client, it is the key in our map
+	c->last_ping = std::time(NULL); // we want to kick incactives clients, so we store the time of the last ping received
+	c->connection_time = c->last_ping;
+	c->timeout = -1;
+	c->_ip_address = ip_str;
+	c->port = port;
 	this->clients.insert(std::make_pair(client_fd, c));
 	std::stringstream ss;
 	ss << "New client: " << client_fd;
@@ -291,8 +292,9 @@ void Server::removeClient(int fd)
 {
 	epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
 	close(fd);
+	delete this->clients[fd];
 	this->clients.erase(fd);
-	// this->clients[fd].printClientInfo();
+	// this->clients[fd]->printClientInfo();
 }
 
 void Server::removeClient(Client *client)
@@ -324,19 +326,19 @@ int Server::read_client_fd(int fd)
 	if (r >= 512)
 	{
 		// si on veut traiter les 512 premiers octets il faut read ici
-		this->reply(&this->clients[fd], "Buffer limit reached, only 512 bytes including \\r\\n allowed");
+		this->reply(this->clients[fd], "Buffer limit reached, only 512 bytes including \\r\\n allowed");
 		std::stringstream ss;
 		ss << "Message " << r << " bytes long from " << fd << " ignored";
 		Debug::print(INFO, ss.str());
-		this->clients[fd].rbuf.clear();
+		this->clients[fd]->rbuf.clear();
 		return 0; // 1 si on veut lire et traiter les 512 premiers octets
 	}
 
 	if (r > 0)
 	{
-		this->clients[fd].rbuf.append(buf, &buf[r]);
+		this->clients[fd]->rbuf.append(buf, &buf[r]);
 		// std::stringstream ss;
-		// ss << "Received " << r << " bytes from fd " << fd << " [" << this->clients[fd].rbuf << "]";
+		// ss << "Received " << r << " bytes from fd " << fd << " [" << this->clients[fd]->rbuf << "]";
 		// Debug::print(DEBUG, ss.str());
 		return 1;
 	}
@@ -375,19 +377,19 @@ int Server::read_client_fd(int fd)
 void Server::is_authentification_complete(int fd)
 {
 	if (clients.find(fd) != clients.end() &&
-		!clients[fd].isRegistered() &&
-		clients[fd].isPasswordCorrect() == true &&
-		clients[fd].getNickname() != "" &&
-		clients[fd].getUsername() != "")
+		!clients[fd]->isRegistered() &&
+		clients[fd]->isPasswordCorrect() == true &&
+		clients[fd]->getNickname() != "" &&
+		clients[fd]->getUsername() != "")
 	{
-		Client &client = this->clients[fd];
+		Client *client = this->clients[fd];
 		std::stringstream ss;
-		ss << client.getNickname() << "!~" << client.getUsername() << "@" << client.getIp();
-		client.setHost(ss.str());
+		ss << client->getNickname() << "!~" << client->getUsername() << "@" << client->getIp();
+		client->setHost(ss.str());
 		ss.str("");
-		this->reply(&client, RPL_WELCOME(client.getNickname(), client.getHost()));
-		client.setRegistered();
-		ss << clients[fd].getHost() << " successfully connected";
+		this->reply(client, RPL_WELCOME(client->getNickname(), client->getHost()));
+		client->setRegistered();
+		ss << clients[fd]->getHost() << " successfully connected";
 		Debug::print(DEBUG, ss.str());
 		// client.printClientIRCInfo();
 	}
@@ -403,15 +405,15 @@ void Server::is_authentification_complete(int fd)
 void Server::interpret_msg(int fd)
 {
 	size_t pos;
-	while ((pos = this->clients[fd].rbuf.find("\r\n")) != std::string::npos)
+	while (this->clients.find(fd) != this->clients.end() && (pos = this->clients[fd]->rbuf.find("\r\n")) != std::string::npos)
 	{
-		std::string line = this->clients[fd].rbuf.substr(0, pos);
-		this->clients[fd].rbuf.erase(0, pos + 2);
+		std::string line = this->clients[fd]->rbuf.substr(0, pos);
+		this->clients[fd]->rbuf.erase(0, pos + 2);
 		ACommand *cmd = CommandFactory::findAndCreateCommand(line);
 		// try catch ?
 		if (cmd)
 		{
-			cmd->execute(&this->clients[fd], *this);
+			cmd->execute(this->clients[fd], *this);
 			delete cmd;
 			// this->clients[fd]->printClientInfo();
 		}
@@ -426,7 +428,9 @@ void Server::interpret_msg(int fd)
 			Debug::print(INFO, ss.str());
 		}
 	}
-	this->clients[fd].last_ping = std::time(NULL);
+	if (this->clients.find(fd) == this->clients.end())
+		return;
+	this->clients[fd]->last_ping = std::time(NULL);
 	this->is_authentification_complete(fd);
 }
 
@@ -475,7 +479,7 @@ void Server::handle_events(int n, epoll_event events[MAX_EVENTS])
 			// EPOLLOUT : We set that flag when we write in a client buffer, we need to send it
 			if (evs & EPOLLOUT)
 			{
-				if (!this->reply(&this->clients[fd], "")) // empty message to trigger write of wbuf != true)
+				if (!this->reply(this->clients[fd], "")) // empty message to trigger write of wbuf != true)
 					continue;
 			}
 			// EPOLLIN : There is data to read in the fd associated

@@ -102,25 +102,25 @@ void Server::remove_inactive_clients()
 	{
 		// if (!it->second)
 		// 	continue;
-		Client &client = it->second;
+		Client *client = it->second;
 		now = std::time(NULL);
-		if ((client.timeout > 0 && now > client.timeout) ||
-			(!client.isRegistered() && client.connection_time + 10 < now))
+		if ((client->timeout > 0 && now > client->timeout) ||
+			(!client->isRegistered() && client->connection_time + 10 < now))
 		{
 			std::stringstream ss;
-			if (client.isRegistered())
+			if (client->isRegistered())
 			{
 				// ss << client->getUsername()
 				// << " aka " << client->getNickname()
 				// << " timed out\r\n";
-				this->reply(&client, "timed out");
+				this->reply(client, "timed out");
 			}
 			else
 			{
 				// ss << "Disconnected: timed out" << std::endl;
 				// client.printClientInfo();
-				if (clients.find(it->first) != clients.end() && clients[it->first].fd > 0) // fixed l'erreur sur timed out fd = -1
-					this->reply(&client, "timed out");
+				if (clients.find(it->first) != clients.end() && clients[it->first]->fd > 0) // fixed l'erreur sur timed out fd = -1
+					this->reply(client, "timed out");
 			}
 			to_erase.push_back(it->first);
 		}
@@ -138,17 +138,17 @@ void Server::check_clients_ping()
 		// 	continue;
 		int fd = it->first;
 		(void)fd;
-		Client &client = it->second;
+		Client *client = it->second;
 
 		std::time_t now = std::time(NULL);
 
-		if (client.isRegistered() && now - client.last_ping > PING_INTERVAL)
+		if (client->isRegistered() && now - client->last_ping > PING_INTERVAL)
 		{
 			std::stringstream ss;
 			ss << "PING :" << now;
-			this->reply(&client, ss.str());
-			client.timeout = now + 3;
-			client.last_ping = now;
+			this->reply(client, ss.str());
+			client->timeout = now + 3;
+			client->last_ping = now;
 			// ss.clear();
 			// ss << "[PING :" << now << "] sent to client " << fd;
 			// Debug::print(DEBUG, ss.str());
@@ -160,8 +160,8 @@ Client *Server::getClient(const std::string &nickname)
 {
 	for (clientsType::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
 	{
-		if (it->second.getNickname() == nickname)
-			return &(it->second);
+		if (it->second->getNickname() == nickname)
+			return (it->second);
 	}
 	return NULL;
 }

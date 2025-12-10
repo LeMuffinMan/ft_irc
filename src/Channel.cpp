@@ -87,7 +87,7 @@ bool Channel::addClientToAllowList(Client *client)
 {
 	if (isClientInAllowList(client))
 		return false;
-	_clients.insert(client);
+	_allowed_clients.insert(client);
 	return true;
 }
 
@@ -95,7 +95,7 @@ bool Channel::removeClientFromAllowList(Client *client)
 {
 	if (isClientInAllowList(client))
 		return false;
-	_clients.erase(client);
+	_allowed_clients.erase(client);
 	return true;
 }
 
@@ -125,7 +125,7 @@ bool Channel::isClientInChannel(Client *client) const
 
 bool Channel::isClientInAllowList(Client *client) const
 {
-	return _allowed_clients.find(client) != _clients.end();
+	return _allowed_clients.find(client) != _allowed_clients.end();
 }
 
 bool Channel::isClientOPChannel(Client *client) const

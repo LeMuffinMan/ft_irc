@@ -24,7 +24,7 @@ class ACommand;
 class Server
 {
 private:
-	typedef std::map<int, Client> clientsType;			   //!< Type for clients
+	typedef std::map<int, Client*> clientsType;			   //!< Type for clients
 	typedef std::map<std::string, Channel *> channelsType; //!< Type for channels
 	int _port;											   //!< Port number for the server
 	std::string _password;								   //!< Password for the server
