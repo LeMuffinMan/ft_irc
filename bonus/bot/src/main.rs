@@ -90,7 +90,7 @@ async fn wall_e(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error>> {
                     timeout_ms,
                 )
                 .await?;
-                std::thread::sleep(std::time::Duration::from_secs(3));
+                tokio::time::sleep(std::time::Duration::from_secs(3));
                 bot.try_expect(
                     &format!("KICK #BuyNLarge {:?}\r\n", nick_player),
                     &format!("KICK #BuyNLarge {:?}", nick_player),
@@ -153,18 +153,20 @@ async fn chat_gpt(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error>> {
     loop {
         if let Some(line) = bot.read_line_timeout(timeout_ms).await? {
             if line.starts_with(":Wall-E") {
-                let player_name = line.rfind(':');
-                bot.try_expect(
-                    &format!("INVITE #Open-AI {:?}\r\n", player_name),
-                    "341",
-                    "Failed to invite user on #Open-AI",
-                    timeout_ms,
-                )
-                .await?;
-                break;
+                    if let Some(idx) = line.rfind(':') {
+                        let nick_player = &line[idx+1..];
+                    bot.try_expect(
+                        &format!("INVITE #Open-AI {:?}\r\n", player_name),
+                        "341",
+                        "Failed to invite user on #Open-AI",
+                        timeout_ms,
+                    )
+                    .await?;
+                    break;
+                    }
             } else if line.starts_with("JOIN") {
                 let nick_player = line.rfind(':');
-                std::thread::sleep(std::time::Duration::from_secs(3));
+                tokio::time::sleep(std::time::Duration::from_secs(3));
                 bot.try_expect(
                     &format!("KICK #Open-AI {:?}\r\n", nick_player),
                     &format!("KICK #Open-AI {:?}", nick_player),
@@ -230,8 +232,11 @@ and if you’re not careful, you may walk right into it.
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let timeout_ms = 0;
-    glados(timeout_ms).await?;
-    wall_e(timeout_ms).await?;
-    chat_gpt(timeout_ms).await?;
+    let glados_handle = tokio::spawn(glados(timeout_ms));
+    let wall_e_handle = tokio::spawn(wall_e(timeout_ms));
+    let chat_gpt_handle = tokio::spawn(chat_gpt(timeout_ms));
+
+    let _ = tokio::join!(glados_handle, wall_e_handle, chat_gpt_handle);
+
     Ok(())
 }
