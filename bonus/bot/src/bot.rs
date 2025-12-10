@@ -139,8 +139,7 @@ impl Bot {
                 let trimed_answer = player_answer.rfind(':');
                 println!("trimed_answer = {:?}", trimed_answer);
                 if  player_answer.ends_with(":2\r\n") {
-                    self.send(&format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translate robots languages
-                            \r\n"), timeout_ms).await;
+                    self.send(&format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates robot languages\r\n"), timeout_ms).await;
                     println!("Good answer");
                     //ici il envoie un msg a un autre robot pour se faire invite
                     return Ok(true);
