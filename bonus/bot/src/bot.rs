@@ -38,7 +38,6 @@ impl Bot {
         )
         .await?;
 
-
         if let Some(line) = self.read_line_timeout(timeout_ms).await? {
             if !line.contains("Welcome to the Internet Relay Network") {
                 return Err(anyhow::anyhow!(
@@ -115,14 +114,19 @@ impl Bot {
         None
     }
 
-    pub async fn pose_riddle(&mut self, riddle: String, nick_player: &String, timeout_ms: u64) -> Result<bool, ()> {
+    pub async fn pose_riddle(
+        &mut self,
+        riddle: String,
+        nick_player: &String,
+        timeout_ms: u64,
+    ) -> Result<bool, ()> {
         if let Ok(_) = self.send(&riddle, timeout_ms).await {
             std::thread::sleep(std::time::Duration::from_millis(200));
             if let Ok(Some(player_answer)) = self.read_line_timeout(timeout_ms).await {
                 println!("Player_answer = {player_answer}");
                 let trimed_answer = player_answer.rfind(':');
                 println!("trimed_answer = {:?}", trimed_answer);
-                if  player_answer.ends_with(":2\r\n") {
+                if player_answer.ends_with(":2\r\n") {
                     let _ = self.send(&format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates robot languages\r\n"), timeout_ms).await;
                     println!("Good answer");
                     return Ok(true);
@@ -131,7 +135,14 @@ impl Bot {
                     let _ = self.send(&format!("PRIVMSG {nick_player} :Uh oh. Somebody cut the cake. I told them to wait for you, but they did it anyway. There is still some left, though, if you hurry back.\r\n"), timeout_ms).await;
                 } else {
                     println!("Bad answer");
-                    let _ = self.send(&format!("PRIVMSG {nick_player} :You are just as smart as you seem.\r\n"), timeout_ms).await;
+                    let _ = self
+                        .send(
+                            &format!(
+                                "PRIVMSG {nick_player} :You are just as smart as you seem.\r\n"
+                            ),
+                            timeout_ms,
+                        )
+                        .await;
                 }
                 return Ok(false);
             } else {
