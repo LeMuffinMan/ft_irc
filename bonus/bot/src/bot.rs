@@ -131,29 +131,31 @@ impl Bot {
         None
     }
 
-    pub async fn pose_riddle(&mut self, riddle: String, answer: String, nick_player: &String, timeout_ms: u64) -> bool {
+    pub async fn pose_riddle(&mut self, riddle: String, answer: String, nick_player: &String, timeout_ms: u64) -> Result<bool, ()> {
         if let Ok(_) = self.send(&riddle, timeout_ms).await {
+            std::thread::sleep(std::time::Duration::from_millis(200));
             if let Ok(Some(player_answer)) = self.read_line_timeout(timeout_ms).await {
-                println!("ICI, player_answer = {player_answer}");
-                match player_answer == answer {
-                    true => {
-                            self.send("Huh. There isn't enough neurotoxin to kill you. So I guess you win.", timeout_ms);
-                        //ici il envoie un msg a un autre robot pour se faire invite
-                        return true;
-                    },
-                    false => {
-                        if player_answer == "1" {
-                            self.send("Uh oh. Somebody cut the cake. I told them to wait for you, but they did it anyway. There is still some left, though, if you hurry back.", timeout_ms);
-                        } else {
-                            self.send("You are just as smart as you seem.", timeout_ms);
-                        }
-                        return false;
-                    },
-                };
+                println!("Player_answer = {player_answer}");
+                let trimed_answer = player_answer.rfind(':');
+                println!("trimed_answer = {:?}", trimed_answer);
+                if  player_answer.ends_with(":2\r\n") {
+                    self.send(&format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translate robots languages
+                            \r\n"), timeout_ms).await;
+                    println!("Good answer");
+                    //ici il envoie un msg a un autre robot pour se faire invite
+                    return Ok(true);
+                } else if player_answer.ends_with(":1\r\n") {
+                    println!("Bad answer");
+                    self.send(&format!("PRIVMSG {nick_player} :Uh oh. Somebody cut the cake. I told them to wait for you, but they did it anyway. There is still some left, though, if you hurry back.\r\n"), timeout_ms).await;
+                } else {
+                    println!("Bad answer");
+                    self.send(&format!("PRIVMSG {nick_player} :You are just as smart as you seem.\r\n"), timeout_ms).await;
+                }
+                return Ok(false);
             } else {
-                unreachable!("Failed to extract answer from player");
+                return Err(());
             }
         }
-        unreachable!("Failed to send riddle to player");
+        Err(())
     }
 }
