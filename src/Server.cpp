@@ -404,8 +404,10 @@ void Server::is_authentification_complete(int fd)
  */
 void Server::interpret_msg(int fd)
 {
+	if (this->clients.find(fd) == this->clients.end())
+		return;
 	size_t pos;
-	while (this->clients.find(fd) != this->clients.end() && (pos = this->clients[fd]->rbuf.find("\r\n")) != std::string::npos)
+	while ((pos = this->clients[fd]->rbuf.find("\r\n")) != std::string::npos)
 	{
 		std::string line = this->clients[fd]->rbuf.substr(0, pos);
 		this->clients[fd]->rbuf.erase(0, pos + 2);
@@ -427,9 +429,9 @@ void Server::interpret_msg(int fd)
 			   << " received";
 			Debug::print(INFO, ss.str());
 		}
+		if (this->clients.find(fd) == this->clients.end())
+			return;
 	}
-	if (this->clients.find(fd) == this->clients.end())
-		return;
 	this->clients[fd]->last_ping = std::time(NULL);
 	this->is_authentification_complete(fd);
 }

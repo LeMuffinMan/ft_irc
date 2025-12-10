@@ -48,13 +48,15 @@ void JoinCommand::execute(Client *executor, Server &server)
 	std::vector<std::string> channel_names;
 	std::vector<std::string> channel_keys;
 	std::stringstream ss_1(_params[0]);
-	std::string channel_name;
-	std::string channel_key;
 	char del = ',';
+{
+	std::string channel_name;
 	while (getline(ss_1, channel_name, del))
 		channel_names.push_back(channel_name);
+}
 	if (_params.size() >= 2)
 	{
+		std::string channel_key;
 		std::stringstream ss_2(_params[1]);
 		while (getline(ss_2, channel_key, del))
 			channel_keys.push_back(channel_key);
@@ -94,7 +96,7 @@ void JoinCommand::execute(Client *executor, Server &server)
 			else
 			{
 				channel->addClient(executor);
-				server.reply(executor, ":" + executor->getNickname() + " JOIN " + channel_name[i]);
+				server.replyChannel(channel, ":" + executor->getNickname() + " JOIN " + channel_names[i]);
 				if (!channel->getTopic().empty())
 					server.reply(executor, RPL_TOPIC(executor->getNickname(), channel_names[i], channel->getTopic()));
 			}
@@ -113,13 +115,13 @@ void JoinCommand::execute(Client *executor, Server &server)
 				continue;
 			}
 			channel->addClient(executor);
-			server.reply(executor, ":" + executor->getNickname() + " JOIN " + channel_name[i]);
+			server.replyChannel(channel, ":" + executor->getNickname() + " JOIN " + channel_names[i]);
 			if (!channel->getTopic().empty())
 				server.reply(executor, RPL_TOPIC(executor->getNickname(), channel_names[i], channel->getTopic()));
 			continue;
 		}
 		channel->addClient(executor);
-		server.reply(executor, ":" + executor->getNickname() + " JOIN " + channel_name[i]);
+		server.replyChannel(channel, ":" + executor->getNickname() + " JOIN " + channel_names[i]);
 		if (!channel->getTopic().empty())
 			server.reply(executor, RPL_TOPIC(executor->getNickname(), channel_names[i], channel->getTopic()));
 	}
