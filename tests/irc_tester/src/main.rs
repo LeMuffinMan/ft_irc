@@ -22,7 +22,7 @@ fn parse() -> (usize, usize, usize) {
 #[tokio::main]
 async fn main() -> Result<()> {
     let port = 6667;
-    let timeout = 0; 
+    let timeout = 0;
     let (num_clients, stress_mode, beh_mode) = parse();
 
     let controle_handle = tokio::spawn(reserved_nick_client(port, timeout));

@@ -1,13 +1,13 @@
 pub mod invite;
 pub mod join;
 pub mod kick;
+pub mod mode;
 pub mod nick;
+pub mod part;
 pub mod pass;
 pub mod ping_pong;
 pub mod privmsg;
 pub mod protocol;
+pub mod time;
 pub mod topic;
 pub mod user;
-pub mod mode;
-pub mod time;
-pub mod part;

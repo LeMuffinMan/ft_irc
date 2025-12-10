@@ -16,7 +16,6 @@ pub async fn run_client(
     behavior: ClientBehavior,
     timeout_ms: u64,
 ) -> ClientResult {
-
     let handler = behavior.handler();
     let start = Instant::now();
     let result = handler(port, id, timeout_ms).await;
@@ -88,14 +87,11 @@ pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
         // ClientBehavior::TopicNoChanModes,
         ClientBehavior::ModeNeedMoreParams,
         ClientBehavior::ModeNotRegistered,
-
         ClientBehavior::PartNeedMoreParams,
         ClientBehavior::PartNotRegistered,
-
         ClientBehavior::TimeWithParams,
         ClientBehavior::TimeCheckTimeZone,
         ClientBehavior::TimeNotRegistered,
-
         ClientBehavior::InviteModeIJoin,
         ClientBehavior::KickPriv,
     ];

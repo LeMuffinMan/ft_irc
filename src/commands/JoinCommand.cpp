@@ -1,3 +1,4 @@
+
 #include "JoinCommand.hpp"
 #include <sstream>
 
@@ -126,3 +127,4 @@ void JoinCommand::execute(Client *executor, Server &server)
 			server.reply(executor, RPL_TOPIC(executor->getNickname(), channel_names[i], channel->getTopic()));
 	}
 }
+

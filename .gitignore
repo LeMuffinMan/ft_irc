@@ -81,3 +81,4 @@ ircserv
 .server_output.log
 tests/irc_tester/target/
 .server.log
+bonus/bot/target/

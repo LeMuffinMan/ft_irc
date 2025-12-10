@@ -17,7 +17,8 @@ pub async fn invite_mode_i_join(port: u16, id: usize, timeout_ms: u64) -> Result
             &format!("JOIN"),
             "C1 Failed to join new chan",
             timeout_ms,
-        ).await?;
+        )
+        .await?;
     client1
         .try_expect(
             &format!("INVITE {} #{}chan\r\n", &nick2, &nick1),
@@ -27,31 +28,45 @@ pub async fn invite_mode_i_join(port: u16, id: usize, timeout_ms: u64) -> Result
         )
         .await?;
     // client2.expect("341", "C2 No invite confirmation received", timeout_ms).await?;
-    client1.try_expect(
-        &format!("MODE #{}chan +i\r\n", &nick1),
-        &format!("324 {} #{}chan +i", &nick1, &nick1), 
-        "C1 Mode didnt answered 324",
+    client1
+        .try_expect(
+            &format!("MODE #{}chan +i\r\n", &nick1),
+            &format!("324 {} #{}chan +i", &nick1, &nick1),
+            "C1 Mode didnt answered 324",
             timeout_ms,
-    ).await?;
-    client3.try_expect(
-        &format!("JOIN #{}chan\r\n", &nick1),
-        " :Cannot join channel (+i)",
-        "C3 ERR_INVITEONLYCHAN missing",
+        )
+        .await?;
+    client3
+        .try_expect(
+            &format!("JOIN #{}chan\r\n", &nick1),
+            " :Cannot join channel (+i)",
+            "C3 ERR_INVITEONLYCHAN missing",
             timeout_ms,
-    ).await?;
-    client2.try_expect(
+        )
+        .await?;
+    client2
+        .try_expect(
             &format!("INVITE inv_normalchan_{}-3 #{}chan", id, &nick1),
             ":You're not channel operator",
             "C2 ERR_NOPRIV missing",
             timeout_ms,
-    ).await?;
-    client1.try_expect(
+        )
+        .await?;
+    client1
+        .try_expect(
             &format!("INVITE inv_normalchan_{}-3 #{}chan", id, &nick1),
             "341",
             "C1 No invite confirmation received ",
             timeout_ms,
-    ).await?;
-    client3.expect(":Cannot join channel (+i)", "C3 No invite confirmation received", timeout_ms).await?;
+        )
+        .await?;
+    client3
+        .expect(
+            ":Cannot join channel (+i)",
+            "C3 No invite confirmation received",
+            timeout_ms,
+        )
+        .await?;
     client1.shutdown().await?;
     client2.shutdown().await?;
     client3.shutdown().await?;

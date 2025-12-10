@@ -558,8 +558,8 @@ int Server::RunServer()
 		handle_events(n, events);
 		deleteUnusedChannels();
 #ifdef USE_FULL_CLIENT
-		this->check_clients_ping();		 // si on n'a pas eu de signe d'activite depuis trop longtemps
-		this->remove_inactive_clients(); // remove inactive localUsers after a unanswered ping
+		// this->check_clients_ping();		 // si on n'a pas eu de signe d'activite depuis trop longtemps
+		// this->remove_inactive_clients(); // remove inactive localUsers after a unanswered ping
 #endif
 	}
 	close(this->_server_socket);

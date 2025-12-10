@@ -37,8 +37,6 @@ pub async fn privmsg_to_nick(port: u16, id: usize, timeout_ms: u64) -> Result<()
 
     client.authenticate(nick, timeout_ms).await?;
 
-
-
     client
         .try_expect(
             "JOIN #privmsg_nick\r\n",
@@ -78,7 +76,6 @@ pub async fn privmsg_to_nick_not_sharing_chan(port: u16, id: usize, timeout_ms: 
 
     Ok(())
 }
-
 
 pub async fn privmsg_to_chan(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("{}_privmsgtochan", id);
@@ -191,4 +188,3 @@ pub async fn privmsg_not_registered(port: u16, _id: usize, timeout_ms: u64) -> R
     client.shutdown().await?;
     Ok(())
 }
-

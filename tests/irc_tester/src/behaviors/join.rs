@@ -100,20 +100,17 @@ pub async fn join_existing_multi_chan(port: u16, id: usize, timeout_ms: u64) -> 
     let nick = format!("{}_join_multi", id);
     let mut client = Client::connect(port).await?;
     client.authenticate(nick.clone(), timeout_ms).await?;
-
-    let join_cmd = format!("JOIN #newchan{},#secondnewchan{}\r\n", nick, nick);
     client
         .try_expect(
-            join_cmd.as_str(),
+            &format!("JOIN #newchan{},#secondnewchan{}\r\n", nick, nick),
             "JOIN #newchan",
             "Failed to join first chan ",
             timeout_ms,
         )
         .await?;
-    let second_join_cmd = format!("JOIN #secondnewchan{}", nick);
     client
         .expect(
-            second_join_cmd.as_str(),
+            &format!("JOIN #secondnewchan{}", nick),
             "Failed to join second chan ",
             timeout_ms,
         )

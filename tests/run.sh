@@ -59,7 +59,7 @@ log "Building Rust tester..."
 
 KITTY_PID=0
 if command -v kitty &>/dev/null && [ "$4" = 1 ]; then
-    kitty --title "IRC Server Log" watch -n 0.1 tail -45 .server.log 2> /dev/null &
+    kitty --title "IRC Server Log" tail -f .server.log 2> /dev/null &
     KITTY_PID=$!
 fi
 

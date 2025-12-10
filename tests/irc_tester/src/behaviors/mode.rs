@@ -7,7 +7,7 @@ use anyhow::Result;
 //ERR_CHANOPRIVSNEEDED
 //ERR_USERNOTINCHANNEL
 //RPL_CHANNELMODEIS
-//Verifier +i +t +k +o +l 
+//Verifier +i +t +k +o +l
 
 pub async fn mode_need_more_params(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("{}_mode_more_params", id);

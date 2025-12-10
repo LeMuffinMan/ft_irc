@@ -1,14 +1,14 @@
-use crate::behaviors::nick::*;
-use crate::behaviors::part::*;
-use crate::behaviors::time::*;
-use crate::behaviors::mode::*;
-use crate::behaviors::protocol::*;
 use crate::behaviors::invite::*;
 use crate::behaviors::join::*;
 use crate::behaviors::kick::*;
+use crate::behaviors::mode::*;
+use crate::behaviors::nick::*;
+use crate::behaviors::part::*;
 use crate::behaviors::pass::*;
 use crate::behaviors::ping_pong::*;
 use crate::behaviors::privmsg::*;
+use crate::behaviors::protocol::*;
+use crate::behaviors::time::*;
 use crate::behaviors::topic::*;
 use crate::behaviors::user::*;
 
@@ -156,7 +156,9 @@ impl BehaviorHandler for ClientBehavior {
             PrivmsgToNick => |p, id, t| Box::pin(privmsg_to_nick(p, id, t)),
             PrivmsgToChan => |p, id, t| Box::pin(privmsg_to_chan(p, id, t)),
             PrivmsgTooManyTargets => |p, id, t| Box::pin(privmsg_too_many_targets(p, id, t)),
-            PrivmsgToNickNotSharingChan => |p, id, t| Box::pin(privmsg_to_nick_not_sharing_chan(p, id, t)),
+            PrivmsgToNickNotSharingChan => {
+                |p, id, t| Box::pin(privmsg_to_nick_not_sharing_chan(p, id, t))
+            }
             PrivmsgNotRegistered => |p, id, t| Box::pin(privmsg_not_registered(p, id, t)),
 
             KickNeedMoreParams => |p, id, t| Box::pin(kick_need_more_params(p, id, t)),
@@ -186,11 +188,10 @@ impl BehaviorHandler for ClientBehavior {
 
             PartNeedMoreParams => |p, id, t| Box::pin(part_need_more_params(p, id, t)),
             PartNotRegistered => |p, id, t| Box::pin(part_not_registered(p, id, t)),
-            
+
             TimeWithParams => |p, id, t| Box::pin(time_with_params(p, id, t)),
             TimeCheckTimeZone => |p, id, t| Box::pin(time_check_answer(p, id, t)),
             TimeNotRegistered => |p, id, t| Box::pin(time_not_registered(p, id, t)),
-
 
             KickPriv => |p, id, t| Box::pin(kick_priviledges(p, id, t)),
             InviteModeIJoin => |p, id, t| Box::pin(invite_mode_i_join(p, id, t)),

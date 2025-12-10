@@ -82,4 +82,3 @@ pub async fn topic_not_registered(port: u16, _id: usize, timeout_ms: u64) -> Res
     client.shutdown().await?;
     Ok(())
 }
-

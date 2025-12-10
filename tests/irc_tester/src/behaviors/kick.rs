@@ -53,7 +53,7 @@ pub async fn kick_no_such_channel(port: u16, id: usize, timeout_ms: u64) -> Resu
     Ok(())
 }
 
-pub async fn kick_priviledges(port :u16, id: usize, timeout_ms: u64) -> Result<()> {
+pub async fn kick_priviledges(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick1 = format!("inv_kickpriv_{}-1", id);
     let nick2 = format!("inv_kickpriv_{}-2", id);
     let nick3 = format!("inv_kickpriv_{}-3", id);
@@ -70,7 +70,8 @@ pub async fn kick_priviledges(port :u16, id: usize, timeout_ms: u64) -> Result<(
             &format!("JOIN"),
             "C1 Failed to join new chan",
             timeout_ms,
-        ).await?;
+        )
+        .await?;
     client1
         .try_expect(
             &format!("INVITE {} #{}chan\r\n", &nick2, &nick1),
@@ -111,19 +112,14 @@ pub async fn kick_priviledges(port :u16, id: usize, timeout_ms: u64) -> Result<(
             timeout_ms,
         )
         .await?;
-    client2.expect(
-        "KICK ",
-        "No kick message recieved",
-        timeout_ms,
-    ).await?;
-    client3.expect(
-        "KICK ",
-        "No kick message recieved",
-        timeout_ms,
-    ).await?;
+    client2
+        .expect("KICK ", "No kick message recieved", timeout_ms)
+        .await?;
+    client3
+        .expect("KICK ", "No kick message recieved", timeout_ms)
+        .await?;
     client1.shutdown().await?;
     client2.shutdown().await?;
     client3.shutdown().await?;
     Ok(())
-} 
- 
+}
