@@ -17,7 +17,10 @@ CXX_DEBUG_CXXFLAGS = -std=c++98 -g3 -Weverything -Wno-padded -pedantic -O2 -Wwri
 #############################################################################################
 # Source directories
 P_SRC = src/
+P_CMDS = commands/
+
 P_OBJ = .obj/
+P_DEPS = .obj/
 
 P_INC = inc/
 
@@ -30,6 +33,12 @@ P_INC = inc/
 INC = \
 	Debug.hpp \
 	utils.hpp \
+	Client.hpp \
+	Channel.hpp \
+	Server.hpp \
+	Reply.hpp \
+
+INC_CMDS = \
 	ACommand.hpp \
 	CommandFactory.hpp \
 	PassCommand.hpp \
@@ -45,11 +54,6 @@ INC = \
 	PartCommand.hpp \
 	QuitCommand.hpp \
 	TimeCommand.hpp \
-	Server_utils.h \
-	Client.hpp \
-	Channel.hpp \
-	Server.hpp \
-	Reply.hpp \
 
 # Template implementation  files
 TPP = \
@@ -59,6 +63,16 @@ TPP = \
 SRC = \
 	main.cpp \
 	Debug.cpp \
+	utils.cpp \
+	Server.cpp \
+	ServerIRC.cpp \
+	Client.cpp \
+	Channel.cpp \
+	Server_utils.cpp \
+	Signals.cpp \
+
+SRC_CMDS = \
+	ACommand.cpp \
 	CommandFactory.cpp \
 	InviteCommand.cpp \
 	TopicCommand.cpp \
@@ -73,14 +87,6 @@ SRC = \
 	PartCommand.cpp \
 	QuitCommand.cpp \
 	TimeCommand.cpp \
-	utils.cpp \
-	Server.cpp \
-	ServerIRC.cpp \
-	Client.cpp \
-	Channel.cpp \
-	Server_utils.cpp \
-	ACommand.cpp \
-	Signals.cpp \
 
 LIBS = \
 
@@ -89,18 +95,21 @@ LIBS = \
 #                                        MANIPULATION                                       #
 #                                                                                           #
 #############################################################################################
-SRCS = $(addprefix $(P_SRC), $(SRC)) 
+SRCS = \
+	$(addprefix $(P_SRC), $(SRC)) \
+	$(addprefix $(P_SRC)$(P_CMDS), $(SRC_CMDS)) \
 
 # List of object files (redirect to P_OBJ)
 OBJS = $(subst $(P_SRC), $(P_OBJ), $(SRCS:.cpp=.o))
 P_OBJS = $(subst $(P_SRC), $(P_OBJ), $(SRCS))
 
 # List of depedencies
-DEPS = $(OBJS:%.o=%.d)
+DEPS = $(subst $(P_OBJ), $(P_DEPS), $(OBJS:%.o=%.d))
 
 # List of header files
 INCS = \
 	$(addprefix $(P_INC), $(INC)) \
+	$(addprefix $(P_INC)$(P_CMDS), $(INC_CMDS)) \
 
 # 	$(addprefix $(P_INC), $(TPP))
 
@@ -115,7 +124,7 @@ all:
 
 # Create $(NAME) executable
 $(NAME): $(OBJS) $(INCS)
-	@if $(CXX) $(CXXFLAGS) $(DEPENDANCIES) -I $(P_INC) -o $(NAME) $(OBJS) $(LIBS); then \
+	@if $(CXX) $(CXXFLAGS) $(DEPENDANCIES) -I $(P_INC) -I $(P_INC)$(P_CMDS) -o $(NAME) $(OBJS) $(LIBS); then \
 		echo "$(Green)Creating executable $@$(Color_Off)"; \
 	else \
 		echo "$(Red)Error creating $@$(Color_Off)"; \
@@ -124,7 +133,7 @@ $(NAME): $(OBJS) $(INCS)
 # Custom rule to compilate all .cpp with there path
 $(P_OBJ)%.o: $(P_SRC)%.cpp $(INCS)
 	@mkdir -p $(dir $@)
-	@if $(CXX) $(CXXFLAGS) $(DEPENDANCIES) -I $(P_INC) -c $< -o $@; then \
+	@if $(CXX) $(CXXFLAGS) $(DEPENDANCIES) -I $(P_INC) -I $(P_INC)$(P_CMDS) -c $< -o $@; then \
 		echo "$(Cyan)Compiling $<$(Color_Off)"; \
 	else \
 		echo "$(Red)Error creating $@$(Color_Off)"; \
@@ -141,9 +150,10 @@ $(P_OBJ)%.o: $(P_SRC)%.cpp $(INCS)
 # Rules for clean up
 clean:
 	rm -rfd $(P_OBJ)
-	rm -rfd $(OBJS)
-	rm -rfd $(DEPS)
+	rm -rfd $(P_DEPS)
 	rm -rf .server_output.log
+# 	rm -rfd $(OBJS)
+# 	rm -rfd $(DEPS)
 
 clean-lib:
 	rm -rfd $(P_LIB)
@@ -156,8 +166,8 @@ clean-obj:
 
 fclean:
 	@$(MAKE) clean-obj
-	@$(MAKE) clean-lib
 	@$(MAKE) clean-bin
+# 	@$(MAKE) clean-lib
 
 re:
 	@$(MAKE) fclean

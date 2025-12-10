@@ -11,7 +11,6 @@
 #include "ACommand.hpp"
 #include "Client.hpp"
 #include "Channel.hpp"
-#include "Server_utils.h"
 
 const int MAX_EVENTS = 64; // Faire une taille dynamique (au fil de l'eau -> vecteur)
 
@@ -47,6 +46,7 @@ public:
 	int read_client_fd(int fd);
 	void enable_epollout(int fd);
 	void disable_epollout(int fd);
+	int make_fd_nonblocking(int fd);
 
 	// Clients managing
 	void client_kicked(int fd);

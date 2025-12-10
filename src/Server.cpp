@@ -10,7 +10,6 @@
 #include <fcntl.h>
 #include <netdb.h>
 
-#include "Server_utils.h"
 #include "Server.hpp"
 #include "ACommand.hpp"
 #include "CommandFactory.hpp"
@@ -121,9 +120,9 @@ int Server::init_socket(int port)
 	}
 	freeaddrinfo(result); /* No longer needed */
 #ifndef SOCK_NONBLOCK
-	if (make_nonblocking(this->_server_socket) < 0)
+	if (make_fd_nonblocking(this->_server_socket) < 0)
 	{
-		perror("make_nonblocking");
+		perror("make_fd_nonblocking");
 		close(this->_server_socket);
 		return -1;
 	}
@@ -168,6 +167,19 @@ void Server::disable_epollout(int fd)
 	ev.events = EPOLLIN | EPOLLRDHUP;
 	ev.data.fd = fd;
 	epoll_ctl(_epfd, EPOLL_CTL_MOD, fd, &ev);
+}
+
+/**
+ * @brief Make a file descriptor non-blocking.
+ *
+ * @param[in,out] fd file descriptor to modify
+ * @return int 0 on success, -1 on failure
+ */
+int Server::make_fd_nonblocking(int fd)
+{
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
+		return -1;
+	return 0;
 }
 
 /**
@@ -243,9 +255,9 @@ void Server::new_client()
 			perror("accept");
 			break;
 		}
-		if (make_nonblocking(client_fd) < 0)
+		if (make_fd_nonblocking(client_fd) < 0)
 		{
-			perror("make_nonblocking client");
+			perror("make_fd_nonblocking client");
 			close(client_fd);
 			continue;
 		}
@@ -503,7 +515,13 @@ int Server::RunServer()
 	ss << "Listening on port: " << this->_port;
 	Debug::print(INFO, ss.str());
 
-	this->_epfd = init_epoll(this->_server_socket);
+	this->_epfd = epoll_create(MAX_EVENTS);
+	if (this->_epfd < 0)
+	{
+		perror("epoll_create");
+		close(this->_server_socket);
+		return (EXIT_FAILURE);
+	}
 	// doc
 	epoll_event ev;
 	ev.events = EPOLLIN | EPOLLRDHUP; // RDHUP pour détecter fermeture distante

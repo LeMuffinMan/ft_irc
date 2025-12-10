@@ -40,7 +40,7 @@ std::string CommandFactory::get_command(const std::string &line)
  */
 std::vector<std::string> CommandFactory::get_params(const std::string &line)
 {
-	std::vector<std::string> params(1);
+	std::vector<std::string> params;
 	std::string last_param;
 
 	size_t pos = line.find(' ');
