@@ -1,6 +1,49 @@
 
 use crate::Bot;
 
+impl Bot {
+    pub async fn glados_riddle(
+        &mut self,
+        riddle: &String,
+        nick_player: &String,
+        timeout_ms: u64,
+    ) -> Result<bool, ()> {
+        if let Ok(_) = self.send(&riddle, timeout_ms).await {
+            let _ = tokio::time::sleep(std::time::Duration::from_millis(200));
+            if let Ok(Some(player_answer)) = self.read_line_timeout(timeout_ms).await {
+                println!("Player_answer = {player_answer}");
+                
+                if player_answer.ends_with(":2\r\n") {
+                    self.send(
+                        &format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates robot languages\r\n"),
+                        0
+                    ).await.ok();
+                    // let _ = self.send(&format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates roself languages\r\n"), timeout_ms).await;
+                    println!("Pose riddle: Good answer");
+                    return Ok(true);
+                } else if player_answer.ends_with(":1\r\n") {
+                    println!("Pose riddle : Bad answer");
+                    self.send(
+                        &format!("KICK #ApertureScience {nick_player} : The Enrichment Center is required to remind you that you will be baked, and then there will be cake.\r\n"),
+                        0
+                    ).await.ok();
+                    return Ok(false);
+                } else {
+                    println!("Pose riddle : Bad answer");
+                    self.send(
+                        &format!("KICK #ApertureScience {nick_player} : You are just smart as you seem\r\n"),
+                        0
+                    ).await.ok();
+                    return Ok(false);
+                }
+            } else {
+                return Err(());
+            }
+        }
+        Err(())
+    }
+}
+
 pub async fn glados(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut bot = Bot::connect(6667).await?;
     let nick = "GladOS";
@@ -29,26 +72,20 @@ pub async fn glados(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + S
         [1] -> The Cake door
         [2] -> The neurotoxin gaz and absolutely no cake door.
         \r\n");
-            match bot.pose_riddle(riddle, &nick_player, timeout_ms).await {
+            match bot.glados_riddle(riddle, &nick_player, timeout_ms).await {
                 Ok(true) => {
                     bot.try_expect(
+                        &format!("PRIVMSG Wall-E :{nick_player}\r\n"),
                         &format!("PRIVMSG Wall-E :{nick_player}"),
-                        &format!("PRVIMSG Wall-E :{nick_player}"),
                         "Failed to send msg to Wall-E",
                         timeout_ms,
                     )
                     .await?;
                 },
                 _ => {
-                    println!("Le joueur a répondu incorrectement.");
+                    println!("Glados : wrong answer");
                 },
             };
-            bot.try_expect(
-                &format!("KICK #ApertureScience {nick_player}"),
-                "KICK #ApertureScience {nick_player}",
-                "Failed to kick player",
-                timeout_ms,
-            ).await?;
         }
     }
 }

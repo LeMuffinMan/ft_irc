@@ -92,12 +92,6 @@ impl Bot {
         }
     }
 
-    pub async fn shutdown(&self) -> Result<()> {
-        let mut writer = self.writer.lock().await;
-        writer.shutdown().await?;
-        Ok(())
-    }
-
     pub async fn get_user_nick(&mut self, timeout_ms: u64) -> Option<String> {
         if let Ok(Some(line)) = self.read_line_timeout(timeout_ms).await {
             println!("Received line = {line}");
@@ -112,39 +106,5 @@ impl Bot {
             }
         }
         None
-    }
-
-    pub async fn pose_riddle(
-        &mut self,
-        riddle: &String,
-        nick_player: &String,
-        timeout_ms: u64,
-    ) -> Result<bool, ()> {
-        if let Ok(_) = self.send(&riddle, timeout_ms).await {
-            let _ = tokio::time::sleep(std::time::Duration::from_millis(200));
-            if let Ok(Some(player_answer)) = self.read_line_timeout(timeout_ms).await {
-                println!("Player_answer = {player_answer}");
-                
-                if player_answer.ends_with(":2\r\n") {
-                    let _ = self.send(&format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates robot languages\r\n"), timeout_ms).await;
-                    println!("Good answer");
-                    return Ok(true);
-                } else if player_answer.ends_with(":1\r\n") {
-                    println!("Bad answer");
-                    let _ = self.send(&format!("PRIVMSG {nick_player} :Uh oh. Somebody cut the cake. I told them to wait for you, but they did it anyway. There is still some left, though, if you hurry back.\r\n"), timeout_ms).await;
-                    return Ok(false);
-                } else {
-                    println!("Bad answer");
-                    let _ = self.send(
-                        &format!("PRIVMSG {nick_player} :You are just as smart as you seem.\r\n"),
-                        timeout_ms,
-                    ).await;
-                    return Ok(false);
-                }
-            } else {
-                return Err(());
-            }
-        }
-        Err(())
     }
 }

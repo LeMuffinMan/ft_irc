@@ -76,7 +76,10 @@ void KickCommand::execute(Client* executor, Server& server)
 		}
 		std::stringstream ss;
 		ss << ":" << executor->getNickname() << "!~" << executor->getUsername() << "@" << executor->getRealname() // realname et pas ip ?
-			<< " KICK " << chan->getName() << target->getNickname() << " :" << target->getNickname();
+			<< " KICK " << chan->getName() << " " << target->getNickname();
+		if (kick_msg != "") {
+			ss << " :" << kick_msg;
+		}
 		server.replyChannel(chan, ss.str());
 	}
 

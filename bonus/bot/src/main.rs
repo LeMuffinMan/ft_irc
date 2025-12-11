@@ -3,10 +3,10 @@ mod chat_gpt;
 mod wall_e;
 mod glados;
 
-use crate::bot::Bot;
-use crate::chat_gpt::chat_gpt;
-use crate::wall_e::wall_e;
-use crate::glados::glados;
+use bot::Bot;
+use chat_gpt::chat_gpt;
+use wall_e::wall_e;
+use glados::glados;
 
 
 #[tokio::main]
