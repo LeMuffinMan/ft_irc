@@ -25,7 +25,14 @@ int main(int argc, char **argv)
 	}
 	std::string password(argv[2]);
 	Server server(port, password);
-	if (server.RunServer() == EXIT_FAILURE)
-		return -1;
+	try 
+	{
+		if (server.RunServer() == EXIT_FAILURE)
+			return -1;
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << RED << "[ERROR]" << RESET << "Impossible event to recover: " << e.what() << '\n';
+	}
 	return 0;
 }

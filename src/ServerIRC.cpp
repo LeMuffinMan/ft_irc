@@ -5,6 +5,16 @@
 #include "CommandFactory.hpp"
 
 // on mettrait pas le timestamp dans le debug aussi ?
+/**
+ * @brief Send a message to a client by the server
+ * If the message can't be sent in one try,
+ * it will enable EPOLLOUT for the client's fd, and try to send the rest later
+ *
+ * @param[in,out] client client to send the message to
+ * @param[in] message message to send
+ * @return true everything sent properly
+ * @return false error occurred
+ */
 bool Server::reply(Client *client, std::string message)
 {
 	if (!client)
@@ -54,6 +64,14 @@ bool Server::reply(Client *client, std::string message)
 	return true;
 }
 
+/**
+ * @brief Send a message to all clients in a channel
+ *
+ * @param[in,out] channel channel to send the message to
+ * @param[in] message message to send
+ * @return true everything sent properly to all clients
+ * @return false error occurred
+ */
 bool Server::replyChannel(Channel *channel, std::string message)
 {
 	if (!channel)
@@ -92,16 +110,17 @@ bool Server::replyChannelOnlyOP(Channel *channel, std::string message)
 	return ret;
 }
 
-//J'ai toujours des chars en trop apres les timeouts dans les logs server
+// J'ai toujours des chars en trop apres les timeouts dans les logs server
+/**
+ * @brief Remove inactive clients from the server
+ * 
+ */
 void Server::remove_inactive_clients()
 {
 	std::time_t now = std::time(NULL);
 	std::vector<int> to_erase;
-	for (clientsType::iterator it = this->clients.begin();
-		 it != this->clients.end(); it++)
+	for (clientsType::iterator it = this->clients.begin(); it != this->clients.end(); it++)
 	{
-		// if (!it->second)
-		// 	continue;
 		Client *client = it->second;
 		now = std::time(NULL);
 		if ((client->timeout > 0 && now > client->timeout) ||
@@ -110,17 +129,18 @@ void Server::remove_inactive_clients()
 			std::stringstream ss;
 			if (client->isRegistered())
 			{
-				// ss << client->getUsername()
-				// << " aka " << client->getNickname()
-				// << " timed out\r\n";
+				ss << "Registered client " << client->getNickname() << " got timed out";
+				Debug::print(INFO, ss.str());
 				this->reply(client, "timed out");
 			}
 			else
 			{
-				// ss << "Disconnected: timed out" << std::endl;
-				// client.printClientInfo();
 				if (clients.find(it->first) != clients.end() && clients[it->first]->fd > 0) // fixed l'erreur sur timed out fd = -1
+				{
+					ss << "Unregistered client with fd: " << client->fd << " got timed out";
+					Debug::print(INFO, ss.str());
 					this->reply(client, "timed out");
+				}
 			}
 			to_erase.push_back(it->first);
 		}
@@ -129,10 +149,13 @@ void Server::remove_inactive_clients()
 		removeClient(*it);
 }
 
+/**
+ * @brief Check all clients for ping timeouts and send PING messages if needed
+ * 
+ */
 void Server::check_clients_ping()
 {
-	for (clientsType::iterator it = this->clients.begin();
-		 it != this->clients.end(); ++it)
+	for (clientsType::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
 	{
 		// if (!it->second)
 		// 	continue;
@@ -169,14 +192,10 @@ Client *Server::getClient(const std::string &nickname)
 Channel *Server::getChannel(const std::string &channel_name)
 {
 	if (channel_name.empty() || channel_name[0] != '#')
-	{
 		return NULL;
-	}
 	channelsType::iterator it = channels.find(channel_name);
 	if (it != channels.end())
-	{
 		return it->second;
-	}
 	return NULL;
 }
 
@@ -193,6 +212,12 @@ bool Server::addChannel(const std::string &channel_name)
 	return false;
 }
 
+/**
+ * @brief Remove a client from all channels they are connected to
+ * This is typically called when a client disconnects from the server
+ * 
+ * @param[in] client Client to remove from all channels 
+ */
 void Server::removeClientFromAllChannels(Client *client)
 {
 	if (!client)
@@ -222,6 +247,10 @@ bool Server::removeChannel(const std::string &channel_name)
 	return false;
 }
 
+/**
+ * @brief Delete channels that have no clients connected every FLUSH_CHANNEL_INTERVAL seconds
+ * No need to send any notification, as channels are recreated when needed
+ */
 void Server::deleteUnusedChannels()
 {
 	static std::time_t last = std::time(NULL);

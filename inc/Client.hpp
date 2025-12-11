@@ -28,22 +28,24 @@ private:
 	std::time_t _last_seen; //!< Last seen time
 	bool _password_correct; //!< Flag indicating if the user has provided the correct password
 	bool _registered;		//!< Flag indicating if the user has provided all the auth info
+	std::string _ip_address;		//!< User's IP address
+	uint16_t port;				//!< User's port number
 public:
 	//= Attributes for LocalUser =//
 	int fd;						 //!< File descriptor for the user's socket connection
 	std::string rbuf;			 //!< Read buffer to store incoming data
 	std::string wbuf;			 //!< Write buffer to store outgoing data
-	bool hasTriggeredEPOLLOUT; //!< Flag indicating if EPOLLOUT is triggered
+	bool hasTriggeredEPOLLOUT;   //!< Flag indicating if EPOLLOUT is triggered
 	std::time_t last_ping;		 //!< Time of the last ping received
 	std::time_t timeout;		 //!< Time when the user will timeout if no activity
 	std::time_t connection_time; //!< Time when user connected to server
-	std::string _ip_address;		//!< User's IP address
-	uint16_t port;				//!< User's port number
 
 	//= Methods =//
-public:
+private:
 	Client();
 	Client(Client const &other);
+public:
+	Client(int fd, const std::string &ip_str, uint16_t port);
 	~Client();
 
 	void clear();
@@ -53,7 +55,6 @@ public:
 	void printConnInfo();
 
 	//= Methods for Client =//
-	void setKey(const std::string &key);
 	const std::string &getKey() const;
 	void setNickname(const std::string &nickname);
 	const std::string &getNickname() const;
@@ -71,9 +72,7 @@ public:
 	void setPasswordCorrect();
 	bool isRegistered() const;
 	void setRegistered();
-	void setIp(const std::string &ip);
 	const std::string &getIp() const;
-
 };
 
 #endif // CLIENT_HPP

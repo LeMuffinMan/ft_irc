@@ -213,20 +213,14 @@ int Server::init_epoll_event(int client_fd)
 /**
  * @brief Initialize a new Client struct and add it to the server's client map.
  *
- * @param[in,out] client_fd file descriptor of the new client socket
- * @param[in,out] ip_str IP address of the new client as a string
- * @param[in,out] port Port number of the new client
+ * @param[in] client_fd file descriptor of the new client socket
+ * @param[in] ip_str IP address of the new client as a string
+ * @param[in] port Port number of the new client
  */
 void Server::initClient(int client_fd, const std::string &ip_str, uint16_t port)
 {
 	// since we added a client in our epoll, we need a struct to represent it on our server
-	Client *c = new Client();
-	c->fd = client_fd;			   // the fd makes the link between epoll and our list of client, it is the key in our map
-	c->last_ping = std::time(NULL); // we want to kick incactives clients, so we store the time of the last ping received
-	c->connection_time = c->last_ping;
-	c->timeout = -1;
-	c->_ip_address = ip_str;
-	c->port = port;
+	Client *c = new Client(client_fd, ip_str, port);
 	this->clients.insert(std::make_pair(client_fd, c));
 	std::stringstream ss;
 	ss << "New client: " << client_fd;
@@ -411,9 +405,11 @@ void Server::interpret_msg(int fd)
 	{
 		std::string line = this->clients[fd]->rbuf.substr(0, pos);
 		this->clients[fd]->rbuf.erase(0, pos + 2);
+		this->clients[fd]->timeout = std::time(NULL) + PING_TIMEOUT; // reset timeout on any message received
+		if (line.empty())
+			continue;
 		ACommand *cmd = CommandFactory::findAndCreateCommand(line);
-		// try catch ?
-		if (cmd)
+		if (cmd) // valid command found
 		{
 			cmd->execute(this->clients[fd], *this);
 			delete cmd;
@@ -421,8 +417,6 @@ void Server::interpret_msg(int fd)
 		}
 		else
 		{
-			if (line.empty()) //if client send 'nothing', just ignore
-				continue;
 			std::stringstream ss;
 			ss << "[" << line << "]"
 			   << " from client " << fd

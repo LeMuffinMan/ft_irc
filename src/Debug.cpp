@@ -58,23 +58,3 @@ void Debug::changeUseColor(bool val)
 {
 	useColors = val;
 }
-
-/*
-Example will print one on stream,
-two and three will be written in file.txt
-and four will be written on first stream
-
-void example(void)
-{
-	Debug::print(ERROR, "one");
-	std::ofstream s;
-	s.open("file.txt");
-	std::ostream *t = Debug::changeErrStream(s);
-	Debug::print(ERROR, "two");
-	Debug::useColors = true;
-	Debug::print(ERROR, "three");
-	Debug::changeErrStream(*t);
-	Debug::print(ERROR, "four");
-	return ;
-}
-*/

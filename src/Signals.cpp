@@ -7,7 +7,7 @@ sig_atomic_t g_sig;
 static void signal_handler(int sig, siginfo_t *info, void *context);
 
 /**
- * @brief Initialize signal handling for SIGINT and SIGQUIT
+ * @brief Initialize signal handling for SIGINT, SIGTERM, SIGQUIT, and SIGPIPE
  *
  * @return int
  */
@@ -27,9 +27,8 @@ int signal_init(void)
 
 /**
  * @brief Signal handler
- * Ctrl+C = SIGINT -> quits the program.
- * Ctrl+\ = SIGQUIT -> same
-
+ * Ctrl+C = SIGINT -> stops the program.
+ * SIGTERM -> same
  *
  * @param sig Signal received.
  * @param info Information about the signal.

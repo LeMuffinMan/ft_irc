@@ -68,7 +68,6 @@ SRC = \
 	ServerIRC.cpp \
 	Client.cpp \
 	Channel.cpp \
-	Server_utils.cpp \
 	Signals.cpp \
 
 SRC_CMDS = \

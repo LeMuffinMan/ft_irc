@@ -14,9 +14,9 @@ enum debug_level
 	ERROR
 };
 
-# define RESET "\033[0m"
-# define RESET_COLOR RESET
-# define RED "\033[31m"
+#define RESET "\033[0m"
+#define RESET_COLOR RESET
+#define RED "\033[31m"
 
 // #ifndef DEBUG_LEVEL
 // #define DEBUG_LEVEL NOTHING
@@ -24,25 +24,25 @@ enum debug_level
 
 class Debug
 {
-//= Variables =//
+	//= Variables =//
 private:
-	static std::ostream* stream;	//!< Output stream for debug messages
-	static std::ostream* errStream;	//!< Output stream for error messages
+	static std::ostream *stream;	//!< Output stream for debug messages
+	static std::ostream *errStream; //!< Output stream for error messages
 
 public:
-	static bool useColors;			//!< Flag to enable/disable colored output
+	static bool useColors; //!< Flag to enable/disable colored output
 
-//= Methods =//
+	//= Methods =//
 private:
 	// Orthodox Canonical Form : Constructors / Destructors / Operators
 	Debug();
 	~Debug();
 	Debug(const Debug &f);
-	Debug& operator=(const Debug& other);
+	Debug &operator=(const Debug &other);
 
 public:
-	static std::ostream* changeStream(std::ostream &newStream);
-	static std::ostream* changeErrStream(std::ostream &newStream);
+	static std::ostream *changeStream(std::ostream &newStream);
+	static std::ostream *changeErrStream(std::ostream &newStream);
 	static void changeUseColor(bool val);
 
 	//= Templates =//
@@ -53,5 +53,25 @@ public:
 };
 
 #include "Debug.tpp"
+
+/*
+Example will print 'one' on ErrStream,
+'two' and 'three' will be written in file.txt
+and 'four' will be written on first stream
+
+void example(void)
+{
+	Debug::print(ERROR, "one");
+	std::ofstream s;
+	s.open("file.txt");
+	std::ostream *t = Debug::changeErrStream(s);
+	Debug::print(ERROR, "two");
+	Debug::useColors = true;
+	Debug::print(ERROR, "three");
+	Debug::changeErrStream(*t);
+	Debug::print(ERROR, "four");
+	return ;
+}
+*/
 
 #endif // DEBUG_HPP
