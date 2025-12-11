@@ -28,7 +28,7 @@ impl Bot {
                     } else if player_answer.ends_with(":1\r\n") {
                         println!("Pose riddle : Bad answer");
                         let _ = self.try_expect(
-                            &format!("KICK #OpenAI Chat-GPT : You play with portals ? I play with words, ideas never die\r\n"),
+                            &format!("KICK #OpenAI {nick_player} : You play with portals ? I play with words, ideas never die\r\n"),
                             "341",
                             "Failed to invite user on #OpenAI",
                             timeout_ms,
@@ -38,7 +38,7 @@ impl Bot {
                     } else if player_answer.ends_with(":3\r\n"){
                         println!("Pose riddle : Bad answer");
                         let _ = self.try_expect(
-                            &format!("KICK #OpenAI Chat-GPT : I eat C++ 98 at breakfast, try again\r\n"),
+                            &format!("KICK #OpenAI {nick_player} : I eat C++ 98 at breakfast, try again\r\n"),
                             "341",
                             "Failed to invite user on #OpenAI",
                             timeout_ms,
@@ -48,7 +48,7 @@ impl Bot {
                     } else if player_answer.ends_with(":2\r\n"){
                         println!("Pose riddle : Bad answer");
                         let _ = self.try_expect(
-                            &format!("KICK #OpenAI Chat-GPT :  That’s fine. I expected little, and you delivered exactly that.\r\n"),
+                            &format!("KICK #OpenAI {nick_player} :  That’s fine. I expected little, and you delivered exactly that.\r\n"),
                             "341",
                             "Failed to invite user on #OpenAI",
                             timeout_ms,
