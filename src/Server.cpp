@@ -22,6 +22,10 @@
 
 Server::~Server()
 {
+	if (this->_server_socket != -1)
+		close(this->_server_socket);
+	if (this->_epfd != -1)
+		close(this->_epfd);
 	for (clientsType::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
 	{
 		close(it->first);
@@ -559,6 +563,8 @@ int Server::RunServer()
 #endif
 	}
 	close(this->_server_socket);
+	this->_server_socket = -1;
 	close(this->_epfd);
+	this->_epfd = -1;
 	return EXIT_SUCCESS;
 }
