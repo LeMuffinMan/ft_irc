@@ -61,28 +61,29 @@ pub async fn wall_e(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + S
         timeout_ms,
     )
     .await?;
-    loop {
+    loop { //loop en trop ?
+        println!("Waiting for a new line");
         if let Some(line) = bot.read_line_timeout(timeout_ms).await? {
             println!("Wall-E received [{line}]");
             if line.starts_with(":GladOS") {
                 if let Some(idx) = line.rfind(':') {
                     let nick_player = &line[idx+1..].trim();
                     println!("Wall-e player name received : {nick_player}");
-                    // println!("INVITE #BuyNLarge {nick_player}");
-                    // bot.try_expect(
-                    //     &format!("INVITE {nick_player} #BuyNLarge\r\n"),
-                    //     "341",
-                    //     "Failed to invite user on #BuyNLarge",
-                    //     timeout_ms,
-                    // )
-                    // .await?;
+                    println!("INVITE {nick_player} #BuyNLarge");
+                    bot.try_expect(
+                        &format!("INVITE {nick_player} #BuyNLarge\r\n"),
+                        "341",
+                        "Failed to invite user on #BuyNLarge",
+                        timeout_ms,
+                    )
+                    .await?;
+                    let _ = tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
                     let riddle = &format!("PRIVMSG {nick_player} :*The robot express itself only with robot noises, but somehow, the Aperture Science Handheld Portal Device translates it in real time :\n
 Humanity will come back soon on earth and I didn't had time to clean everything!. 
 Be usefull you lazy human, can you tell me how to make pizza to welcome them ?
 
 [1] -> It's an old ancestral knowledge, no one knows anymore how to make pizza !
 [2] -> You just need to plant some pizzas, then you can grow pizza trees, and have free pizza\r\n");
-                    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
                     match bot.wall_e_riddle(riddle, &nick_player.to_string(), timeout_ms).await {
                         Ok(true) => {
                             bot.try_expect(&format!("PRIVMSG Chat-GPT :{nick_player}\r\n"),
@@ -95,6 +96,7 @@ Be usefull you lazy human, can you tell me how to make pizza to welcome them ?
                             println!("Glados : wrong answer");
                         },
                     }
+                    break;
                 }
             } else if line.ends_with("JOIN #BuyNLarge\r\n") {
                 if let Some(idx) = line.find(':') {
@@ -119,4 +121,6 @@ Be usefull you lazy human, can you tell me how to make pizza to welcome them ?
             }
         }
     }
+    bot.shutdown().await?;
+    Ok(())
 }

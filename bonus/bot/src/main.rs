@@ -17,13 +17,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let chat_gpt_handle = tokio::spawn(chat_gpt(timeout_ms));
 
     if let Err(e) = glados_handle.await {
-        eprintln!("GladOS error: {}", e);
+        println!("GladOS error: {}", e);
     }
     if let Err(e) = wall_e_handle.await {
-        eprintln!("Wall-E error: {}", e);
+        println!("Wall-E error: {}", e);
     }
     if let Err(e) = chat_gpt_handle.await {
-        eprintln!("Chat-GPT error: {}", e);
+        println!("Chat-GPT error: {}", e);
     }
 
     Ok(())

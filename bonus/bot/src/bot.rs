@@ -107,4 +107,10 @@ impl Bot {
         }
         None
     }
+
+    pub async fn shutdown(&self) -> Result<()> {
+        let mut writer = self.writer.lock().await;
+        writer.shutdown().await?;
+        Ok(())
+    }
 }

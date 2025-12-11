@@ -59,18 +59,18 @@ pub async fn glados(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + S
         if let Some(nick_player) = bot.get_user_nick(timeout_ms).await {
             println!("nick_player = {:?} !", nick_player);
             let riddle = &format!("PRIVMSG {nick_player} :Alright, listen carefully, because I’m only going to say this once.
-        You stand before two doors.
-        One leads to cake.
-        The other leads to a room full of neurotoxin gaz, and absolutely no cake.
+You stand before two doors.
+One leads to cake.
+The other leads to a room full of neurotoxin gaz, and absolutely no cake.
 
-        Choose wisely, or don’t.
-        The outcome is equally informative.
-        For science.
+Choose wisely, or don’t.
+The outcome is equally informative.
+For science.
 
-        You monster.
+You monster.
 
-        [1] -> The Cake door
-        [2] -> The neurotoxin gaz and absolutely no cake door.
+[1] -> The Cake door
+[2] -> The neurotoxin gaz and absolutely no cake door.
         \r\n");
             match bot.glados_riddle(riddle, &nick_player, timeout_ms).await {
                 Ok(true) => {
@@ -83,7 +83,12 @@ pub async fn glados(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + S
                     .await?;
                 },
                 _ => {
-                    println!("Glados : wrong answer");
+                    bot.try_expect(
+                        &format!("KICK #ApertureScience {nick_player}\r\n"),
+                        "KICK #ApertureScience {nick_player}",
+                        "Failed to kick player",
+                        timeout_ms,
+                    ).await?;
                 },
             };
         }

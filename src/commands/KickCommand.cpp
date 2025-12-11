@@ -81,6 +81,7 @@ void KickCommand::execute(Client* executor, Server& server)
 			ss << " :" << kick_msg;
 		}
 		server.replyChannel(chan, ss.str());
+		channel->removeClient(target);
 	}
 
 	// for (size_t i = 0; i < users.size(); ++i) {
