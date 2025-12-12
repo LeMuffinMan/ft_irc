@@ -13,25 +13,31 @@ impl Bot {
                 println!("Player_answer = {player_answer}");
 
                 if player_answer.ends_with(":2\r\n") {
-                    self.send(
-                        &format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates robot languages\r\n"),
-                        0
+                    self.try_expect(
+                        &format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates roself languages\r\n"),
+                        &format!("PRIVMSG {nick_player}"),
+                        "Failed to send msg to answer player",
+                        timeout_ms,
                     ).await.ok();
                     // let _ = self.send(&format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates roself languages\r\n"), timeout_ms).await;
                     println!("Pose riddle: Good answer");
                     return Ok(true);
                 } else if player_answer.ends_with(":1\r\n") {
                     println!("Pose riddle : Bad answer");
-                    self.send(
+                    self.try_expect(
                         &format!("KICK #ApertureScience {nick_player} : The Enrichment Center is required to remind you that you will be baked, and then there will be cake.\r\n"),
-                        0
+                        &format!("KICK #ApertureScience {nick_player}"),
+                        "Failed to kick player",
+                        timeout_ms,
                     ).await.ok();
                     return Ok(false);
                 } else {
                     println!("Pose riddle : Bad answer");
-                    self.send(
+                    self.try_expect(
                         &format!("KICK #ApertureScience {nick_player} : You are just smart as you seem\r\n"),
-                        0
+                        &format!("KICK #ApertureScience {nick_player}"),
+                        "Failed to kick player",
+                        timeout_ms,
                     ).await.ok();
                     return Ok(false);
                 }
@@ -88,13 +94,6 @@ You monster.
                         .await?;
                     }
                     _ => {
-                        bot.try_expect(
-                            &format!("KICK #ApertureScience {nick_player}\r\n"),
-                            "KICK #ApertureScience {nick_player}",
-                            "Failed to kick player",
-                            timeout_ms,
-                        )
-                        .await?;
                     }
                 };
             }
