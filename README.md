@@ -10,6 +10,7 @@ Make your own IRC Server that no one asked for.
 * [⚙️ Requirements](#requirements-en)
 * [📝 Features](#features-en)
 * [🚀 How to use](#use-en)
+* [How to stop](#stop-en)
 
 ## <a name="requirements-en">⚙️ Requirements ##
 
@@ -19,23 +20,37 @@ If you want to run the tester, you will need at least a recent version of `cargo
 
 Use only the following `C functions` :
 
-* select, poll, epoll (epoll_create, epoll_ctl,epoll_wait),kqueue (kqueue, kevent)
-* getaddrinfo, gethostbyname freeaddrinfo, gai_strerror
-* socket, accept, listen, send, recv, bind, connect,setsockopt, getsockname,getprotobyname
-* htons, htonl, ntohs, ntohl
-* inet_addr, inet_ntoa, inet_ntop
-* lseek, close
-* signal, sigaction, sigemptyset, sigfillset, sigaddset, sigdelset, sigismember
+* select, poll, **epoll (epoll_create, epoll_ctl,epoll_wait)**, kqueue (kqueue, kevent)
+* **getaddrinfo**, **gethostbyname**, **freeaddrinfo**, **gai_strerror**
+* **socket**, **accept**, **listen**, **send**, **recv**, **bind**, connect, setsockopt, getsockname, getprotobyname
+* htons, htonl, **ntohs**, ntohl
+* inet_addr, inet_ntoa, **inet_ntop**
+* lseek, **close**
+* **signal**, **sigaction**, **sigemptyset**, sigfillset, sigaddset, sigdelset, sigismember
 
 ### How does it work ###
 
 This is the first big project after the `C` projects at 42 so we tried to make it the most Object-Oriented possible as we can now use `C++`.
 
+### References ###
+
 We used as a reference the [RFC 2812](https://datatracker.ietf.org/doc/html/rfc2812) , and some precisions of [RFC 2811](https://datatracker.ietf.org/doc/html/rfc2811). We implemented only the server, we were not required to implement a client neither a server-to-server communication.
 
 ## <a name="features-en">📝 Features ##
 
-Rules for Commands notation:
+### Classes ###
+
+We used 5 classes :
+
+* `Server` : handles the server operations, manage everything
+* `Client` : stores informations of a client/user
+* `Channel` : stores informations of a channel
+* `ACommand` : an abstract class to show the minimum to implement to create new commands
+* `Debug` : Debug printing to make correctly formatted logging
+
+A Client doesn't have any permission to execute anything, the server does it for him. A Channel has it's own permissions to work on his own member variables. A Command is a regroupment of server, client and channel operations. The server acts as the orchestrator of its group of users and channels.
+
+### Commands notation ###
 
 * Each `<param>` is a string, delimited by a single space (` `).
 * Parenthesis such as `(` and `)` are used to show which block can be repeated.
@@ -74,5 +89,9 @@ Rules for Commands notation:
 
 * `port` port number where server will listen and answer incoming IRC connections
 * `password` password of the connection, the clients will need it to connect
+
+## <a name="stop-en"> How to stop ##
+
+The server have some signal handling, currently to stop it, you need to send a `SIGINT` or a `SIGTERM` to end it properly. If it receives a `SIGPIPE` (error from a write/read) or a `SIGQUIT`, it's simply ignored.
 
 ---
