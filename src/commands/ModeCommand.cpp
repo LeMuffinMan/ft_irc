@@ -63,6 +63,7 @@ void ModeCommand::executeUserMode(Client *executor, Server &server)
 	}
 	// TODO: not explicitly required by subject !!
 }
+				// :salut!~t@46.231.218.157 MODE #UNBONTEST +i 
 
 /**
  * @brief Execute channel mode changes.
@@ -114,69 +115,87 @@ void ModeCommand::executeChannelMode(Client *executor, Server &server)
 			}
 			Client *target = channel->getClientByNickname(_params[i + 1]);
 			if (_params[i][0] == '+')
+			{
+				server.replyChannel(channel, RPL_CHANNELMODEIS(executor->getHost(), _params[0], "+o", _params[i + 1]));
 				channel->addOperator(target);
+			}
 			else
+			{
+				server.replyChannel(channel, RPL_CHANNELMODEIS(executor->getHost(), _params[0], "-o", _params[i + 1]));
 				channel->removeOperator(target); // retirer même si c'est le dernier ?? -> channel sans operateur
+			}
 		}
-		if (_params[i][1] == 'i')
+		else if (_params[i][1] == 'i')
 		{
 			ChannelModes modes = channel->getModes();
 			if (_params[i][0] == '+')
+			{
+				server.replyChannel(channel, RPL_CHANNELMODEIS(executor->getHost(), _params[0], "+i", ""));
 				modes.is_invite_only = true;
+			}
 			else
+			{
+				server.replyChannel(channel, RPL_CHANNELMODEIS(executor->getHost(), _params[0], "-i", ""));
 				modes.is_invite_only = false;
+			}
 			channel->setModes(modes);
 		}
-		if (_params[i][1] == 't')
+		else if (_params[i][1] == 't')
 		{
 			ChannelModes modes = channel->getModes();
 			if (_params[i][0] == '+')
+			{
+				server.replyChannel(channel, RPL_CHANNELMODEIS(executor->getHost(), _params[0], "+t", ""));
 				modes.is_topic_set_op_only = true;
+			}
 			else
+			{
+				server.replyChannel(channel, RPL_CHANNELMODEIS(executor->getHost(), _params[0], "-t", ""));
 				modes.is_topic_set_op_only = false;
+			}
 			channel->setModes(modes);
 		}
-		if (_params[i][1] == 'k')
+		else if (_params[i][1] == 'k')
 		{
 			if (_paramSize < i + 1) // s'il n'y a pas de clé, on ne peut pas modifier
 				continue;
 			ChannelModes modes = channel->getModes();
 			if (_params[i][0] == '+')
 			{
+				server.replyChannel(channel, RPL_CHANNELMODEIS(executor->getNickname(), _params[0], "+k", _params[i + 1]));
 				modes.has_key = true;
 				channel->setKey(_params[i + 1]);
-				server.reply(executor, RPL_CHANNELMODEIS(executor->getNickname(), _params[0], "+k ", _params[i + 1]));
 			}
 			else
 			{
 				if (channel->isKeySame(_params[i + 1]) == false)
 					continue;
+				server.replyChannel(channel, RPL_CHANNELMODEIS(executor->getNickname(), _params[0], "-k", "*"));
 				modes.has_key = false;
 				channel->setKey("*");
-				server.reply(executor, RPL_CHANNELMODEIS(executor->getNickname(), _params[0], "-k ", "*"));
 			}
 			channel->setModes(modes);
 			i++;
 		}
-		if (_params[i][1] == 'l')
+		else if (_params[i][1] == 'l')
 		{
 			ChannelModes modes = channel->getModes();
 			if (_params[i][0] == '+')
 			{
 				if (_paramSize < i + 1) // s'il n'y a pas de limite, on ne peut pas modifier
 					continue;
+					server.replyChannel(channel, RPL_CHANNELMODEIS(executor->getNickname(), _params[0], "+l", _params[i + 1]));
 				modes.is_limited = true;
 				std::istringstream iss(_params[i + 1]);
 				size_t limit;
 				iss >> limit;
 				channel->setUserLimit(limit);
-				server.reply(executor, RPL_CHANNELMODEIS(executor->getNickname(), _params[0], "+l ", _params[i + 1]));
 				i++;
 			}
 			else
 			{
+				server.replyChannel(channel, RPL_CHANNELMODEIS(executor->getNickname(), _params[0], "-l", ""));
 				modes.is_limited = false;
-				server.reply(executor, RPL_CHANNELMODEIS(executor->getNickname(), _params[0], "-l ", ""));
 			}
 			channel->setModes(modes);
 		}
