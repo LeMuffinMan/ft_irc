@@ -1,4 +1,5 @@
 use crate::Bot;
+use anyhow::Result;
 
 impl Bot {
     pub async fn wall_e_riddle(
@@ -15,8 +16,10 @@ impl Bot {
 
                     if player_answer.ends_with(":2\r\n") {
                         self.send(
-                            &format!("PRIVMSG {nick_player} :Oh is that this simple ? *The robot plant a pizza and sees it works, a pizza tree juste grow, with pizzas as leaves and fruits
-Thank you ! Here take a pizza, you might need it later ...\r\n"),
+                            &format!("PRIVMSG {nick_player} :
+        Oh is that this simple ?
+        *The robot plant a pizza and sees it works, a pizza tree juste grow, with pizzas as leaves and fruits*
+        Thank you ! Here take a pizza, you might need it later ...\r\n"),
                             0
                         ).await.ok();
                         // let _ = self.send(&format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates roself languages\r\n"), timeout_ms).await;
@@ -43,6 +46,44 @@ Thank you ! Here take a pizza, you might need it later ...\r\n"),
             }
         }
     }
+
+    async fn expect_glados_msg(&mut self, timeout_ms: u64) -> Result<String> {
+        while let Some(line) = self.read_line_timeout(timeout_ms).await? {
+            if line.starts_with(":GladOS") {
+                if let Some(idx) = line.rfind(':') {
+                    let nick_player = &line[idx + 1..].trim();
+                    self.try_expect(
+                        &format!("INVITE {nick_player} #BuyNLarge\r\n"),
+                        "341",
+                        "Failed to invite user on #BuyNLarge",
+                        timeout_ms,
+                    )
+                    .await?;
+                    return Ok(nick_player.to_string());
+                }
+            } else if line.ends_with("JOIN #BuyNLarge\r\n") {
+                if let Some(idx) = line.find(':') {
+                    let after_colon = &line[idx + 1..];
+                    let end_idx = after_colon.find(' ').unwrap_or(after_colon.len());
+                    let nick_player = &after_colon[..end_idx];
+                    self.send(
+                        &format!("PRIVMSG {nick_player} :Bip Booop bap bzz noise Clap Trap biiiiiip BOOM !\r\n"),
+                        timeout_ms,
+                    )
+                    .await?;
+                    let _ = tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                    self.try_expect(
+                        &format!("KICK #BuyNLarge {nick_player}\r\n"),
+                        &format!("KICK #BuyNLarge {nick_player}"),
+                        "Failed to kick player",
+                        timeout_ms,
+                    )
+                    .await?;
+               }
+            }
+        }
+        Err(anyhow::anyhow!("readline returned None"))
+    }
 }
 
 pub async fn wall_e(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -58,63 +99,37 @@ pub async fn wall_e(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + S
         timeout_ms,
     )
     .await?;
+    let nick_player = bot.expect_glados_msg(timeout_ms).await?;
     while let Some(line) = bot.read_line_timeout(timeout_ms).await? {
-        println!("Wall-E received [{line}]");
-        if line.starts_with(":GladOS") {
-            if let Some(idx) = line.rfind(':') {
-                let nick_player = &line[idx + 1..].trim();
-                bot.try_expect(
-                    &format!("INVITE {nick_player} #BuyNLarge\r\n"),
-                    "341",
-                    "Failed to invite user on #BuyNLarge",
-                    timeout_ms,
-                )
-                .await?;
-                let _ = tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-                let riddle = &format!("PRIVMSG {nick_player} :*The robot express itself only with robot noises, but somehow, the Aperture Science Handheld Portal Device translates it in real time :\n
-Humanity will come back soon on earth and I didn't had time to clean everything!. 
-Be usefull you lazy human, can you tell me how to make pizza to welcome them ?
+        println!("Wall-E : received [{line}]");
+        if line.starts_with(&format!(":{nick_player} JOIN")) {
+            let riddle = &format!("PRIVMSG {nick_player} :
+        *Wall-E express itself only with robot noises,
+        but somehow, the Aperture Science Handheld Portal Device translates it*
 
-[1] -> It's an old ancestral knowledge, no one knows anymore how to make pizza !
-[2] -> You just need to plant some pizzas, then you can grow pizza trees, and have free pizza\r\n");
-                match bot
-                    .wall_e_riddle(riddle, &nick_player.to_string(), timeout_ms)
-                    .await
-                {
-                    Ok(true) => {
-                        bot.try_expect(
-                            &format!("PRIVMSG Chat-GPT :{nick_player}\r\n"),
-                            &format!("PRIVMSG Chat-GPT :{nick_player}"),
-                            "Failed to send msg to Chat-GPT",
-                            timeout_ms,
-                        )
-                        .await?;
-                    }
-                    _ => {
-                        println!("Glados : wrong answer");
-                    }
+        Humanity will come back soon on earth, I didn't had time to clean everything ! 
+        You lazy human, tell me how to make pizza to welcome them ?
+
+        [1] It's an old ancestral knowledge, no one knows anymore how to make pizza
+        [2] You just need to plant some pizzas, then you can grow pizza trees, and have free pizza\r\n");
+            match bot
+                .wall_e_riddle(riddle, &nick_player.to_string(), timeout_ms)
+                .await
+            {
+                Ok(true) => {
+                    bot.try_expect(
+                        &format!("PRIVMSG Chat-GPT :{nick_player}\r\n"),
+                        &format!("PRIVMSG Chat-GPT :{nick_player}"),
+                        "Failed to send msg to Chat-GPT",
+                        timeout_ms,
+                    )
+                    .await?;
                 }
-                break;
+                _ => {
+                    println!("Wall E : wrong answer");
+                }
             }
-        } else if line.ends_with("JOIN #BuyNLarge\r\n") {
-            if let Some(idx) = line.find(':') {
-                let after_colon = &line[idx + 1..];
-                let end_idx = after_colon.find(' ').unwrap_or(after_colon.len());
-                let nick_player = &after_colon[..end_idx];
-                bot.send(
-                    &format!("PRIVMSG {nick_player} :Bip Booop bap bzz noise Clap Trap biiiiiip BOOM !\r\n"),
-                    timeout_ms,
-                )
-                .await?;
-                let _ = tokio::time::sleep(std::time::Duration::from_secs(2)).await;
-                bot.try_expect(
-                    &format!("KICK #BuyNLarge {nick_player}\r\n"),
-                    &format!("KICK #BuyNLarge {nick_player}"),
-                    "Failed to kick player",
-                    timeout_ms,
-                )
-                .await?;
-            }
+            break;
         }
     }
     bot.shutdown().await?;

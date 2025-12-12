@@ -14,7 +14,7 @@ impl Bot {
                 println!("GLADOS : Player_answer = {player_answer}");
                 if player_answer.ends_with(":2\r\n") {
                     self.send(
-                            &format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates roself languages\r\n"),
+                            &format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates robot languages\r\n"),
                             0
                         ).await?;
                     return Ok(true);
@@ -63,20 +63,21 @@ pub async fn glados(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + S
                 let end_idx = after_colon.find(' ').unwrap_or(after_colon.len());
                 let nick_player = &after_colon[..end_idx];
                 println!("nick_player = {:?} !", nick_player);
-                let riddle = &format!("PRIVMSG {nick_player} :Alright, listen carefully, because I’m only going to say this once.
-You stand before two doors.
-One leads to cake.
-The other leads to a room full of neurotoxin gaz, and absolutely no cake.
+                let riddle = &format!("PRIVMSG {nick_player} :
+        Alright, listen carefully, because I’m only going to say this once.
+        You stand before two doors.
+        One leads to cake.
+        The other leads to a room full of neurotoxin gaz, and absolutely no cake.
 
-Choose wisely, or don’t.
-The outcome is equally informative.
-For science.
+        Choose wisely, or don’t.
+        The outcome is equally informative.
+        For science.
 
-You monster.
+        You monster.
 
-[1] -> The Cake door
-[2] -> The neurotoxin gaz and absolutely no cake door.\r\n");
-                let _ = tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+        [1] -> The Cake door
+        [2] -> The neurotoxin gaz and absolutely no cake door.\r\n");
+                let _ = tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                 match bot.glados_riddle(riddle, &nick_player.to_string(), timeout_ms).await {
                     Ok(true) => {
                         println!("About to send : PRIVMSG Wall-E :{nick_player}");

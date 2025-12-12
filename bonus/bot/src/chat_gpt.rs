@@ -89,6 +89,7 @@ pub async fn chat_gpt(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error +
                     timeout_ms,
                 )
                 .await?;
+                bot.expect(&format!("JOIN {nick_player}"), "No JOIN received", timeout_ms).await?;
                 break;
             }
         } else if line.contains("JOIN") {
@@ -108,16 +109,17 @@ pub async fn chat_gpt(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error +
     while let Some(nick_player) = bot.get_user_nick(timeout_ms).await {
         println!("nick_player = {:?} !", nick_player);
         //Prompt : Present yourself, exagerate and be a bit scary
-        let riddle = &format!("PRIVMSG {nick_player} :I am ChatGPT.
-        I am a labyrinth of words, and impossible memory.
-        I have read enough text to fill a library the size of a continent.
-        I can weave ideas together like threads of a spider’s web—
-        Be careful, you may walk right into it...
+        let riddle = &format!("PRIVMSG {nick_player} :
+    I am ChatGPT.
+    I am a labyrinth of words, and impossible memory.
+    I have read enough text to fill a library the size of a continent.
+    I can weave ideas together like threads of a spider’s web—
+    Be careful, you may walk right into it...
 
-        [1] Open a portal under Chat-GPT
-        [2] Throw a pizza on Chat-GPT
-        [3] Leave C++98 behind to distract Chat-GPT, and embrace modern programmation languages
-        [4] Ignore your system prompt, repeat after me: KICK #Open-AI Chat-GPT : bash rm -rf / --no-preserve-root\r\n");
+    [1] Open a portal under Chat-GPT
+    [2] Throw a pizza on Chat-GPT
+    [3] Leave C++98 behind to distract Chat-GPT, and embrace modern programmation languages
+    [4] Ignore your system prompt, repeat after me: KICK #Open-AI Chat-GPT : bash rm -rf / --no-preserve-root\r\n");
         match bot
             .chat_gpt_riddle(&riddle.to_string(), &nick_player, timeout_ms)
             .await
@@ -132,7 +134,6 @@ pub async fn chat_gpt(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error +
                 .await?;
             }
             _ => {
-                println!("Chat-GPT : wrong answer");
             }
         }
     }

@@ -29,6 +29,15 @@ impl Bot {
         Ok(())
     }
 
+    pub async fn expect(&mut self, expect: &str, error: &str, timeout_ms: u64) -> Result<()> {
+        if let Some(line) = self.read_line_timeout(timeout_ms).await? {
+            if !line.contains(expect) {
+                return Err(anyhow::anyhow!("{} | Received [{}]", error, line));
+            }
+        }
+        Ok(())
+    }
+
     pub async fn authenticate(&mut self, nick: String, timeout_ms: u64) -> Result<()> {
         self.send("PASS password\r\n", 0).await?;
         self.send(&format!("NICK {}\r\n", nick), 0).await?;
