@@ -1,4 +1,3 @@
-
 use crate::Bot;
 
 impl Bot {
@@ -12,7 +11,7 @@ impl Bot {
             let _ = tokio::time::sleep(std::time::Duration::from_millis(200));
             if let Ok(Some(player_answer)) = self.read_line_timeout(timeout_ms).await {
                 println!("Player_answer = {player_answer}");
-                
+
                 if player_answer.ends_with(":2\r\n") {
                     self.send(
                         &format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates robot languages\r\n"),
@@ -55,10 +54,16 @@ pub async fn glados(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + S
         timeout_ms,
     )
     .await?;
-    loop {
-        if let Some(nick_player) = bot.get_user_nick(timeout_ms).await {
-            println!("nick_player = {:?} !", nick_player);
-            let riddle = &format!("PRIVMSG {nick_player} :Alright, listen carefully, because I’m only going to say this once.
+    
+
+    while let Some(line) = bot.read_line_timeout(timeout_ms).await? {
+        if line.contains("JOIN") {
+            if let Some(idx) = line.rfind(':') {
+                let after_colon = &line[idx + 1..].trim();
+                let end_idx = after_colon.find(' ').unwrap_or(after_colon.len());
+                let nick_player = &after_colon[..end_idx];
+                println!("nick_player = {:?} !", nick_player);
+                let riddle = &format!("PRIVMSG {nick_player} :Alright, listen carefully, because I’m only going to say this once.
 You stand before two doors.
 One leads to cake.
 The other leads to a room full of neurotoxin gaz, and absolutely no cake.
@@ -70,27 +75,30 @@ For science.
 You monster.
 
 [1] -> The Cake door
-[2] -> The neurotoxin gaz and absolutely no cake door.
-        \r\n");
-            match bot.glados_riddle(riddle, &nick_player, timeout_ms).await {
-                Ok(true) => {
-                    bot.try_expect(
-                        &format!("PRIVMSG Wall-E :{nick_player}\r\n"),
-                        &format!("PRIVMSG Wall-E :{nick_player}"),
-                        "Failed to send msg to Wall-E",
-                        timeout_ms,
-                    )
-                    .await?;
-                },
-                _ => {
-                    bot.try_expect(
-                        &format!("KICK #ApertureScience {nick_player}\r\n"),
-                        "KICK #ApertureScience {nick_player}",
-                        "Failed to kick player",
-                        timeout_ms,
-                    ).await?;
-                },
-            };
+[2] -> The neurotoxin gaz and absolutely no cake door.\r\n");
+                let _ = tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+                match bot.glados_riddle(riddle, &nick_player.to_string(), timeout_ms).await {
+                    Ok(true) => {
+                        bot.try_expect(
+                            &format!("PRIVMSG Wall-E :{nick_player}\r\n"),
+                            &format!("PRIVMSG Wall-E :{nick_player}"),
+                            "Failed to send msg to Wall-E",
+                            timeout_ms,
+                        )
+                        .await?;
+                    }
+                    _ => {
+                        bot.try_expect(
+                            &format!("KICK #ApertureScience {nick_player}\r\n"),
+                            "KICK #ApertureScience {nick_player}",
+                            "Failed to kick player",
+                            timeout_ms,
+                        )
+                        .await?;
+                    }
+                };
+            }
         }
     }
+    Ok(())
 }

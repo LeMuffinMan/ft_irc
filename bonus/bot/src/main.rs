@@ -1,13 +1,12 @@
 mod bot;
 mod chat_gpt;
-mod wall_e;
 mod glados;
+mod wall_e;
 
 use bot::Bot;
 use chat_gpt::chat_gpt;
-use wall_e::wall_e;
 use glados::glados;
-
+use wall_e::wall_e;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
