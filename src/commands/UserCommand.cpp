@@ -11,10 +11,9 @@ UserCommand::UserCommand(std::vector<std::string> params)
  * User can claim a username, to identify itself on channels and server, 
  * Ex : User username hostname servername :realname
  *
+ * @param[in,out] executor client executing the command
+ * @param[in,out] server server instance
  */
-
-
-
 void UserCommand::execute(Client *executor, Server &server)
 {
 	if (!executor->isPasswordCorrect())

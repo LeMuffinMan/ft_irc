@@ -1,4 +1,3 @@
-
 #include "JoinCommand.hpp"
 #include <sstream>
 

@@ -13,6 +13,8 @@ PongCommand::PongCommand(std::vector<std::string> params)
  * The server sent a Ping command with a timestamp to a client, 
  * and expect a pong answer with the same timestamp as proof of activity
  *
+ * @param[in,out] executor client executing the command
+ * @param[in,out] server server instance
  */
 void PongCommand::execute(Client *executor, Server &server)
 {

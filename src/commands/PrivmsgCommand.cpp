@@ -2,20 +2,21 @@
 #include <sstream>
 #include "Server.hpp"
 
-/**
- * @brief Execute the Privmsg command.
- * Users commuinicate using Primsg, directly to user sharing the same server, 
- * or channl, or on an entire channel.
- * Ex : Privmsg target_nickname :msg
- * 		: Privmsg #channl :msg
- *
- */
-
 PrivmsgCommand::PrivmsgCommand(std::vector<std::string> params)
 {
 	_params = params;
 }
 
+/**
+ * @brief Execute the Privmsg command.
+ * Users communicate using Privmsg, directly to user sharing the same server,
+ * or channel, or on an entire channel.
+ * Ex : Privmsg target_nickname :msg
+ * 	  : Privmsg #channel :msg
+ * 
+ * @param[in,out] executor client executing the command
+ * @param[in,out] server server instance
+ */
 void PrivmsgCommand::execute(Client *executor, Server &server)
 {
 	std::vector<int> vec;

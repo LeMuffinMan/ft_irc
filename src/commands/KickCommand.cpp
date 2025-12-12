@@ -26,6 +26,8 @@ static std::vector<std::string> split_param(std::string params)
  * Ex: KICK #channel user :msg
  * The targeted user leaves the channel.
  *
+ * @param[in,out] executor client executing the command
+ * @param[in,out] server server instance
  */
 void KickCommand::execute(Client* executor, Server& server)
 {

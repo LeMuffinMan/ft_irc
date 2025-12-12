@@ -11,6 +11,8 @@ PassCommand::PassCommand(std::vector<std::string> params)
  * Allow user to input a password for the server.
  * Ex: PASS password
  *
+ * @param[in,out] executor client executing the command
+ * @param[in,out] server server instance
  */
 void PassCommand::execute(Client *executor, Server &server)
 {

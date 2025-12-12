@@ -14,6 +14,8 @@ NickCommand::NickCommand(std::vector<std::string> params)
  * Ex: NICK john_doe
  * User can appears under its nickname in channels.
  *
+ * @param[in,out] executor client executing the command
+ * @param[in,out] server server instance
  */
 void NickCommand::execute(Client *executor, Server &server)
 {

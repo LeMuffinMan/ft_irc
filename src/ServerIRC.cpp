@@ -226,8 +226,19 @@ void Server::removeClientFromAllChannels(Client *client)
 		Channel *channel = it->second;
 		if (channel->removeClient(client)) // if succeed, client was in channel and is now removed
 		{
-			this->reply(client, ":" + client->getNickname() + " PART " + channel->getName());
-			Debug::print(INFO, "Client " + client->getNickname() + " removed from channel " + channel->getName());
+			if (this->reply(client, ":" + client->getNickname() + " PART " + channel->getName()))
+			{
+				Debug::print(INFO, "Client "
+					+ client->getNickname()
+					+ " removed from channel "
+					+ channel->getName());
+			}
+			else
+			{
+				std::stringstream ss;
+				ss << "Client already dead, can't read it's name";
+				Debug::print(INFO, ss.str());
+			}
 		}
 	}
 }
