@@ -37,7 +37,7 @@ Server::~Server()
 	}
 }
 
-Server::Server(int port, std::string password) : _port(port), _password(password)
+Server::Server(int port, std::string password) : _port(port), _password(password), _server_socket(-1), _epfd(-1)
 {
 	g_sig = 0;
 	signal_init();

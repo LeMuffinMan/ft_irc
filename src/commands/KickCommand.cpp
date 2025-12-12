@@ -78,6 +78,7 @@ void KickCommand::execute(Client* executor, Server& server)
 		if (!chan->isClientInChannel(target))
 		{
 			server.reply(executor, ERR_USERNOTINCHANNEL(executor->getNickname(), users[i], chans[i]));
+			continue;
 		}
 		std::stringstream ss;
 		ss << ":" << executor->getNickname() << "!~" << executor->getUsername() << "@" << executor->getRealname() // realname et pas ip ?
