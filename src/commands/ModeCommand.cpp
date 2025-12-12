@@ -184,7 +184,7 @@ void ModeCommand::executeChannelMode(Client *executor, Server &server)
 			{
 				if (_paramSize < i + 1) // s'il n'y a pas de limite, on ne peut pas modifier
 					continue;
-					server.replyChannel(channel, RPL_CHANNELMODEIS(executor->getNickname(), _params[0], "+l", _params[i + 1]));
+				server.replyChannel(channel, RPL_CHANNELMODEIS(executor->getNickname(), _params[0], "+l", _params[i + 1]));
 				modes.is_limited = true;
 				std::istringstream iss(_params[i + 1]);
 				size_t limit;

@@ -42,6 +42,7 @@ Command Responses (001-399)
 #define RPL_TOPIC(nick, channel, topic) "332 " + nick + " " + channel + " :" + topic
 
 #define RPL_INVITING(nick, channel, target) "341 " + nick + " " + channel + " " + target
+#define RPL_INVITEACCEPTED(host, channel, target) ":" + host + " INVITE " + target + " :" + channel
 #define RPL_SUMMONING(nick, user) "342 " + nick + " " + user + " :Summoning user to IRC"
 
 #define RPL_INVITELIST(nick, channel, invitemask) "346 " + nick + " " + channel + " " + invitemask

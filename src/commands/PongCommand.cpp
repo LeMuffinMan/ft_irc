@@ -15,7 +15,7 @@ void PongCommand::execute(Client *executor, Server &server)
 	if (executor->last_ping != std::atol(_params[0].c_str()))
 	{
 		server.reply(executor, "Invalid pong");
-		server.removeClient(executor->fd);
+		server.removeClient(executor->_fd);
 		return;
 	}
 	std::time_t now = std::time(NULL);
@@ -24,7 +24,7 @@ void PongCommand::execute(Client *executor, Server &server)
 
 	std::stringstream ss;
 	ss << "[PONG: " << _params[0]
-	   << "] from client " << executor->fd
+	   << "] from client " << executor->_fd
 	   << " received";
 
 	Debug::print(DEBUG, ss.str());

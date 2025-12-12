@@ -32,7 +32,7 @@ void PassCommand::execute(Client *executor, Server &server)
 	else
 	{
 		server.reply(executor, ERR_PASSWDMISMATCH(executor->getNickname()));
-		server.client_kicked(executor->fd);
+		server.client_kicked(executor->_fd);
 	}
 	return;
 }

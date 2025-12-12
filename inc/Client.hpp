@@ -29,10 +29,10 @@ private:
 	bool _password_correct; //!< Flag indicating if the user has provided the correct password
 	bool _registered;		//!< Flag indicating if the user has provided all the auth info
 	std::string _ip_address;		//!< User's IP address
-	uint16_t port;				//!< User's port number
+	uint16_t _port;				//!< User's port number
 public:
 	//= Attributes for LocalUser =//
-	int fd;						 //!< File descriptor for the user's socket connection
+	int _fd;						 //!< File descriptor for the user's socket connection
 	std::string rbuf;			 //!< Read buffer to store incoming data
 	std::string wbuf;			 //!< Write buffer to store outgoing data
 	bool hasTriggeredEPOLLOUT;   //!< Flag indicating if EPOLLOUT is triggered

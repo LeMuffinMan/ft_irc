@@ -299,7 +299,7 @@ void Server::removeClient(Client *client)
 {
 	if (!client)
 		return;
-	removeClient(client->fd);
+	removeClient(client->_fd);
 }
 
 std::string &Server::getPassword()

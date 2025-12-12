@@ -23,13 +23,13 @@ bool Server::reply(Client *client, std::string message)
 		return false;
 	}
 	if (client->hasTriggeredEPOLLOUT)
-		disable_epollout(client->fd);
+		disable_epollout(client->_fd);
 	std::string &wbuf = client->wbuf;
 	if (!message.empty())
 		wbuf.append(message).append("\r\n");
 	while (!wbuf.empty())
 	{
-		ssize_t n = send(client->fd, wbuf.c_str(), wbuf.size(), 0);
+		ssize_t n = send(client->_fd, wbuf.c_str(), wbuf.size(), 0);
 		int error = errno;
 		if (n > 0)
 		{
@@ -41,7 +41,7 @@ bool Server::reply(Client *client, std::string message)
 			if (error == EAGAIN || error == EWOULDBLOCK)
 			{
 				Debug::print(INFO, "The message couldn't be send in one try, retrying next time");
-				enable_epollout(client->fd);
+				enable_epollout(client->_fd);
 				return 0;
 			}
 			else if (error == EPIPE)
@@ -55,7 +55,7 @@ bool Server::reply(Client *client, std::string message)
 		{
 			// error as send shouldn't return 0 or client disconnected?
 			std::stringstream ss;
-			ss << "Disconnected: send error on fd(" << client->fd << ") with errno(" << error << ")";
+			ss << "Disconnected: send error on fd(" << client->_fd << ") with errno(" << error << ")";
 			Debug::print(ERROR, ss.str());
 			removeClient(client);
 			return false;
@@ -135,9 +135,9 @@ void Server::remove_inactive_clients()
 			}
 			else
 			{
-				if (clients.find(it->first) != clients.end() && clients[it->first]->fd > 0) // fixed l'erreur sur timed out fd = -1
+				if (clients.find(it->first) != clients.end() && clients[it->first]->_fd > 0) // fixed l'erreur sur timed out fd = -1
 				{
-					ss << "Unregistered client with fd: " << client->fd << " got timed out";
+					ss << "Unregistered client with fd: " << client->_fd << " got timed out";
 					Debug::print(INFO, ss.str());
 					this->reply(client, "timed out");
 				}

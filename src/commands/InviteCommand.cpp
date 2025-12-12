@@ -64,6 +64,7 @@ void InviteCommand::execute(Client *executor, Server &server)
 			}
 			channel->addClientToAllowList(target);
 			server.reply(executor, RPL_INVITING(executor->getNickname(), _params[1], _params[0]));
+			server.reply(target, RPL_INVITEACCEPTED(target->getHost(), _params[1], _params[0]));
 			return;
 		}
 		else
@@ -81,6 +82,7 @@ void InviteCommand::execute(Client *executor, Server &server)
 		}
 		channel->addClientToAllowList(target);
 		server.reply(executor, RPL_INVITING(executor->getNickname(), _params[1], _params[0]));
+		server.reply(target, RPL_INVITEACCEPTED(target->getHost(), _params[1], _params[0]));
 		return;
 	}
 }

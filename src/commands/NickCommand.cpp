@@ -16,7 +16,7 @@ void NickCommand::execute(Client *executor, Server &server)
 	if (!executor->isPasswordCorrect())
 	{
 		server.reply(executor, "PASS must be first");
-		server.client_kicked(executor->fd);
+		server.client_kicked(executor->_fd);
 		return;
 	}
 	if (_params.empty())
