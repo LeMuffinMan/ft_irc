@@ -335,18 +335,13 @@ int Server::read_client_fd(int fd)
 	}
 	else if (r == 0)
 	{
-		std::cout << "Client " << fd << " disconnected" << std::endl;
-		epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
-		close(fd);
-		this->clients.erase(fd);
+		client_quited(fd);
 		return 0;
 	}
 	else
 	{
 		perror("recv");
-		epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
-		close(fd);
-		this->clients.erase(fd);
+		client_quited(fd);
 		return -1;
 	}
 }
@@ -472,19 +467,8 @@ void Server::handle_events(int n, epoll_event events[MAX_EVENTS])
 			if (evs & EPOLLIN)
 			{
 				int result = this->read_client_fd(fd);
-				// 0 = client disconnected
-				if (result == 0)
-				{
-					continue;
-				}
-				else if (result == 1)
-				{
+				if (result == 1)
 					interpret_msg(fd);
-				}
-				else if (result < 0)
-				{
-					// error handling
-				}
 			}
 		}
 	}
@@ -541,10 +525,10 @@ int Server::RunServer()
 		}
 		handle_events(n, events);
 		deleteUnusedChannels();
-#ifdef USE_FULL_CLIENT
+// #ifdef USE_FULL_CLIENT
 		// this->check_clients_ping();		 // si on n'a pas eu de signe d'activite depuis trop longtemps
 		// this->remove_inactive_clients(); // remove inactive localUsers after a unanswered ping
-#endif
+// #endif
 	}
 	close(this->_server_socket);
 	this->_server_socket = -1;
