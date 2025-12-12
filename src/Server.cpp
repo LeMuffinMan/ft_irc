@@ -282,9 +282,11 @@ void Server::client_quited(int fd) // leaved plutot que quited
 
 void Server::removeClient(int fd)
 {
+	removeClientFromAllChannels(this->clients[fd]);
 	epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
 	close(fd);
 	delete this->clients[fd];
+	this->clients[fd] = NULL;
 	this->clients.erase(fd);
 	// this->clients[fd]->printClientInfo();
 }
