@@ -81,11 +81,7 @@ impl Bot {
             }
         }
 
-        match tokio::time::timeout(
-            Duration::from_millis(timeout_ms),
-            self.reader.read_line(&mut line),
-        )
-        .await
+        match tokio::time::timeout(Duration::from_millis(timeout_ms),self.reader.read_line(&mut line)).await
         {
             Ok(Ok(n)) if n > 0 => Ok(Some(line)),
             _ => Ok(None),

@@ -1,4 +1,5 @@
 use crate::Bot;
+use anyhow::Result;
 
 impl Bot {
     pub async fn glados_riddle(
@@ -6,50 +7,39 @@ impl Bot {
         riddle: &String,
         nick_player: &String,
         timeout_ms: u64,
-    ) -> Result<bool, ()> {
+    ) -> Result<bool, anyhow::Error> {
         if let Ok(_) = self.send(&riddle, timeout_ms).await {
-            let _ = tokio::time::sleep(std::time::Duration::from_millis(200));
+            let _ = tokio::time::sleep(std::time::Duration::from_millis(200)).await;
             if let Ok(Some(player_answer)) = self.read_line_timeout(timeout_ms).await {
                 println!("GLADOS : Player_answer = {player_answer}");
-
                 if player_answer.ends_with(":2\r\n") {
-                    println!("Entering good answer");
                     self.send(
                             &format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates roself languages\r\n"),
                             0
-                        ).await.ok();
-                    // let _ = self.try_expect(
-                    //     &format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates roself languages\r\n"),
-                    //     &format!("PRIVMSG {nick_player}"),
-                    //     "Failed to send msg to answer player",
-                    //     timeout_ms,
-                    // ).await.ok();
-                    println!("Pose riddle: Good answer");
+                        ).await?;
                     return Ok(true);
                 } else if player_answer.ends_with(":1\r\n") {
-                    println!("Pose riddle : Bad answer");
-                    let _ = self.try_expect(
+                    self.try_expect(
                         &format!("KICK #ApertureScience {nick_player} : The Enrichment Center is required to remind you that you will be baked, and then there will be cake.\r\n"),
                         &format!("KICK #ApertureScience {nick_player}"),
                         "Failed to kick player",
                         timeout_ms,
-                    ).await;
+                    ).await?;
                     return Ok(false);
                 } else {
-                    println!("Pose riddle : Bad answer");
-                    let _ = self.try_expect(
+                    self.try_expect(
                         &format!("KICK #ApertureScience {nick_player} : You are just smart as you seem\r\n"),
                         &format!("KICK #ApertureScience {nick_player}"),
                         "Failed to kick player",
                         timeout_ms,
-                    ).await;
+                    ).await?;
                     return Ok(false);
                 }
             } else {
-                return Err(());
+                return Err(anyhow::anyhow!("Read returned None"))
             }
         }
-        Err(())
+        Err(anyhow::anyhow!("Send riddle failed"))
     }
 }
 
