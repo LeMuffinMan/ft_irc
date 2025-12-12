@@ -10,35 +10,39 @@ impl Bot {
         if let Ok(_) = self.send(&riddle, timeout_ms).await {
             let _ = tokio::time::sleep(std::time::Duration::from_millis(200));
             if let Ok(Some(player_answer)) = self.read_line_timeout(timeout_ms).await {
-                println!("Player_answer = {player_answer}");
+                println!("GLADOS : Player_answer = {player_answer}");
 
                 if player_answer.ends_with(":2\r\n") {
-                    self.try_expect(
-                        &format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates roself languages\r\n"),
-                        &format!("PRIVMSG {nick_player}"),
-                        "Failed to send msg to answer player",
-                        timeout_ms,
-                    ).await.ok();
-                    // let _ = self.send(&format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates roself languages\r\n"), timeout_ms).await;
+                    println!("Entering good answer");
+                    self.send(
+                            &format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates roself languages\r\n"),
+                            0
+                        ).await.ok();
+                    // let _ = self.try_expect(
+                    //     &format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates roself languages\r\n"),
+                    //     &format!("PRIVMSG {nick_player}"),
+                    //     "Failed to send msg to answer player",
+                    //     timeout_ms,
+                    // ).await.ok();
                     println!("Pose riddle: Good answer");
                     return Ok(true);
                 } else if player_answer.ends_with(":1\r\n") {
                     println!("Pose riddle : Bad answer");
-                    self.try_expect(
+                    let _ = self.try_expect(
                         &format!("KICK #ApertureScience {nick_player} : The Enrichment Center is required to remind you that you will be baked, and then there will be cake.\r\n"),
                         &format!("KICK #ApertureScience {nick_player}"),
                         "Failed to kick player",
                         timeout_ms,
-                    ).await.ok();
+                    ).await;
                     return Ok(false);
                 } else {
                     println!("Pose riddle : Bad answer");
-                    self.try_expect(
+                    let _ = self.try_expect(
                         &format!("KICK #ApertureScience {nick_player} : You are just smart as you seem\r\n"),
                         &format!("KICK #ApertureScience {nick_player}"),
                         "Failed to kick player",
                         timeout_ms,
-                    ).await.ok();
+                    ).await;
                     return Ok(false);
                 }
             } else {
@@ -85,6 +89,7 @@ You monster.
                 let _ = tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
                 match bot.glados_riddle(riddle, &nick_player.to_string(), timeout_ms).await {
                     Ok(true) => {
+                        println!("About to send : PRIVMSG Wall-E :{nick_player}");
                         bot.try_expect(
                             &format!("PRIVMSG Wall-E :{nick_player}\r\n"),
                             &format!("PRIVMSG Wall-E :{nick_player}"),

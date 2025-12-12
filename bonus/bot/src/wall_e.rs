@@ -59,7 +59,7 @@ pub async fn wall_e(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + S
     )
     .await?;
     while let Some(line) = bot.read_line_timeout(timeout_ms).await? {
-        // println!("Wall-E received [{line}]");
+        println!("Wall-E received [{line}]");
         if line.starts_with(":GladOS") {
             if let Some(idx) = line.rfind(':') {
                 let nick_player = &line[idx + 1..].trim();
