@@ -98,7 +98,7 @@ pub async fn kick_priviledges(port: u16, id: usize, timeout_ms: u64) -> Result<(
         .await?;
     client2
         .try_expect(
-            &format!("KICK #{}chan {} : client3 kick client3\r\n", &nick1, &nick3),
+            &format!("KICK #{}chan {} : client2 kick client3\r\n", &nick1, &nick3),
             " :You're not channel operator",
             "C2 kicked client3 without priv ",
             timeout_ms,
@@ -106,9 +106,17 @@ pub async fn kick_priviledges(port: u16, id: usize, timeout_ms: u64) -> Result<(
         .await?;
     client1
         .try_expect(
-            &format!("KICK #{}chan {} : client3 kick client3\r\n", &nick1, &nick3),
+            &format!("KICK #{}chan {} : client1 kick client3\r\n", &nick1, &nick3),
             "KICK ",
             "C1 failed to kick client3 ",
+            timeout_ms,
+        )
+        .await?;
+    client1
+        .try_expect(
+            &format!("KICK #{}chan {} : client1 kick client1\r\n", &nick1, &nick1),
+            &format!("KICK #{}chan {} : client1 kick client1", &nick1, &nick1),
+            "C1 failed to kick himself",
             timeout_ms,
         )
         .await?;

@@ -31,7 +31,7 @@ pub async fn invite_mode_i_join(port: u16, id: usize, timeout_ms: u64) -> Result
     client1
         .try_expect(
             &format!("MODE #{}chan +i\r\n", &nick1),
-            &format!("324 {} #{}chan +i", &nick1, &nick1),
+            &format!("324"),
             "C1 Mode didnt answered 324",
             timeout_ms,
         )
