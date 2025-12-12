@@ -1,13 +1,6 @@
 use crate::client::Client;
 use anyhow::Result;
 
-//Error pour un parametre en plus
-//checker si on recoit un timestamp
-//
-
-// +00:00
-//
-
 pub async fn time_with_params(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("modeneedmorep_{}", id);
     let mut client = Client::connect(port).await?;
