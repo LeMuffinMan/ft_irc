@@ -36,7 +36,6 @@ async fn main() -> Result<()> {
         let _ = test_behaviors(port, 0).await;
     }
     if beh_mode == 0 {
-        // let connection_stress_handle = tokio::spawn(connection_stress_test(port, num_clients, 0));
         connection_stress_test(port, num_clients, timeout).await?;
         advanced_stress_test(port, num_clients, timeout).await?;
     }
@@ -51,22 +50,3 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-//Todo
-//
-//KICK :
-//- BADCHANMASK
-//- USERNOTONCHAN
-//- USERNOTINCHAN
-//-
-// MODE:
-// - ERR_NEEDMOREPARAMS
-// - ERR_USERSDONTMATCH
-// - ERR_UMODEUNKNOWNFLAG
-// -RPL_UMODEIS
-//
-// PART:
-// - ERR_NOSUCHCHANNEL
-// - ERR_NOTONCHANNEL
-//
-// QUIT:
-// - quitter un chan commun et checker le message en face
