@@ -1,5 +1,19 @@
 #!/bin/bash
 
+
+# This script execute our irc server and then launch our bots, before opening a new
+# shell executing nc -C 127.0.0.1 6667 with an already authenticated user on the irc server 
+# to start the self game
+# You will need terminator terminal installed, or manualy :
+# at root of pproject :
+#   Open a shell root of project and execute make && ./ircserv <PORT> <PASSWORD>
+#   Open a shell in bonus/bot and execute cargo build && ./target/release/bot
+#
+# Open a shell using for example socat to send inputs to server, with automatic \r\n 
+# message completion
+#
+# socat - TCP:localhost:6667,crlf
+#
 if ! command -v terminator &>/dev/null; then
     echo "Error : Terminator not found"
     exit 1
@@ -31,7 +45,7 @@ echo "IRC Server started in Terminator (PID: $TERMINATOR_PID_SERV)"
 
 sleep 2
 
-terminator --title "Bots" -e 'bash -c "cd bonus/bot && cargo run"' 2>/dev/null &
+terminator --title "Bots" -e 'bash -c "cd bonus/bot && cargo build && ./target/release/bot"' 2>/dev/null &
 TERMINATOR_PID_BOTS=$!
 echo "Bots started in Terminator (PID: $TERMINATOR_PID_BOTS)"
 
