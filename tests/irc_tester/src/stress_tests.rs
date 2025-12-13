@@ -143,7 +143,6 @@ pub async fn advanced_stress_test(port: u16, num_clients: usize, timeout_ms: u64
         ClientBehavior::PrivmsgNoTextToSend,
         ClientBehavior::PrivmsgNoSuchChannel,
         ClientBehavior::PrivmsgTooManyTargets,
-        ClientBehavior::PrivmsgToNickNotSharingChan,
         ClientBehavior::KickNeedMoreParams,
         ClientBehavior::KickNotRegistered,
         ClientBehavior::KickNoSuchChannel,

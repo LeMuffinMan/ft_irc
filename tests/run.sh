@@ -57,10 +57,10 @@ log "Building Rust tester..."
     cargo build --release
 ) || exit 1
 
-KITTY_PID=0
-if command -v kitty &>/dev/null && [ "$4" = 1 ]; then
-    kitty --title "IRC Server Log" tail -f .server.log 2> /dev/null &
-    KITTY_PID=$!
+TERMINATOR_PID=0
+if command -v terminator &>/dev/null && [ "$4" = 1 ]; then
+    terminator --title "IRC Server Log" -e "tail -f .server.log" 2> /dev/null &
+    TERMINATOR_PID=$!
 fi
 
 START_TIME=$(date +%s)
@@ -107,7 +107,7 @@ printf "%-25s : %5d (%d/s)\n" "Registrations" "$REGISTRATIONS" "$((REGISTRATIONS
 printf "%-25s : %5d (%d/s)\n" "Timed out" "$TIMEDOUT" "$((TIMEDOUT / ELAPSED))"
 echo
 
-if [[ -n "$KITTY_PID" ]]; then
-    echo "Killing log watcher (kitty) PID: $KITTY_PID"
-    kill "$KITTY_PID" 2>/dev/null || true
+if [[ -n "$TERMINATOR_PID" ]]; then
+    echo "Killing log watcher (terminator) PID: $TERMINATOR_PID"
+    kill "$TERMINATOR_PID" 2>/dev/null || true
 fi
