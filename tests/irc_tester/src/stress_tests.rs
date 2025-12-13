@@ -10,7 +10,6 @@ use rand::prelude::IndexedRandom;
 use rand::rng;
 use tokio::time::{Duration, Instant};
 
-
 /**
  *
  * @brief Initialise and execute a test depending of Behavior
@@ -32,6 +31,71 @@ pub async fn run_client(
         Ok(_) => ClientResult::success(id, behavior, reply),
         Err(e) => ClientResult::failure(id, behavior, e.to_string(), reply),
     }
+}
+
+/**
+ *
+ * @brief We run  <num_clients> clients at almost same time, realising a normal connection test
+ *  
+ */
+pub async fn connection_stress_test(port: u16, num_clients: usize, timeout_ms: u64) -> Result<()> {
+    println!(
+        "Starting connection stress test with {} clients...",
+        num_clients
+    );
+
+    let start = Instant::now();
+    let mut handles = Vec::with_capacity(num_clients);
+
+    for i in 0..num_clients {
+        let handle = tokio::spawn(async move {
+            let nick = format!("stress_{}", i);
+            let mut client = match Client::connect(port).await {
+                Ok(c) => c,
+                Err(_) => return Err(anyhow::anyhow!("Failed to connect")),
+            };
+
+            let messages = vec![
+                "PASS password\r\n".to_string(),
+                format!("NICK {}_stress_connection\r\n", nick),
+                format!("USER {} 0 * :stress user\r\n", nick),
+            ];
+
+            for msg in messages {
+                client.send(&msg, 0).await?;
+            }
+
+            if let Some(line) = client.read_line_timeout(timeout_ms).await? {
+                if line.contains("Welcome to the Internet Relay Network") {
+                    return Ok(());
+                }
+            }
+            Err(anyhow::anyhow!("Failed to register client"))
+        });
+        handles.push(handle);
+    }
+
+    let mut ok_count = 0;
+    let mut ko_count = 0;
+
+    for handle in handles {
+        match handle.await {
+            Ok(Ok(_)) => ok_count += 1,
+            _ => ko_count += 1,
+        }
+    }
+
+    let total_duration = start.elapsed();
+    println!(
+        "\nConnection stress test finished: {} \x1b[32mOK\x1b[0m, {} \x1b[31mKO\x1b[0m",
+        ok_count, ko_count
+    );
+    println!("Total time: {:?}", total_duration);
+    println!(
+        "Time per client: {:?}\n",
+        total_duration / num_clients as u32
+    );
+    Ok(())
 }
 
 /**
@@ -103,7 +167,7 @@ pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
     // We use FuturesUnordered and we do not await our async task, to send them by interating in
     // behavior enum
     // for each behavior, we create an asynchron future, which realise the test.
-    // .collect() fill our futures variable, with our asynchron function return 
+    // .collect() fill our futures variable, with our asynchron function return
     let mut futures: FuturesUnordered<_> = behaviors
         .into_iter()
         .map(|behavior| async move {
@@ -250,71 +314,5 @@ pub async fn advanced_stress_test(port: u16, num_clients: usize, timeout_ms: u64
         ko_count
     );
 
-    Ok(())
-}
-
-/**
- *
- * @brief We run  <num_clients> clients at almost same time, realising a normal connection test
- *  
- */
-
-pub async fn connection_stress_test(port: u16, num_clients: usize, timeout_ms: u64) -> Result<()> {
-    println!(
-        "Starting connection stress test with {} clients...",
-        num_clients
-    );
-
-    let start = Instant::now();
-    let mut handles = Vec::with_capacity(num_clients);
-
-    for i in 0..num_clients {
-        let handle = tokio::spawn(async move {
-            let nick = format!("stress_{}", i);
-            let mut client = match Client::connect(port).await {
-                Ok(c) => c,
-                Err(_) => return Err(anyhow::anyhow!("Failed to connect")),
-            };
-
-            let messages = vec![
-                "PASS password\r\n".to_string(),
-                format!("NICK {}_stress_connection\r\n", nick),
-                format!("USER {} 0 * :stress user\r\n", nick),
-            ];
-
-            for msg in messages {
-                client.send(&msg, 0).await?;
-            }
-
-            if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-                if line.contains("Welcome to the Internet Relay Network") {
-                    return Ok(());
-                }
-            }
-            Err(anyhow::anyhow!("Failed to register client"))
-        });
-        handles.push(handle);
-    }
-
-    let mut ok_count = 0;
-    let mut ko_count = 0;
-
-    for handle in handles {
-        match handle.await {
-            Ok(Ok(_)) => ok_count += 1,
-            _ => ko_count += 1,
-        }
-    }
-
-    let total_duration = start.elapsed();
-    println!(
-        "\nConnection stress test finished: {} \x1b[32mOK\x1b[0m, {} \x1b[31mKO\x1b[0m",
-        ok_count, ko_count
-    );
-    println!("Total time: {:?}", total_duration);
-    println!(
-        "Time per client: {:?}\n",
-        total_duration / num_clients as u32
-    );
     Ok(())
 }

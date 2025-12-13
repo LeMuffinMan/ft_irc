@@ -4,9 +4,9 @@ use anyhow::Result;
 *
 * @brief Glados
 *
-* the GladOS bot is supposed to immediately send its riddle to player as soon as 
+* the GladOS bot is supposed to immediately send its riddle to player as soon as
 * a player join its channel
-* in case of failure, it kicks player and continue its loop waiting for a new JOIN 
+* in case of failure, it kicks player and continue its loop waiting for a new JOIN
 * in case of success it congrats player and send player nickname to Wall-E to allow
 * player to progress in game
 *
@@ -67,7 +67,6 @@ You monster.
     Ok(())
 }
 
-
 impl Bot {
     pub async fn glados_riddle(
         &mut self,
@@ -122,5 +121,3 @@ impl Bot {
         return Err(anyhow::anyhow!("Read returned None"));
     }
 }
-
-

@@ -19,7 +19,6 @@ pub struct Bot {
     reader: tokio::io::BufReader<tokio::net::tcp::OwnedReadHalf>,
 }
 
-
 /**
 *
 * @Brief Bot implementations are basic tools to animate 3 bots asynchronously

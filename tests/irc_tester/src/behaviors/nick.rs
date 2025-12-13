@@ -1,7 +1,6 @@
 use crate::client::Client;
 use anyhow::Result;
 
-
 /**
 *
 * @Brief Nick Command tests

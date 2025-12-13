@@ -1,8 +1,8 @@
 use crate::behavior::ClientBehavior;
 use tokio::time::Duration;
 
- /**
-* 
+/**
+*
 * @Brief ClientResult as test data capsule
 * Each client is identified to the server with an id in their registered nickname
 * Each has a behavior, the test.
@@ -10,8 +10,6 @@ use tokio::time::Duration;
 * It include the test duration.
 *
 */
-
-
 #[derive(Debug)]
 pub struct ClientResult {
     pub id: usize,

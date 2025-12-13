@@ -2,7 +2,6 @@ use crate::client::Client;
 use anyhow::Result;
 use tokio::time::Duration;
 
-
 /**
 *
 * @Brief Protocol connection tests

@@ -5,10 +5,10 @@ use anyhow::Result;
 *
 * @Brief Wall-E
 *
-* The Wall-E Bot is supposed to send noise and kick player if its channel is joined 
+* The Wall-E Bot is supposed to send noise and kick player if its channel is joined
 * before the GladOS bot sent him the nickname of the player allow to progress in the game
 *
-* once nickname received, it wait player to join its channel to send its riddle 
+* once nickname received, it wait player to join its channel to send its riddle
 * and expect player answer
 *
 * Wall-E kicks the player with custom message in case of failure
@@ -54,8 +54,7 @@ You lazy human, tell me how to make pizza to welcome them ?
                     )
                     .await?;
                 }
-                _ => {
-                }
+                _ => {}
             }
             break;
         }
@@ -63,7 +62,6 @@ You lazy human, tell me how to make pizza to welcome them ?
     bot.shutdown().await?;
     Ok(())
 }
-
 
 impl Bot {
     pub async fn wall_e_riddle(
@@ -77,7 +75,6 @@ impl Bot {
             .await;
         let _ = tokio::time::sleep(std::time::Duration::from_millis(200));
         if let Ok(Some(player_answer)) = self.read_line_timeout(timeout_ms).await {
-
             if player_answer.ends_with(":2\r\n") {
                 self.send(
                     &format!("PRIVMSG {nick_player} :Oh is that this simple ?\r\n"),
@@ -154,5 +151,3 @@ impl Bot {
         Err(anyhow::anyhow!("readline returned None"))
     }
 }
-
-

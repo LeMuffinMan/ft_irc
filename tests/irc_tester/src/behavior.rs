@@ -16,11 +16,10 @@ use anyhow::Result;
 use std::future::Future;
 use std::pin::Pin;
 
-
 /**
 *
 *
-* @Brief Handler trait 
+* @Brief Handler trait
 *
 *  To decouple the list of client behaviors from the execution logic,
  * we useda a handler-based abstraction.

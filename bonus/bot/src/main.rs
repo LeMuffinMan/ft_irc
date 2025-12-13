@@ -8,13 +8,12 @@ use chat_gpt::chat_gpt;
 use glados::glados;
 use wall_e::wall_e;
 
-
 /*
 *
 * @Brief Bot
 *
 * This program simulate asychronously 3 bots on the irc server.
-* Each bot is launched in using tokio spawn and collecting their future, 
+* Each bot is launched in using tokio spawn and collecting their future,
 * allowing bot to not block each others on I/O operations while they interact with
 * several players
 *

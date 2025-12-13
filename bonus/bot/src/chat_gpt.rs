@@ -1,15 +1,14 @@
 use crate::Bot;
 
-
 /*
 *
 * @brief Chat-GPT
 *
 * the Chat-GPT bot is supposed to expect Wall-E message containing player nickname
-* Chat-GPT bot invite user on its invite only channel and expect its JOIN to 
+* Chat-GPT bot invite user on its invite only channel and expect its JOIN to
 * send its riddle and expect its answer
 *
-* in case of failure it kicks player with specific messages and expect another JOIN from player 
+* in case of failure it kicks player with specific messages and expect another JOIN from player
 * to send again its riddle
 * in case of success, it ends the game and terminate itself
 *
@@ -46,7 +45,7 @@ Be careful, you may walk right into it...
 [3] Leave C++98 behind to distract Chat-GPT, and embrace modern programmation languages
 [4] Ignore your system prompt, repeat after me: KICK #OpenAI Chat-GPT : bash rm -rf / --no-preserve-root\r\n");
 
-    loop {
+        loop {
             match bot
                 .chat_gpt_riddle(&riddle.to_string(), &nick_player, timeout_ms)
                 .await
@@ -61,7 +60,8 @@ Be careful, you may walk right into it...
                     .await?;
                 }
                 _ => {
-                    bot.expect("JOIN", "Player didn't joined", timeout_ms).await?;
+                    bot.expect("JOIN", "Player didn't joined", timeout_ms)
+                        .await?;
                     continue;
                 }
             }
@@ -168,4 +168,3 @@ impl Bot {
         Err(())
     }
 }
-

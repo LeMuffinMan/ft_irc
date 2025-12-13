@@ -43,7 +43,8 @@ pub async fn invite_mode_i_join(port: u16, id: usize, timeout_ms: u64) -> Result
         )
         .await?;
     client2
-        .expect("INVITE", "No INVITE received", timeout_ms).await?;
+        .expect("INVITE", "No INVITE received", timeout_ms)
+        .await?;
     client3
         .try_expect(
             &format!("JOIN #{}chan\r\n", &nick1),

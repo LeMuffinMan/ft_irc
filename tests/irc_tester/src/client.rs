@@ -7,7 +7,6 @@ use tokio::{
     time::{Duration, sleep},
 };
 
-
 /**
 *
 * @Brief Our client structure is basicaly an input/output tcp connection
@@ -24,7 +23,7 @@ pub struct Client {
 * @Brief Clients implementations are basic tools to operate tests
 *
 * try_expect test to send tests, and expect specific answers from the server
-* authenticate 
+* authenticate
 */
 impl Client {
     pub async fn try_expect(
@@ -134,7 +133,7 @@ impl Client {
         Ok(())
     }
 
-    //send used for fragmented inputs 
+    //send used for fragmented inputs
     pub async fn send_raw(&self, data: &[u8]) -> Result<()> {
         let mut writer = self.writer.lock().await;
         writer.write_all(data).await?;

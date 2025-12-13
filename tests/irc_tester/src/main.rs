@@ -10,15 +10,6 @@ use crate::stress_tests::*;
 use anyhow::Result;
 use std::env;
 
-fn parse() -> (usize, usize, usize) {
-    let args: Vec<String> = env::args().collect();
-    let num_clients: usize = args[1].parse().expect("Argument must be 0 or 1");
-    let stress_mode: usize = args[2].parse().expect("Argument must be 0 or 1");
-    let beh_mode: usize = args[3].parse().expect("Argument must be 0 or 1");
-
-    (num_clients, stress_mode, beh_mode)
-}
-
 /**
  *
  * @brief irc server tester
@@ -64,3 +55,11 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
+fn parse() -> (usize, usize, usize) {
+    let args: Vec<String> = env::args().collect();
+    let num_clients: usize = args[1].parse().expect("Argument must be 0 or 1");
+    let stress_mode: usize = args[2].parse().expect("Argument must be 0 or 1");
+    let beh_mode: usize = args[3].parse().expect("Argument must be 0 or 1");
+
+    (num_clients, stress_mode, beh_mode)
+}

@@ -1,7 +1,6 @@
 use crate::client::Client;
 use anyhow::Result;
 
-
 /**
 *
 * @Brief Kick Command tests
@@ -84,16 +83,19 @@ pub async fn kick_priviledges(port: u16, id: usize, timeout_ms: u64) -> Result<(
         )
         .await?;
     client2
-        .expect("INVITE", "C2 Not invit received", timeout_ms).await?;
+        .expect("INVITE", "C2 Not invit received", timeout_ms)
+        .await?;
     client2
         .try_expect(
             &format!("JOIN #{}chan\r\n", &nick1),
             "JOIN",
             "C2 Failed to join chan",
             timeout_ms,
-        ).await?;
+        )
+        .await?;
     client1
-        .expect("JOIN", "C1 Not invit received", timeout_ms).await?;
+        .expect("JOIN", "C1 Not invit received", timeout_ms)
+        .await?;
     client1
         .try_expect(
             &format!("INVITE {} #{}chan\r\n", &nick3, &nick1),
@@ -103,9 +105,11 @@ pub async fn kick_priviledges(port: u16, id: usize, timeout_ms: u64) -> Result<(
         )
         .await?;
     client3
-        .expect("INVITE", "No INVITE received", timeout_ms).await?;
+        .expect("INVITE", "No INVITE received", timeout_ms)
+        .await?;
     client3
-        .try_expect(&format!("JOIN #{}chan\r\n", &nick1), 
+        .try_expect(
+            &format!("JOIN #{}chan\r\n", &nick1),
             "JOIN",
             "C3 Failed to join chan",
             timeout_ms,
@@ -120,7 +124,8 @@ pub async fn kick_priviledges(port: u16, id: usize, timeout_ms: u64) -> Result<(
         )
         .await?;
     client2
-        .expect("JOIN", "No joined received", timeout_ms).await?;
+        .expect("JOIN", "No joined received", timeout_ms)
+        .await?;
     client2
         .try_expect(
             &format!("KICK #{}chan {} : client2 kick client3\r\n", &nick1, &nick3),
@@ -130,7 +135,8 @@ pub async fn kick_priviledges(port: u16, id: usize, timeout_ms: u64) -> Result<(
         )
         .await?;
     client1
-        .expect("JOIN", "No joined received", timeout_ms).await?;
+        .expect("JOIN", "No joined received", timeout_ms)
+        .await?;
     client1
         .try_expect(
             &format!("KICK #{}chan {} : client1 kick client3\r\n", &nick1, &nick3),

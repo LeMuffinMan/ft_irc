@@ -6,7 +6,7 @@ use tokio::time::{Duration, sleep};
 *
 * @Brief Controle clients
 *
-*  We need some client to be already 
+*  We need some client to be already
 *  before we start the test : alowing automatic feed back
 *  and creating specific situations.
 *
