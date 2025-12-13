@@ -33,7 +33,9 @@ bool Server::reply(Client *client, std::string message)
 		int error = errno;
 		if (n > 0)
 		{
-			Debug::print(INFO, "Reply to " + client->getNickname() + ": " + wbuf.substr(0, static_cast<size_t>(n - 1)));
+			std::stringstream ss;
+			ss << "Reply to " << safe_nick(client->getNickname()) << " [" << wbuf.substr(0, static_cast<size_t>(n - 2)) << "]";
+			Debug::print(INFO, ss.str());
 			wbuf.erase(0, static_cast<size_t>(n));
 		}
 		else if (n < 0)
@@ -46,7 +48,7 @@ bool Server::reply(Client *client, std::string message)
 			}
 			else if (error == EPIPE)
 			{
-				Debug::print(WARNING, "SIGPIPE received while sending message to client " + client->getNickname());
+				Debug::print(WARNING, "SIGPIPE received while sending message to client " + safe_nick(client->getNickname()));
 				removeClient(client);
 				return false;
 			}

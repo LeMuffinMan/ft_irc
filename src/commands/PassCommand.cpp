@@ -30,6 +30,7 @@ void PassCommand::execute(Client *executor, Server &server)
 
 	if (executor->isPasswordCorrect())
 	{
+		server.reply(executor, ERR_ALREADYREGISTRED(executor->getNickname()));
 		return;
 	}
 
