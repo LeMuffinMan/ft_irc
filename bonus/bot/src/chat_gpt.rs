@@ -118,7 +118,6 @@ pub async fn chat_gpt(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error +
     .await?;
 
     if let Ok(nick_player) = bot.expect_wall_e_msg(timeout_ms).await {
-        println!("Chat-gpt received {nick_player} from Wall-E");
         //Prompt : Present yourself, exagerate and be a bit scary
         let riddle = &format!("I am ChatGPT.
 I am a labyrinth of words, and impossible memory.

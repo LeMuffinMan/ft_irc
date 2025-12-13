@@ -14,7 +14,6 @@ impl Bot {
 
         let _ = tokio::time::sleep(std::time::Duration::from_millis(200)).await;
         if let Ok(Some(player_answer)) = self.read_line_timeout(timeout_ms).await {
-            println!("GLADOS : Player_answer = {player_answer}");
             if player_answer.ends_with(":2\r\n") {
                 self.send(
                         &format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\r\n"),
@@ -52,9 +51,8 @@ impl Bot {
                 .await?;
                 return Ok(false);
             }
-        } else {
-            return Err(anyhow::anyhow!("Read returned None"));
         }
+        return Err(anyhow::anyhow!("Read returned None"));
     }
 }
 
@@ -76,7 +74,6 @@ pub async fn glados(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + S
                 let after_colon = &line[idx + 1..].trim();
                 let end_idx = after_colon.find(' ').unwrap_or(after_colon.len());
                 let nick_player = &after_colon[..end_idx];
-                println!("nick_player = {:?} !", nick_player);
                 let riddle = &format!(
                     "Alright, listen carefully, because I’m only going to say this once.
 You stand before two doors.
@@ -98,7 +95,6 @@ You monster.
                     .await
                 {
                     Ok(true) => {
-                        println!("About to send : PRIVMSG Wall-E :{nick_player}");
                         bot.try_expect(
                             &format!("PRIVMSG Wall-E :{nick_player}\r\n"),
                             &format!("PRIVMSG Wall-E :{nick_player}"),

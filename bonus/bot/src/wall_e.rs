@@ -13,7 +13,6 @@ impl Bot {
             .await;
         let _ = tokio::time::sleep(std::time::Duration::from_millis(200));
         if let Ok(Some(player_answer)) = self.read_line_timeout(timeout_ms).await {
-            println!("Wall-e : Player_answer = {player_answer}");
 
             if player_answer.ends_with(":2\r\n") {
                 self.send(
@@ -107,7 +106,6 @@ pub async fn wall_e(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + S
     .await?;
     let nick_player = bot.expect_glados_msg(timeout_ms).await?;
     while let Some(line) = bot.read_line_timeout(timeout_ms).await? {
-        println!("Wall-E : received [{line}]");
         if line.starts_with(&format!(":{nick_player} JOIN")) {
             let riddle = &format!(
                 "*Wall-E express itself only with robot noises,
@@ -133,7 +131,6 @@ You lazy human, tell me how to make pizza to welcome them ?
                     .await?;
                 }
                 _ => {
-                    println!("Wall E : wrong answer");
                 }
             }
             break;
