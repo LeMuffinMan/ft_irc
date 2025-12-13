@@ -57,6 +57,30 @@ impl Bot {
         Ok(())
     }
 
+    pub async fn send_line_by_line(
+        &mut self,
+        riddle: &String,
+        nick_player: &String,
+        timeout_ms: u64,
+    ) -> Result<()> {
+        let lines: Vec<&str> = riddle.lines().collect();
+        for line in lines {
+            if let Ok(_) = self
+                .send(&format!("PRIVMSG {nick_player} :{line}\r\n"), timeout_ms)
+                .await
+            {
+                if line.trim().is_empty() {
+                    let _ = tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+                } else {
+                    let _ = tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+                }
+            } else {
+                return Err(anyhow::anyhow!("Send failed sending riddle"));
+            }
+        }
+        Ok(())
+    }
+
     pub async fn connect(port: u16) -> Result<Self> {
         let stream = TcpStream::connect(("127.0.0.1", port)).await?;
         let (reader, writer) = stream.into_split();
@@ -90,27 +114,15 @@ impl Bot {
             }
         }
 
-        match tokio::time::timeout(Duration::from_millis(timeout_ms),self.reader.read_line(&mut line)).await
+        match tokio::time::timeout(
+            Duration::from_millis(timeout_ms),
+            self.reader.read_line(&mut line),
+        )
+        .await
         {
             Ok(Ok(n)) if n > 0 => Ok(Some(line)),
             _ => Ok(None),
         }
-    }
-
-    pub async fn get_user_nick(&mut self, timeout_ms: u64) -> Option<String> {
-        if let Ok(Some(line)) = self.read_line_timeout(timeout_ms).await {
-            println!("Received line = {line}");
-            if line.contains("JOIN") {
-                if let Some((nick, _)) = line.split_once(' ') {
-                    let trimed_nick = nick.chars().skip(1).collect::<String>();
-                    println!("Extracted Nick = {trimed_nick}");
-                    return Some(trimed_nick.to_string());
-                } else {
-                    println!("Bot failed to get nick");
-                }
-            }
-        }
-        None
     }
 
     pub async fn shutdown(&self) -> Result<()> {

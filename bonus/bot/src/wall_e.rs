@@ -8,42 +8,47 @@ impl Bot {
         nick_player: &String,
         timeout_ms: u64,
     ) -> Result<bool, ()> {
-        loop {
-            if let Ok(_) = self.send(&riddle, timeout_ms).await {
-                let _ = tokio::time::sleep(std::time::Duration::from_millis(200));
-                if let Ok(Some(player_answer)) = self.read_line_timeout(timeout_ms).await {
-                    println!("Wall-e : Player_answer = {player_answer}");
+        let _ = self
+            .send_line_by_line(riddle, nick_player, timeout_ms)
+            .await;
+        let _ = tokio::time::sleep(std::time::Duration::from_millis(200));
+        if let Ok(Some(player_answer)) = self.read_line_timeout(timeout_ms).await {
+            println!("Wall-e : Player_answer = {player_answer}");
 
-                    if player_answer.ends_with(":2\r\n") {
-                        self.send(
-                            &format!("PRIVMSG {nick_player} :
-        Oh is that this simple ?
-        *The robot plant a pizza and sees it works, a pizza tree juste grow, with pizzas as leaves and fruits*
-        Thank you ! Here take a pizza, you might need it later ...\r\n"),
-                            0
-                        ).await.ok();
-                        // let _ = self.send(&format!("PRIVMSG {nick_player} :Huh. There isn't enough neurotoxin to kill you. So I guess you win.\nTake this Aperture Science Handheld Portal Device, it does not make portal anymore but it translates roself languages\r\n"), timeout_ms).await;
-                        println!("Pose riddle: Good answer");
-                        return Ok(true);
-                    } else if player_answer.ends_with(":1\r\n") {
-                        println!("Pose riddle : Bad answer");
-                        self.send(
-                            &format!("KICK #BuyNLarge {nick_player} : Everyone will die as soon as they land back on earth because of you !!\r\n"),
-                            0
-                        ).await.ok();
-                        return Ok(false);
-                    } else {
-                        println!("Pose riddle : Bad answer");
-                        self.send(
-                            &format!("KICK #ApertureScience {nick_player} : I hope others humans are smarter than you ...\r\n"),
-                            0
-                        ).await.ok();
-                        return Ok(false);
-                    }
-                } else {
-                    return Err(());
-                }
+            if player_answer.ends_with(":2\r\n") {
+                self.send(
+                    &format!("PRIVMSG {nick_player} :Oh is that this simple ?\r\n"),
+                    0,
+                )
+                .await
+                .ok();
+                let _ = tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+                let _ = self.send(
+                    &format!("PRIVMSG {nick_player} :*The robot plant a pizza and sees it works, a pizza tree juste grow, with pizzas as leaves and fruits*\r\n"),
+                    0)
+                    .await;
+                let _ = tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+                let _ = self.send(
+                    &format!("PRIVMSG {nick_player} :Thank you ! Here take a pizza, you might need it later ...\r\n"),
+                    0)
+                    .await;
+                let _ = tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+                return Ok(true);
+            } else if player_answer.ends_with(":1\r\n") {
+                let _ = self.send(
+                    &format!("KICK #BuyNLarge {nick_player} : Everyone will die as soon as they land back on earth because of you !!\r\n"),
+                    0
+                ).await.ok();
+                return Ok(false);
+            } else {
+                let _ = self.send(
+                    &format!("KICK #ApertureScience {nick_player} : I hope others humans are smarter than you ...\r\n"),
+                    0
+                ).await.ok();
+                return Ok(false);
             }
+        } else {
+            return Err(());
         }
     }
 
@@ -52,6 +57,7 @@ impl Bot {
             if line.starts_with(":GladOS") {
                 if let Some(idx) = line.rfind(':') {
                     let nick_player = &line[idx + 1..].trim();
+                    let _ = tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
                     self.try_expect(
                         &format!("INVITE {nick_player} #BuyNLarge\r\n"),
                         "341",
@@ -79,7 +85,7 @@ impl Bot {
                         timeout_ms,
                     )
                     .await?;
-               }
+                }
             }
         }
         Err(anyhow::anyhow!("readline returned None"))
@@ -103,15 +109,16 @@ pub async fn wall_e(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + S
     while let Some(line) = bot.read_line_timeout(timeout_ms).await? {
         println!("Wall-E : received [{line}]");
         if line.starts_with(&format!(":{nick_player} JOIN")) {
-            let riddle = &format!("PRIVMSG {nick_player} :
-        *Wall-E express itself only with robot noises,
-        but somehow, the Aperture Science Handheld Portal Device translates it*
+            let riddle = &format!(
+                "*Wall-E express itself only with robot noises,
+but somehow, the Aperture Science Handheld Portal Device translates it*
 
-        Humanity will come back soon on earth, I didn't had time to clean everything ! 
-        You lazy human, tell me how to make pizza to welcome them ?
+Humanity will come back soon on earth, I didn't had time to clean everything ! 
+You lazy human, tell me how to make pizza to welcome them ?
 
-        [1] It's an old ancestral knowledge, no one knows anymore how to make pizza
-        [2] You just need to plant some pizzas, then you can grow pizza trees, and have free pizza\r\n");
+[1] It's an old ancestral knowledge, no one knows anymore how to make pizza
+[2] You just need to plant some pizzas, then you can grow pizza trees, and have free pizza\r\n"
+            );
             match bot
                 .wall_e_riddle(riddle, &nick_player.to_string(), timeout_ms)
                 .await

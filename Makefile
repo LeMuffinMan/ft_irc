@@ -1,4 +1,4 @@
-.PHONY : all clean fclean re bonus clean-lib clean-bin clean-obj debug debug-CXX debug-print
+.PHONY : all clean fclean re bonus clean-lib clean-bin clean-obj debug debug-CXX debug-print test
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 DEPENDANCIES = -MMD -MP
