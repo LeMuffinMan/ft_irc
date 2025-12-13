@@ -92,7 +92,7 @@ pub async fn invite_chan_client(port: u16, timeout_ms: u64) -> Result<()> {
 
 pub async fn privmsg_client_chan(port: u16, timeout_ms: u64) -> Result<()> {
     let mut client = Client::connect(port).await?;
-    let nick = "invite_chan_client".to_string();
+    let nick = "privmsg_chan_client".to_string();
 
     client.authenticate(nick, timeout_ms).await?;
     client.send("JOIN #privmsg_chan\r\n", 0).await?;

@@ -21,21 +21,22 @@ pub async fn invite_mode_i_join(port: u16, id: usize, timeout_ms: u64) -> Result
         .await?;
     client1
         .try_expect(
-            &format!("INVITE {} #{}chan\r\n", &nick2, &nick1),
-            "341",
-            "C1 No invite confirmation received ",
-            timeout_ms,
-        )
-        .await?;
-    // client2.expect("341", "C2 No invite confirmation received", timeout_ms).await?;
-    client1
-        .try_expect(
             &format!("MODE #{}chan +i\r\n", &nick1),
             &format!("324"),
             "C1 Mode didnt answered 324",
             timeout_ms,
         )
         .await?;
+    client1
+        .try_expect(
+            &format!("INVITE {} #{}chan\r\n", &nick2, &nick1),
+            "341",
+            "C1 No invite confirmation received ",
+            timeout_ms,
+        )
+        .await?;
+    client2
+        .expect("INVITE", "No INVITE received", timeout_ms).await?;
     client3
         .try_expect(
             &format!("JOIN #{}chan\r\n", &nick1),
@@ -57,13 +58,6 @@ pub async fn invite_mode_i_join(port: u16, id: usize, timeout_ms: u64) -> Result
             &format!("INVITE inv_normalchan_{}-3 #{}chan", id, &nick1),
             "341",
             "C1 No invite confirmation received ",
-            timeout_ms,
-        )
-        .await?;
-    client3
-        .expect(
-            ":Cannot join channel (+i)",
-            "C3 No invite confirmation received",
             timeout_ms,
         )
         .await?;

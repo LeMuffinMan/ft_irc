@@ -91,24 +91,6 @@ void KickCommand::execute(Client* executor, Server& server)
 		server.replyChannel(chan, ss.str());
 		chan->removeClient(target);
 	}
-
-	// for (size_t i = 0; i < users.size(); ++i) {
-	// 	Client* target = server.getClient(users[i]);
-	// 	Channel* chan = server.getChannel(chans[i]);
-	// 	if (!chan) {
-	// 		continue;
-	// 	}
-	// 	if (!chan->isClientInChannel(target))
-	// 	{
-	// 		server.reply(executor, ERR_USERNOTINCHANNEL(executor->getNickname(), users[i], chans[i]));
-	// 	}
-	// 	std::stringstream ss;
-	// 	ss << ":" << executor->getNickname() << "!~" << executor->getUsername() << "@" << executor->getRealname() // realname et pas ip ?
-	// 		<< " KICK " << chan->getName() << target->getNickname() << " :" << target->getNickname();
-	// 	server.replyChannel(chan, ss.str());
-	// }
 	return;
 }
 
-// KICK #a,#b John,Mark :Raison du kick
-//REPLY On chan :theNick!~theUser@46.231.218.157 KICK #Theonlychan otherNick :otherNick

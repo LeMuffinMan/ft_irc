@@ -32,6 +32,8 @@ async fn main() -> Result<()> {
     let privmsg_client_nick_handle = tokio::spawn(privmsg_client_nick(port, timeout));
     let privmsg_client_chan_handle = tokio::spawn(privmsg_client_chan(port, timeout));
 
+    let _ = tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+
     if stress_mode == 0 {
         let _ = test_behaviors(port, 0).await;
     }

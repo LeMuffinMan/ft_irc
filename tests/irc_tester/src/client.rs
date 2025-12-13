@@ -33,9 +33,14 @@ impl Client {
     }
 
     pub async fn expect(&mut self, expect: &str, error: &str, timeout_ms: u64) -> Result<()> {
-        if let Some(line) = self.read_line_timeout(timeout_ms).await? {
-            if !line.contains(expect) {
+        while let Some(line) = self.read_line_timeout(timeout_ms).await? {
+            if line.starts_with("PING") {
+                let resp = line.replace("PING", "PONG");
+                self.send(&resp, 0).await?;
+            } else if !line.contains(expect) {
                 return Err(anyhow::anyhow!("{} | Received [{}]", error, line));
+            } else {
+                break;
             }
         }
         Ok(())

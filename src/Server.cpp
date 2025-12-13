@@ -392,7 +392,6 @@ void Server::interpret_msg(int fd)
 	{
 		std::string line = this->clients[fd]->rbuf.substr(0, pos);
 		this->clients[fd]->rbuf.erase(0, pos + 2);
-		this->clients[fd]->timeout = std::time(NULL) + PING_TIMEOUT; // reset timeout on any message received
 		if (line.empty())
 			continue;
 		ACommand *cmd = CommandFactory::findAndCreateCommand(line);
@@ -413,7 +412,7 @@ void Server::interpret_msg(int fd)
 		if (this->clients.find(fd) == this->clients.end())
 			return;
 	}
-	this->clients[fd]->last_ping = std::time(NULL);
+	// this->clients[fd]->last_ping = std::time(NULL);
 	this->is_authentification_complete(fd);
 }
 
@@ -527,8 +526,8 @@ int Server::RunServer()
 		handle_events(n, events);
 		deleteUnusedChannels();
 // #ifdef USE_FULL_CLIENT
-		// this->check_clients_ping();		 // si on n'a pas eu de signe d'activite depuis trop longtemps
-		// this->remove_inactive_clients(); // remove inactive localUsers after a unanswered ping
+		this->check_clients_ping();		 // si on n'a pas eu de signe d'activite depuis trop longtemps
+		this->remove_inactive_clients(); // remove inactive localUsers after a unanswered ping
 // #endif
 	}
 	close(this->_server_socket);
