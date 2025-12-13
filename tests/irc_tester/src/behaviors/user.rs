@@ -1,6 +1,13 @@
 use crate::client::Client;
 use anyhow::Result;
 
+
+
+/**
+*
+* @Brief User connection tests
+*
+*/
 pub async fn user_already_registered(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("user_already_registered_{}", id);
     let mut client = Client::connect(port).await?;

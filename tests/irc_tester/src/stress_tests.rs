@@ -10,6 +10,13 @@ use rand::prelude::IndexedRandom;
 use rand::rng;
 use tokio::time::{Duration, Instant};
 
+
+/**
+ *
+ * @brief Initialise and execute a test depending of Behavior
+*   It expects a ClientResult struct including data collected during test.
+ *
+ */
 pub async fn run_client(
     port: u16,
     id: usize,
@@ -26,6 +33,12 @@ pub async fn run_client(
         Err(e) => ClientResult::failure(id, behavior, e.to_string(), reply),
     }
 }
+
+/**
+ *
+ * @brief Test each unit test in parrallele.
+ *  
+ */
 
 pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
     let behaviors = vec![
@@ -87,6 +100,10 @@ pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
         ClientBehavior::KickPriv,
     ];
 
+    // We use FuturesUnordered and we do not await our async task, to send them by interating in
+    // behavior enum
+    // for each behavior, we create an asynchron future, which realise the test.
+    // .collect() fill our futures variable, with our asynchron function return 
     let mut futures: FuturesUnordered<_> = behaviors
         .into_iter()
         .map(|behavior| async move {
@@ -97,6 +114,7 @@ pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
 
     let mut res = Ok(());
 
+    //we can now await each result and access tests data
     while let Some((behavior, result)) = futures.next().await {
         match result {
             ClientResult { success: true, .. } => {
@@ -118,7 +136,11 @@ pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
 
     res
 }
-
+/**
+ *
+ * @brief We run 100 - <num_clients> clients each 100 - 300 ms, using a random behavior
+ *  
+ */
 pub async fn advanced_stress_test(port: u16, num_clients: usize, timeout_ms: u64) -> Result<()> {
     println!("Starting advanced stress test with waves of clients for 10 seconds...");
 
@@ -163,6 +185,8 @@ pub async fn advanced_stress_test(port: u16, num_clients: usize, timeout_ms: u64
     let mut client_id = 0;
     let mut rng = rng();
 
+    //we use rng to diversify waves size, behaviors and frequency
+    //we collect the future reutrned by spawn and we do not await our spawns here, to send waves without waiting the previous
     while start_time.elapsed() < duration {
         let wave_size = rng.random_range(100..=num_clients);
 
@@ -185,6 +209,7 @@ pub async fn advanced_stress_test(port: u16, num_clients: usize, timeout_ms: u64
     let mut ko_count = 0;
     let mut reply_time_vec: Vec<Duration> = Vec::new();
 
+    //now we collect and process test data
     for handle in handles {
         match handle.await {
             Ok(client_result) => {
@@ -227,6 +252,12 @@ pub async fn advanced_stress_test(port: u16, num_clients: usize, timeout_ms: u64
 
     Ok(())
 }
+
+/**
+ *
+ * @brief We run  <num_clients> clients at almost same time, realising a normal connection test
+ *  
+ */
 
 pub async fn connection_stress_test(port: u16, num_clients: usize, timeout_ms: u64) -> Result<()> {
     println!(

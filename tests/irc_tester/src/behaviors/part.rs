@@ -1,6 +1,14 @@
 use crate::client::Client;
 use anyhow::Result;
 
+
+
+/**
+*
+* @Brief Part Command tests
+*
+*/
+
 pub async fn part_need_more_params(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("partneedmorep_{}", id);
     let mut client = Client::connect(port).await?;

@@ -2,6 +2,16 @@ use crate::client::Client;
 use anyhow::Result;
 use tokio::time::{Duration, sleep};
 
+/**
+*
+* @Brief Controle clients
+*
+*  We need some client to be already 
+*  before we start the test : alowing automatic feed back
+*  and creating specific situations.
+*
+*/
+
 pub async fn reserved_nick_client(port: u16, timeout_ms: u64) -> Result<()> {
     let mut client = Client::connect(port).await?;
     let nick = "reserved_nick".to_string();

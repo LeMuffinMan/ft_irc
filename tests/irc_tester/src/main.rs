@@ -19,6 +19,18 @@ fn parse() -> (usize, usize, usize) {
     (num_clients, stress_mode, beh_mode)
 }
 
+/**
+ *
+ * @brief irc server tester
+ *
+ * This asynchronous function launches multiple test clients in parallel
+ * to validate server behavior and performance.
+ *
+ * Depending on the selected modes, it runs behavior tests and/or stress tests,
+ * then stops all spawned tasks before exiting.
+ *
+ */
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let port = 6667;

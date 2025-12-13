@@ -1,6 +1,13 @@
 use crate::client::Client;
 use anyhow::Result;
-
+/**
+*
+* @Brief Invite command tests
+*
+* This first test combime 3 clients executed sequencially
+* it tests invite, mode and join command in specific situations
+*
+*/
 pub async fn invite_mode_i_join(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick1 = format!("inv_normalchan_{}-1", id);
     let nick2 = format!("inv_normalchan_{}-2", id);
@@ -67,6 +74,11 @@ pub async fn invite_mode_i_join(port: u16, id: usize, timeout_ms: u64) -> Result
     Ok(())
 }
 
+/**
+*
+* Each replies of invites are tested
+*
+*/
 pub async fn invite_need_more_params(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("inv_needmore_p_{}", id);
     let mut client = Client::connect(port).await?;

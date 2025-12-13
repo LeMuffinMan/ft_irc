@@ -2,6 +2,13 @@ use crate::client::Client;
 use anyhow::Result;
 use tokio::time::Duration;
 
+
+/**
+*
+* @Brief Protocol connection tests
+*
+*/
+
 pub async fn legit_disconnect(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("legit_disco_{}", id);
     let mut client = Client::connect(port).await?;

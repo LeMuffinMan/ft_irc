@@ -1,22 +1,11 @@
 use crate::client::Client;
 use anyhow::Result;
 
-//      Waiting MODE
-//          ERR_INVITEONLYCHAN
-//          ERR_BADCHANNELKEY
-//          ERR_CHANNELISFULL
-//          ERR_TOOMANYTARGETS
-//          RPL_JOINED -> la coder nous meme
-//          RPL_TOPIC
-//
-//          ERR_TOOMANYCHANNELS
-//
-//
-//avec MODE :
-// ClientBehavior::JoinInviteOnlyChannel => join_invite_only_channel(port, id, timeout_ms).await,
-// ClientBehavior::JoinBadChannelKey => join_bad_channel_key(port, id, timeout_ms).await,
-// ClientBehavior::JoinChannelIsFull => join_channel_is_full(port, id, timeout_ms).await,
-
+/**
+*
+* @Brief Join Command tests
+*
+*/
 pub async fn join_need_more_params(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("{}_join_more_params", id);
     let mut client = Client::connect(port).await?;
