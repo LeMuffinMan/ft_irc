@@ -91,7 +91,6 @@ impl Client {
         if timeout_ms == 0 {
             let n = self.reader.read_line(&mut line).await?;
             if n > 0 {
-                // println!("<< {line}");
                 return Ok(Some(line));
             } else {
                 return Ok(None);

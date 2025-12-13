@@ -69,7 +69,7 @@ pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
         ClientBehavior::JoinNewChan,
         ClientBehavior::JoinNotRegistered,
         ClientBehavior::JoinInviteOnlyChannel,
-        ClientBehavior::JoinExistingMutliChan,
+        ClientBehavior::JoinExistingMultiChan,
         ClientBehavior::JoinExistingChan,
         ClientBehavior::JoinExistingChanMdp,
         ClientBehavior::TopicNeedMoreParams,
@@ -124,20 +124,38 @@ pub async fn advanced_stress_test(port: u16, num_clients: usize, timeout_ms: u64
 
     let behaviors = vec![
         ClientBehavior::LegitDisconnect,
-        // ClientBehavior::WrongPassword, //should be kicked
-        // ClientBehavior::FragmentedMessages,
-        // ClientBehavior::LowBandwidth,
+        ClientBehavior::FragmentedMessages,
+        ClientBehavior::LowBandwidth,
         ClientBehavior::TooLongMessage,
         ClientBehavior::NickNormalClaimAndChange,
         ClientBehavior::NickNoNicknameGiven,
+        ClientBehavior::WrongPassword,
         ClientBehavior::PassAlreadyRregistered,
-        // ClientBehavior::PassNotFirst, //should be kicked
+        ClientBehavior::PassNotFirst,
         ClientBehavior::PassNeedMoreParams,
         ClientBehavior::UserAlreadyRegistered,
         ClientBehavior::UserNeedMoreParams,
-        // ClientBehavior::InviteNeedMoreParams,
-        // ClientBehavior::InviteNoSuchNick, //getClient fail
-        // ClientBehavior::InviteNotOnChannel, //getClient fail ?
+        ClientBehavior::InviteNeedMoreParams,
+        ClientBehavior::InviteNotOnChannel,
+        ClientBehavior::NickAlreadyInUse,
+        ClientBehavior::InviteNotRegistered,
+        ClientBehavior::PrivmsgNoRecipient,
+        ClientBehavior::PrivmsgNoTextToSend,
+        ClientBehavior::PrivmsgNoSuchChannel,
+        ClientBehavior::PrivmsgTooManyTargets,
+        ClientBehavior::PrivmsgToNickNotSharingChan,
+        ClientBehavior::KickNeedMoreParams,
+        ClientBehavior::KickNotRegistered,
+        ClientBehavior::KickNoSuchChannel,
+        ClientBehavior::KickPriv,
+        ClientBehavior::JoinInviteOnlyChannel,
+        ClientBehavior::ModeNeedMoreParams,
+        ClientBehavior::ModeNotRegistered,
+        ClientBehavior::PartNeedMoreParams,
+        ClientBehavior::PartNotRegistered,
+        ClientBehavior::TimeWithParams,
+        ClientBehavior::TimeCheckTimeZone,
+        ClientBehavior::TimeNotRegistered,
     ];
 
     let mut handles = vec![];

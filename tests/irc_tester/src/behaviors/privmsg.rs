@@ -1,11 +1,6 @@
 use crate::client::Client;
 use anyhow::Result;
 
-// PrivmsgCannotSendToChan,
-// - Not registerd
-// - NOT op in chan targeted ?
-//
-
 pub async fn privmsg_no_such_nick(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("{}_privmsgnosuchnick", id);
     let mut client = Client::connect(port).await?;

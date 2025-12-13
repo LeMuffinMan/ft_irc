@@ -104,7 +104,6 @@ pub async fn privmsg_client_chan(port: u16, timeout_ms: u64) -> Result<()> {
                     let resp = l.replace("PING", "PONG");
                     client.send(&resp, 0).await?;
                 } else {
-                    //checker si chan / user -> repondre ne fct
                     let _ = client.send(&format!("{l}"), 0).await;
                 }
             }
@@ -129,7 +128,6 @@ pub async fn privmsg_client_nick(port: u16, timeout_ms: u64) -> Result<()> {
                     let resp = l.replace("PING", "PONG");
                     client.send(&resp, 0).await?;
                 } else {
-                    //checker si chan / user -> repondre ne fct
                     let _ = client.send(&format!("{l}"), 0).await;
                 }
             }

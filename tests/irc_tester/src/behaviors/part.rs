@@ -1,10 +1,6 @@
 use crate::client::Client;
 use anyhow::Result;
 
-// ERR_NOSUCHCHANNEL
-//ERR_NOTONCHANNEL
-//Verifier si on a la reply avant de part, puis retenter apres part d'emvoyer un msg sur le chan
-
 pub async fn part_need_more_params(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("partneedmorep_{}", id);
     let mut client = Client::connect(port).await?;

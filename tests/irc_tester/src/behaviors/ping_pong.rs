@@ -60,7 +60,6 @@ pub async fn wrong_pong(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
 
     while let Some(line) = client.read_line_timeout(timeout_ms).await? {
         if line.starts_with("PING") {
-            // println!("Sending wrong pong");
             let resp = "PONG :4242424242\r\n";
             client.send(&resp, 0).await?;
         } else if line.contains("Invalid pong") {
@@ -77,7 +76,6 @@ pub async fn pong_without_connect(port: u16, timeout_ms: u64) -> Result<()> {
         if let Some(line) = client.read_line_timeout(timeout_ms).await? {
             if line.starts_with("PING") {
                 let resp = line.replace("PING", "PONG");
-                println!("Sending {resp}");
                 client.send(&resp, 0).await?;
             } else if line.contains("timed out") {
                 return Ok(());

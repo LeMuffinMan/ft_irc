@@ -58,12 +58,12 @@ pub enum ClientBehavior {
     InviteNoSuchNick,
     InviteNotOnChannel,
     InviteNotRegistered,
+    InviteModeIJoin,
 
     //privmsg
     PrivmsgNoRecipient,
     PrivmsgNoTextToSend,
     PrivmsgNoSuchChannel,
-    // PrivmsgCannotSendToChan,
     PrivmsgNoSuchNick,
     PrivmsgToNick,
     PrivmsgToChan,
@@ -72,12 +72,10 @@ pub enum ClientBehavior {
     PrivmsgNotRegistered,
 
     //kick
-    // KickBadChanMask,
     KickNoSuchChannel,
     KickNeedMoreParams,
     KickNotRegistered,
-    // KickChaNoPrivsNeeded,
-    // KickUserNotInChannel,
+    KickPriv,
 
     //join
     JoinNeedMoreParams,
@@ -85,33 +83,28 @@ pub enum ClientBehavior {
     JoinNewChan,
     JoinNotRegistered,
     JoinInviteOnlyChannel,
-    // JoinBadChannelKey,
-    // JoinChannelIsFull,
     JoinExistingChan,
     JoinExistingChanMdp,
-    JoinExistingMutliChan,
+    JoinExistingMultiChan,
 
     //topic
     TopicNeedMoreParams,
     TopicNotRegistered,
     TopicNotOnChannel,
     TopicNoTopic,
-    // TopicRpl,
-    // TopicNoPriv,
-    // TopicNoChanModes,
-    //
+
+    //Mode
     ModeNeedMoreParams,
     ModeNotRegistered,
 
+    //Part
     PartNeedMoreParams,
     PartNotRegistered,
 
+    //Time
     TimeWithParams,
     TimeCheckTimeZone,
     TimeNotRegistered,
-
-    InviteModeIJoin,
-    KickPriv,
 }
 
 impl BehaviorHandler for ClientBehavior {
@@ -151,7 +144,6 @@ impl BehaviorHandler for ClientBehavior {
             PrivmsgNoRecipient => |p, id, t| Box::pin(privmsg_no_recipient(p, id, t)),
             PrivmsgNoTextToSend => |p, id, t| Box::pin(privmsg_no_text_to_send(p, id, t)),
             PrivmsgNoSuchChannel => |p, id, t| Box::pin(privmsg_no_such_channel(p, id, t)),
-            // PrivmsgCannotSendToChan => |p, id, t| Box::pin(privmsg_cannot_send_to_chan(p, id, t)),
             PrivmsgNoSuchNick => |p, id, t| Box::pin(privmsg_no_such_nick(p, id, t)),
             PrivmsgToNick => |p, id, t| Box::pin(privmsg_to_nick(p, id, t)),
             PrivmsgToChan => |p, id, t| Box::pin(privmsg_to_chan(p, id, t)),
@@ -169,20 +161,15 @@ impl BehaviorHandler for ClientBehavior {
             JoinNoSuchChan => |p, id, t| Box::pin(join_no_such_channel(p, id, t)),
             JoinNewChan => |p, id, t| Box::pin(join_new_channel(p, id, t)),
             JoinNotRegistered => |p, id, t| Box::pin(join_not_registered(p, id, t)),
-            JoinExistingMutliChan => |p, id, t| Box::pin(join_existing_multi_chan(p, id, t)),
+            JoinExistingMultiChan => |p, id, t| Box::pin(join_existing_multi_chan(p, id, t)),
             JoinInviteOnlyChannel => |p, id, t| Box::pin(join_invite_only_chan(p, id, t)),
             JoinExistingChanMdp => |p, id, t| Box::pin(join_existing_chan_mdp(p, id, t)),
             JoinExistingChan => |p, id, t| Box::pin(join_existing_chan(p, id, t)),
-            // JoinBadChannelKey => |p, id, t| Box::pin(join_bad_channel_key(p, id, t)),
-            // JoinChannelIsFull => |p, id, t| Box::pin(join_channel_is_full(p, id, t)),
+
             TopicNeedMoreParams => |p, id, t| Box::pin(topic_need_more_params(p, id, t)),
             TopicNotRegistered => |p, id, t| Box::pin(topic_not_registered(p, id, t)),
             TopicNotOnChannel => |p, id, t| Box::pin(topic_not_on_chan(p, id, t)),
             TopicNoTopic => |p, id, t| Box::pin(topic_no_topic(p, id, t)),
-            // TopicRpl => |p, id, t| Box::pin(topic_reply(p, id, t)),
-            // TopicNoPriv => |p, id, t| Box::pin(topic_no_priv(p, id, t)),
-            // TopicNoChanModes => |p, id, t| Box::pin(topic_no_chan_modes(p, id, t)),
-            //
             ModeNeedMoreParams => |p, id, t| Box::pin(mode_need_more_params(p, id, t)),
             ModeNotRegistered => |p, id, t| Box::pin(mode_not_registered(p, id, t)),
 

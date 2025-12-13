@@ -1,10 +1,6 @@
 use crate::client::Client;
 use anyhow::Result;
 
-// TopicRpl,
-// TopicNoPriv,
-// TopicNoChanModes,
-
 pub async fn topic_need_more_params(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("{}_topic_params", id);
     let mut client = Client::connect(port).await?;

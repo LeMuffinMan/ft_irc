@@ -6,14 +6,6 @@ pub async fn user_already_registered(port: u16, id: usize, timeout_ms: u64) -> R
     let mut client = Client::connect(port).await?;
 
     client.authenticate(nick, timeout_ms).await?;
-
-    // if let Some(line) = client.read_line_timeout(timeout_ms).await? {
-    //     if line.starts_with("PING") {
-    //         let resp = line.replace("PING", "PONG");
-    //         client.send(&resp, 0).await?;
-    //     }
-    // }
-
     client
         .try_expect(
             &format!("USER {}_no_nick 0 * :NoNick\r\n", id),
