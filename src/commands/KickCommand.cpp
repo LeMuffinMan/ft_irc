@@ -50,7 +50,6 @@ void KickCommand::execute(Client* executor, Server& server)
 	}
 
 	if (chans.size() != users.size()) {
-		//BADCHANMASK ?
 		return;
 	}
 
@@ -66,7 +65,7 @@ void KickCommand::execute(Client* executor, Server& server)
 			server.reply(executor, ERR_NOTONCHANNEL(executor->getNickname(), chans[i]));
 			continue;
 		}
-		if (!chan->isClientOPChannel(executor)) // isClientOPChannel a casse ?
+		if (!chan->isClientOPChannel(executor)) 
 		{
 			server.reply(executor, ERR_CHANOPRIVSNEEDED(executor->getNickname(), _params[i]));
 			continue;

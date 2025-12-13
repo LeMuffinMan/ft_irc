@@ -217,7 +217,6 @@ int Server::init_epoll_event(int client_fd)
  */
 void Server::initClient(int client_fd, const std::string &ip_str, uint16_t port)
 {
-	// since we added a client in our epoll, we need a struct to represent it on our server
 	Client *c = new Client(client_fd, ip_str, port);
 	this->clients.insert(std::make_pair(client_fd, c));
 	std::stringstream ss;
@@ -272,8 +271,7 @@ void Server::client_kicked(int fd)
 	this->removeClient(fd);
 }
 
-void Server::client_quited(int fd) // leaved plutot que quited
-{
+void Server::client_quited(int fd) {
 	std::stringstream ss;
 	ss << "Client left: " << fd;
 	Debug::print(INFO, ss.str());
@@ -317,13 +315,12 @@ int Server::read_client_fd(int fd)
 
 	if (r >= 512)
 	{
-		// si on veut traiter les 512 premiers octets il faut read ici
 		this->reply(this->clients[fd], "Buffer limit reached, only 512 bytes including \\r\\n allowed");
 		std::stringstream ss;
 		ss << "Message " << r << " bytes long from " << fd << " ignored";
 		Debug::print(INFO, ss.str());
 		this->clients[fd]->rbuf.clear();
-		return 0; // 1 si on veut lire et traiter les 512 premiers octets
+		return 0;
 	}
 
 	if (r > 0)
@@ -347,7 +344,6 @@ int Server::read_client_fd(int fd)
 	}
 }
 
-// FIXME: ? a mettre en bas de PASS USER et NICK uniquement
 /**
  * @brief Check if a client has completed authentication.
  * If the client has provided the correct password, nickname, and username,
