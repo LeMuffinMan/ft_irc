@@ -21,7 +21,7 @@ pub struct Client {
 }
 /**
 *
-* @Brief Clients implementation are basic tools to operate tests
+* @Brief Clients implementations are basic tools to operate tests
 *
 * try_expect test to send tests, and expect specific answers from the server
 * authenticate 

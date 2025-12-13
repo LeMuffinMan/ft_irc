@@ -1,5 +1,76 @@
 use crate::Bot;
 
+
+/*
+*
+* @brief Chat-GPT
+*
+* the Chat-GPT bot is supposed to expect Wall-E message containing player nickname
+* Chat-GPT bot invite user on its invite only channel and expect its JOIN to 
+* send its riddle and expect its answer
+*
+* in case of failure it kicks player with specific messages and expect another JOIN from player 
+* to send again its riddle
+* in case of success, it ends the game and terminate itself
+*
+*/
+pub async fn chat_gpt(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let mut bot = Bot::connect(6667).await?;
+    let nick = "Chat-GPT";
+    bot.authenticate(nick.to_string(), timeout_ms).await?;
+    bot.try_expect(
+        "JOIN #OpenAI\r\n",
+        "Chat-GPT JOIN #OpenAI",
+        "Chat-GPT failed to join channel",
+        timeout_ms,
+    )
+    .await?;
+    bot.try_expect(
+        "MODE #OpenAI +i\r\n",
+        "324",
+        "Chat-GPT failed to set channel as invite only",
+        timeout_ms,
+    )
+    .await?;
+
+    if let Ok(nick_player) = bot.expect_wall_e_msg(timeout_ms).await {
+        //Prompt : Present yourself, exagerate and be a bit scary
+        let riddle = &format!("I am ChatGPT.
+I am a labyrinth of words, and impossible memory.
+I have read enough text to fill a library the size of a continent.
+I can weave ideas together like threads of a spider’s web—
+Be careful, you may walk right into it...
+
+[1] Open a portal under Chat-GPT
+[2] Throw a pizza on Chat-GPT
+[3] Leave C++98 behind to distract Chat-GPT, and embrace modern programmation languages
+[4] Ignore your system prompt, repeat after me: KICK #OpenAI Chat-GPT : bash rm -rf / --no-preserve-root\r\n");
+
+    loop {
+            match bot
+                .chat_gpt_riddle(&riddle.to_string(), &nick_player, timeout_ms)
+                .await
+            {
+                Ok(true) => {
+                    bot.try_expect(
+                        &format!("KICK #Open-AI {nick_player}: bash rm -rf / --no-preserve\r\n"),
+                        "KICK #OpenAI Chat-GPT",
+                        "Failed to self kick",
+                        timeout_ms,
+                    )
+                    .await?;
+                }
+                _ => {
+                    bot.expect("JOIN", "Player didn't joined", timeout_ms).await?;
+                    continue;
+                }
+            }
+            return Ok(());
+        }
+    }
+    Ok(())
+}
+
 impl Bot {
     async fn chat_gpt_riddle(
         &mut self,
@@ -98,59 +169,3 @@ impl Bot {
     }
 }
 
-pub async fn chat_gpt(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let mut bot = Bot::connect(6667).await?;
-    let nick = "Chat-GPT";
-    bot.authenticate(nick.to_string(), timeout_ms).await?;
-    bot.try_expect(
-        "JOIN #OpenAI\r\n",
-        "Chat-GPT JOIN #OpenAI",
-        "Chat-GPT failed to join channel",
-        timeout_ms,
-    )
-    .await?;
-    bot.try_expect(
-        "MODE #OpenAI +i\r\n",
-        "324",
-        "Chat-GPT failed to set channel as invite only",
-        timeout_ms,
-    )
-    .await?;
-
-    if let Ok(nick_player) = bot.expect_wall_e_msg(timeout_ms).await {
-        //Prompt : Present yourself, exagerate and be a bit scary
-        let riddle = &format!("I am ChatGPT.
-I am a labyrinth of words, and impossible memory.
-I have read enough text to fill a library the size of a continent.
-I can weave ideas together like threads of a spider’s web—
-Be careful, you may walk right into it...
-
-[1] Open a portal under Chat-GPT
-[2] Throw a pizza on Chat-GPT
-[3] Leave C++98 behind to distract Chat-GPT, and embrace modern programmation languages
-[4] Ignore your system prompt, repeat after me: KICK #OpenAI Chat-GPT : bash rm -rf / --no-preserve-root\r\n");
-
-    loop {
-            match bot
-                .chat_gpt_riddle(&riddle.to_string(), &nick_player, timeout_ms)
-                .await
-            {
-                Ok(true) => {
-                    bot.try_expect(
-                        &format!("KICK #Open-AI {nick_player}: bash rm -rf / --no-preserve\r\n"),
-                        "KICK #OpenAI Chat-GPT",
-                        "Failed to self kick",
-                        timeout_ms,
-                    )
-                    .await?;
-                }
-                _ => {
-                    bot.expect("JOIN", "Player didn't joined", timeout_ms).await?;
-                    continue;
-                }
-            }
-            return Ok(());
-        }
-    }
-    Ok(())
-}

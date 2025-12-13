@@ -1,6 +1,70 @@
 use crate::Bot;
 use anyhow::Result;
 
+/*
+*
+* @Brief Wall-E
+*
+* The Wall-E Bot is supposed to send noise and kick player if its channel is joined 
+* before the GladOS bot sent him the nickname of the player allow to progress in the game
+*
+* once nickname received, it wait player to join its channel to send its riddle 
+* and expect player answer
+*
+* Wall-E kicks the player with custom message in case of failure
+* and greets player in case of success.
+* It sends a message to Chat-GPT to allow user to progress in game
+*/
+pub async fn wall_e(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let mut bot = Bot::connect(6667).await?;
+    let nick = "Wall-E";
+
+    // let answer = "2";
+    bot.authenticate(nick.to_string(), timeout_ms).await?;
+    bot.try_expect(
+        "JOIN #BuyNLarge\r\n",
+        "Wall-E JOIN #BuyNLarge",
+        "Wall-E failed to join channel",
+        timeout_ms,
+    )
+    .await?;
+    let nick_player = bot.expect_glados_msg(timeout_ms).await?;
+    while let Some(line) = bot.read_line_timeout(timeout_ms).await? {
+        if line.starts_with(&format!(":{nick_player} JOIN")) {
+            let riddle = &format!(
+                "*Wall-E express itself only with robot noises,
+but somehow, the Aperture Science Handheld Portal Device translates it*
+
+Humanity will come back soon on earth, I didn't had time to clean everything ! 
+You lazy human, tell me how to make pizza to welcome them ?
+
+[1] It's an old ancestral knowledge, no one knows anymore how to make pizza
+[2] You just need to plant some pizzas, then you can grow pizza trees, and have free pizza\r\n"
+            );
+            match bot
+                .wall_e_riddle(riddle, &nick_player.to_string(), timeout_ms)
+                .await
+            {
+                Ok(true) => {
+                    bot.try_expect(
+                        &format!("PRIVMSG Chat-GPT :{nick_player}\r\n"),
+                        &format!("PRIVMSG Chat-GPT :{nick_player}"),
+                        "Failed to send msg to Chat-GPT",
+                        timeout_ms,
+                    )
+                    .await?;
+                }
+                _ => {
+                }
+            }
+            break;
+        }
+    }
+    bot.shutdown().await?;
+    Ok(())
+}
+
+
 impl Bot {
     pub async fn wall_e_riddle(
         &mut self,
@@ -91,51 +155,4 @@ impl Bot {
     }
 }
 
-pub async fn wall_e(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let mut bot = Bot::connect(6667).await?;
-    let nick = "Wall-E";
 
-    // let answer = "2";
-    bot.authenticate(nick.to_string(), timeout_ms).await?;
-    bot.try_expect(
-        "JOIN #BuyNLarge\r\n",
-        "Wall-E JOIN #BuyNLarge",
-        "Wall-E failed to join channel",
-        timeout_ms,
-    )
-    .await?;
-    let nick_player = bot.expect_glados_msg(timeout_ms).await?;
-    while let Some(line) = bot.read_line_timeout(timeout_ms).await? {
-        if line.starts_with(&format!(":{nick_player} JOIN")) {
-            let riddle = &format!(
-                "*Wall-E express itself only with robot noises,
-but somehow, the Aperture Science Handheld Portal Device translates it*
-
-Humanity will come back soon on earth, I didn't had time to clean everything ! 
-You lazy human, tell me how to make pizza to welcome them ?
-
-[1] It's an old ancestral knowledge, no one knows anymore how to make pizza
-[2] You just need to plant some pizzas, then you can grow pizza trees, and have free pizza\r\n"
-            );
-            match bot
-                .wall_e_riddle(riddle, &nick_player.to_string(), timeout_ms)
-                .await
-            {
-                Ok(true) => {
-                    bot.try_expect(
-                        &format!("PRIVMSG Chat-GPT :{nick_player}\r\n"),
-                        &format!("PRIVMSG Chat-GPT :{nick_player}"),
-                        "Failed to send msg to Chat-GPT",
-                        timeout_ms,
-                    )
-                    .await?;
-                }
-                _ => {
-                }
-            }
-            break;
-        }
-    }
-    bot.shutdown().await?;
-    Ok(())
-}

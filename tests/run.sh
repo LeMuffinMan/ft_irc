@@ -1,5 +1,21 @@
 #!/bin/bash
 
+# This script execute the tested irc server with a $PASSWORD and on a $PORT
+# Then, it executes the tester with provided arguments
+# Ultimately, it prints logs from .server.log file
+#
+# By default, using 'make test' will execute each unit test asynchronously, then NUM_CLIENT 
+# connection tests, and more diversified tests, with a NUM_CLIENT=1000
+#
+# Using 'make test NUM_CLIENT=500' will execute maximum 500 clients at each wave
+#
+# Using STRESS=1 launch only stress tests
+# Using BEH=1 launch only behaviors tests
+#
+# Having terminator terminal install allow to monitor server output in real time
+# using : 
+# make test LOG=1
+#
 SERVER="./ircserv"
 PORT=6667
 PASS="password"
@@ -21,10 +37,6 @@ kill_server() {
     fi
 }
 trap kill_server EXIT
-
-# Port < 0
-# Port 0 -> 1024
-# port > 65535  
 
 ulimit -n $(ulimit -Hn)
 echo -e "${YELLOW}ulimit = $(ulimit -n)${NC}"
@@ -100,8 +112,6 @@ if [[ $errors_unique -gt 0 ]]; then
         printf "%s x %5d\n" "$MSG" "$COUNT" 
     done
 fi
-# printf "%-25s : %5d\n" "Pings sent" "$pings"
-# printf "%-25s : %5d\n" "Pongs received" "$pongs"
 printf "%-25s : %5d (%d/s)\n" "Connections" "$CONNECTIONS" "$((CONNECTIONS / ELAPSED))"
 printf "%-25s : %5d (%d/s)\n" "Registrations" "$REGISTRATIONS" "$((REGISTRATIONS / ELAPSED))"
 printf "%-25s : %5d (%d/s)\n" "Timed out" "$TIMEDOUT" "$((TIMEDOUT / ELAPSED))"
