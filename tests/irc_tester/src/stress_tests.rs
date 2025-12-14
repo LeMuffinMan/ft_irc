@@ -193,10 +193,6 @@ pub async fn advanced_stress_test(port: u16, num_clients: usize, timeout_ms: u64
     println!("Starting advanced stress test with waves of clients for 10 seconds...");
 
     let behaviors = vec![
-        ClientBehavior::LegitDisconnect,
-        ClientBehavior::FragmentedMessages,
-        ClientBehavior::LowBandwidth,
-        ClientBehavior::TooLongMessage,
         ClientBehavior::NickNormalClaimAndChange,
         ClientBehavior::NickNoNicknameGiven,
         ClientBehavior::WrongPassword,

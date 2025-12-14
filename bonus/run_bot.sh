@@ -45,7 +45,7 @@ echo "IRC Server started in Terminator (PID: $TERMINATOR_PID_SERV)"
 
 sleep 2
 
-terminator --title "Bots" -e 'bash -c "cd bonus/bot && cargo build && ./target/release/bot"' 2> /dev/null &
+terminator --title "Bots" -e 'bash -c "cd bonus/bot && cargo build --release && ./target/release/bot"' 2> /dev/null &
 TERMINATOR_PID_BOTS=$!
 echo "Bots started in Terminator (PID: $TERMINATOR_PID_BOTS)"
 

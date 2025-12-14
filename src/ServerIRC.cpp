@@ -82,13 +82,16 @@ bool Server::replyChannel(Channel *channel, std::string message)
 		return false;
 	}
 	bool ret = true;
-	for (Channel::clientsType::iterator it = channel->getClients().begin(); it != channel->getClients().end(); ++it)
+	for (Channel::clientsType::iterator it = channel->getClients().begin(); it != channel->getClients().end();)
 	{
+		Channel::clientsType::iterator next_it = it;
+		next_it++;
 		if (!reply(*it, message))
 		{
 			ret = false;
 			Debug::print(ERROR, "The following message couldn't be properly send: " + message);
 		}
+		it = next_it;
 	}
 	return ret;
 }
@@ -101,13 +104,16 @@ bool Server::replyChannelOnlyOP(Channel *channel, std::string message)
 		return false;
 	}
 	bool ret = true;
-	for (Channel::clientsType::iterator it = channel->getOperators().begin(); it != channel->getOperators().end(); ++it)
+	for (Channel::clientsType::iterator it = channel->getOperators().begin(); it != channel->getOperators().end();)
 	{
+		Channel::clientsType::iterator next_it = it;
+		next_it++;
 		if (!reply(*it, message))
 		{
 			ret = false;
 			Debug::print(ERROR, "The following message couldn't be properly send: " + message);
 		}
+		it = next_it;
 	}
 	return ret;
 }
