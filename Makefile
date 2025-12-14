@@ -202,6 +202,9 @@ doc-clean:
 	rm -rf docs/irc_tester
 	rm -rf docs/bot
 
+bonus: 
+	./bonus/run_bot.sh
+
 # Aliases
 clear: clean
 fclear: fclean

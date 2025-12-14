@@ -9,6 +9,8 @@ Make your own IRC Server that no one asked for.
 * [📖 Introduction](#introduction-en)
 * [⚙️ Requirements](#requirements-en)
 * [📝 Features](#features-en)
+* [🧪 Tester](#tester-en)
+* [🤖 Async bots](#async-bots-en)
 * [🚀 How to use](#use-en)
 * [How to stop](#stop-en)
 
@@ -77,9 +79,29 @@ A Client doesn't have any permission to execute anything, the server does it for
 * QUIT `<quit message>`
 
 ### Bonus ###
-
 * TIME
 * PONG
+
+## <a name="tester-en"> 🧪 Tester ##
+
+We realized a tester in rust using tokio to experiment and discover async in client server communication
+Using rust guarantees memory safety at compile time without loosing performances.
+
+The crate Tokio gave us a layer to program asychronously.
+
+* Using make test will, by default, run all unit tests connection and advanced tests, without server log monitoring and with a maximum of 1000 clients / wave
+* Using make test LOG=1 activated server logs monitoring, if terminator is installed
+* Using make test CLIENTS=500 run tests with a maximum of 500 clients per wave
+* Using make test STRESS=1 skip the unit tests and runs only connection and advanced tests
+* Using make test BEH=1 will test each unit tests (behaviors)
+
+## <a name="async-bots-en"> 🤖 Async bots ##
+
+To demonstrate the advantage of tokio and rust async, we synthetized what we learned into a simple 3 bots program. 
+It allows several users to interact with each bot, without blocking each other.
+To illustrate how bots operate with user and with each other, we included a basic riddles games for demonstration purpose.
+
+Use make bonus to run the server, the bots and expect a terminal already authenticated to open and start to play.
 
 ## <a name="use-en">🚀 How to use ##
 

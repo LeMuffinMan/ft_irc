@@ -14,7 +14,7 @@
 #
 # socat - TCP:localhost:6667,crlf
 #
-if ! command -v terminator &>/dev/null; then
+if ! command -v terminator 2> /dev/null; then
     echo "Error : Terminator not found"
     exit 1
 fi
@@ -39,13 +39,13 @@ TERMINATOR_PID_SERV=0
 TERMINATOR_PID_PLAYER=0
 TERMINATOR_PID_BOTS=0
 
-terminator --title "IRC Server" -e 'bash -c "make && ./ircserv 6667 password"' 2>/dev/null &
+terminator --title "IRC Server" -e 'bash -c "make && ./ircserv 6667 password"' 2> /dev/null &
 TERMINATOR_PID_SERV=$!
 echo "IRC Server started in Terminator (PID: $TERMINATOR_PID_SERV)"
 
 sleep 2
 
-terminator --title "Bots" -e 'bash -c "cd bonus/bot && cargo build && ./target/release/bot"' 2>/dev/null &
+terminator --title "Bots" -e 'bash -c "cd bonus/bot && cargo build && ./target/release/bot"' 2> /dev/null &
 TERMINATOR_PID_BOTS=$!
 echo "Bots started in Terminator (PID: $TERMINATOR_PID_BOTS)"
 
@@ -64,5 +64,5 @@ echo 'Connexion au serveur IRC sur port $PORT...'
 EOF
 
 chmod +x "$TEMP_SCRIPT"
-terminator --title="IRC Client" -e "$TEMP_SCRIPT" &
+terminator --title="IRC Client" -e "$TEMP_SCRIPT" 2> /dev/null &
 TERMINATOR_PID_PLAYER=$!
