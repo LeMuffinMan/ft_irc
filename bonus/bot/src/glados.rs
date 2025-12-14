@@ -1,16 +1,12 @@
+//! Glados bot
+//!
+//! the GladOS bot is supposed to immediately send its riddle to player as soon as
+//! a player join its channel
+//! in case of failure, it kicks player and continue its loop waiting for a new JOIN
+//! in case of success it congrats player and send player nickname to Wall-E to allow
+//! player to progress in game
 use crate::Bot;
 use anyhow::Result;
-/*
-*
-* @brief Glados
-*
-* the GladOS bot is supposed to immediately send its riddle to player as soon as
-* a player join its channel
-* in case of failure, it kicks player and continue its loop waiting for a new JOIN
-* in case of success it congrats player and send player nickname to Wall-E to allow
-* player to progress in game
-*
-*/
 
 pub async fn glados(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut bot = Bot::connect(6667).await?;

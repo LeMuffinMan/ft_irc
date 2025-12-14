@@ -1,18 +1,14 @@
+//! Chat-GPT bot
+//!
+//! the Chat-GPT bot is supposed to expect Wall-E message containing player nickname
+//! Chat-GPT bot invite user on its invite only channel and expect its JOIN to
+//! send its riddle and expect its answer
+//!
+//! in case of failure it kicks player with specific messages and expect another JOIN from player
+//! to send again its riddle
+//! in case of success, it ends the game and terminate itself
 use crate::Bot;
 
-/*
-*
-* @brief Chat-GPT
-*
-* the Chat-GPT bot is supposed to expect Wall-E message containing player nickname
-* Chat-GPT bot invite user on its invite only channel and expect its JOIN to
-* send its riddle and expect its answer
-*
-* in case of failure it kicks player with specific messages and expect another JOIN from player
-* to send again its riddle
-* in case of success, it ends the game and terminate itself
-*
-*/
 pub async fn chat_gpt(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut bot = Bot::connect(6667).await?;
     let nick = "Chat-GPT";

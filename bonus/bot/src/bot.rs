@@ -1,3 +1,10 @@
+//! @Brief Our Bot structure is basicaly an input/output tcp connection
+//! The write half is is wrapped in an `Arc<Mutex<...>>` to allow safe concurrent
+//!  writes from multiple asynchronous tasks
+//!
+//! Bot implementations are basic tools to animate 3 bots asynchronously
+//!
+//! try_expect allows our bots to send messages and expect answer from player or other bots
 use anyhow::Result;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -7,24 +14,13 @@ use tokio::{
     time::{Duration, sleep},
 };
 
-/**
-*
-* @Brief Our Bot structure is basicaly an input/output tcp connection
-* The write half is is wrapped in an `Arc<Mutex<...>>` to allow safe concurrent
-*  writes from multiple asynchronous tasks
-*
-*/
+
 pub struct Bot {
     writer: Arc<Mutex<BufWriter<tokio::net::tcp::OwnedWriteHalf>>>,
     reader: tokio::io::BufReader<tokio::net::tcp::OwnedReadHalf>,
 }
 
-/**
-*
-* @Brief Bot implementations are basic tools to animate 3 bots asynchronously
-*
-* try_expect allows our bots to send messages and expect answer from player or other bots
-*/
+
 impl Bot {
     pub async fn try_expect(
         &mut self,
@@ -42,7 +38,7 @@ impl Bot {
         Ok(())
     }
 
-    //expect allow Bot to wait specific event
+    ///expect allow Bot to wait specific event
     pub async fn expect(&mut self, expect: &str, error: &str, timeout_ms: u64) -> Result<()> {
         if let Some(line) = self.read_line_timeout(timeout_ms).await? {
             if !line.contains(expect) {
@@ -52,7 +48,7 @@ impl Bot {
         Ok(())
     }
 
-    //init the bot on the server
+    ///init the bot on the server
     pub async fn authenticate(&mut self, nick: String, timeout_ms: u64) -> Result<()> {
         self.send("PASS password\r\n", 0).await?;
         self.send(&format!("NICK {}\r\n", nick), 0).await?;
@@ -72,7 +68,7 @@ impl Bot {
         Ok(())
     }
 
-    //allow bots to send line by line their riddles, with specific delay
+    ///allow bots to send line by line their riddles, with specific delay
     pub async fn send_line_by_line(
         &mut self,
         riddle: &String,
@@ -97,7 +93,7 @@ impl Bot {
         Ok(())
     }
 
-    //Init bot connection
+    ///Init bot connection
     pub async fn connect(port: u16) -> Result<Self> {
         let stream = TcpStream::connect(("127.0.0.1", port)).await?;
         let (reader, writer) = stream.into_split();
@@ -107,7 +103,7 @@ impl Bot {
         })
     }
 
-    //send a messages to the server
+    ///send a messages to the server
     pub async fn send(&self, msg: &str, delay_ms: u64) -> Result<()> {
         let mut writer = self.writer.lock().await;
         writer.write_all(msg.as_bytes()).await?;
@@ -119,7 +115,7 @@ impl Bot {
         Ok(())
     }
 
-    //wait server answer
+    ///wait server answer
     pub async fn read_line_timeout(&mut self, timeout_ms: u64) -> Result<Option<String>> {
         let mut line = String::new();
 
@@ -143,7 +139,7 @@ impl Bot {
         }
     }
 
-    //clean disconnection
+    ///clean disconnection
     pub async fn shutdown(&self) -> Result<()> {
         let mut writer = self.writer.lock().await;
         writer.shutdown().await?;

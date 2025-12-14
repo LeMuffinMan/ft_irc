@@ -1,3 +1,12 @@
+//! Bot
+//!
+//! This program simulate asychronously 3 bots on the irc server.
+//! Each bot is launched in using tokio spawn and collecting their future,
+//! allowing bot to not block each others on I/O operations while they interact with
+//! several players
+//!
+//! We only await chat_gpt_handle as it return means the end of the game,
+//! so we can abort() other bots
 mod bot;
 mod chat_gpt;
 mod glados;
@@ -8,19 +17,7 @@ use chat_gpt::chat_gpt;
 use glados::glados;
 use wall_e::wall_e;
 
-/*
-*
-* @Brief Bot
-*
-* This program simulate asychronously 3 bots on the irc server.
-* Each bot is launched in using tokio spawn and collecting their future,
-* allowing bot to not block each others on I/O operations while they interact with
-* several players
-*
-* We only await chat_gpt_handle as it return means the end of the game,
-* so we can abort() other bots
-*
-*/
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let timeout_ms = 0;

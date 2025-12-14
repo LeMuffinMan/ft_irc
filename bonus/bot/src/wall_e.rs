@@ -1,25 +1,22 @@
+//! Wall-E bot
+//!
+//! The Wall-E Bot is supposed to send noise and kick player if its channel is joined
+//! before the GladOS bot sent him the nickname of the player allow to progress in the game
+//!
+//! once nickname received, it wait player to join its channel to send its riddle
+//! and expect player answer
+//!
+//! Wall-E kicks the player with custom message in case of failure
+//! and greets player in case of success.
+//! It sends a message to Chat-GPT to allow user to progress in game
 use crate::Bot;
 use anyhow::Result;
 
-/*
-*
-* @Brief Wall-E
-*
-* The Wall-E Bot is supposed to send noise and kick player if its channel is joined
-* before the GladOS bot sent him the nickname of the player allow to progress in the game
-*
-* once nickname received, it wait player to join its channel to send its riddle
-* and expect player answer
-*
-* Wall-E kicks the player with custom message in case of failure
-* and greets player in case of success.
-* It sends a message to Chat-GPT to allow user to progress in game
-*/
+
 pub async fn wall_e(timeout_ms: u64) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut bot = Bot::connect(6667).await?;
     let nick = "Wall-E";
 
-    // let answer = "2";
     bot.authenticate(nick.to_string(), timeout_ms).await?;
     bot.try_expect(
         "JOIN #BuyNLarge\r\n",
