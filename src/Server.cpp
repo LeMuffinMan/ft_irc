@@ -434,32 +434,21 @@ void Server::handle_events(int n, epoll_event events[MAX_EVENTS])
 		}
 		else
 		{
-			// HUP : fd closed by client : the socket is dead
-			// ERR : Error on fdSer
-			if (evs & (EPOLLHUP | EPOLLERR))
-			{ // in case of EPOLLHUP / EPOLLRDHUP : we clean our map, but is there any other possibility of client leaving without saying ?
-				// std::stringstream ss;
-				// ss << "EPOLLERR/HUP on fd " << fd;
-				// Debug::print(ERROR, ss.str());
-				this->client_quited(fd);
-				continue;
-			}
-			// RDHUP :  client closed fd, the socket is still alive
-			if (evs & EPOLLRDHUP)
+			// EPOLLHUP : fd closed by client : the socket is dead
+			// EPOLLERR= error condition happened on the associated fd
+			// EPOLLRDHUP :  client closed fd but the socket is still alive
+			if (evs & (EPOLLHUP | EPOLLERR) || evs & EPOLLRDHUP) 
 			{
-				// std::stringstream ss;
-				// ss << "EPOLLRDHUP on fd " << fd;
-				// Debug::print(INFO, ss.str());
 				this->client_quited(fd);
 				continue;
 			}
-			// EPOLLOUT : We set that flag when we write in a client buffer, we need to send it
+			// EPOLLOUT : We set that flag when we couldn't send all data to client in one try
 			if (evs & EPOLLOUT)
 			{
-				if (!this->reply(this->clients[fd], "")) // empty message to trigger write of wbuf != true)
+				if (!this->reply(this->clients[fd], ""))
 					continue;
 			}
-			// EPOLLIN : There is data to read in the fd associated
+			// EPOLLIN : There is data to read in the associated fd
 			if (evs & EPOLLIN)
 			{
 				int result = this->read_client_fd(fd);
@@ -493,7 +482,6 @@ int Server::RunServer()
 		close(this->_server_socket);
 		return (EXIT_FAILURE);
 	}
-	// doc
 	epoll_event ev;
 	ev.events = EPOLLIN | EPOLLRDHUP; 
 	ev.data.fd = this->_server_socket;
@@ -508,7 +496,7 @@ int Server::RunServer()
 	epoll_event events[MAX_EVENTS];
 	while (g_sig == 0)
 	{
-		int n = epoll_wait(this->_epfd, events, MAX_EVENTS, 100); // timeout 100ms -> Max event ??
+		int n = epoll_wait(this->_epfd, events, MAX_EVENTS, EPOLL_WAIT_TIMEOUT);
 		if (n < 0)
 		{
 			if (errno == EINTR) 
@@ -522,8 +510,8 @@ int Server::RunServer()
 		handle_events(n, events);
 		deleteUnusedChannels();
 // #ifdef USE_FULL_CLIENT
-		// this->check_clients_ping();		 // si on n'a pas eu de signe d'activite depuis trop longtemps
-		// this->remove_inactive_clients(); // remove inactive localUsers after a unanswered ping
+		this->check_clients_ping();
+		this->remove_inactive_clients();
 // #endif
 	}
 	close(this->_server_socket);

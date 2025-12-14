@@ -18,6 +18,7 @@ const int MAX_EVENTS = 64; // Faire une taille dynamique (au fil de l'eau -> vec
 #define FLUSH_CHANNEL_INTERVAL 5
 #define PING_INTERVAL 5
 #define PING_TIMEOUT 3
+#define EPOLL_WAIT_TIMEOUT 100 // in milliseconds
 
 class ACommand;
 

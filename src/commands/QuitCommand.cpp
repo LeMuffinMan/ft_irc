@@ -22,6 +22,6 @@ void QuitCommand::execute(Client *executor, Server &server)
 		return;
 	}
 	server.reply(executor, ":" + executor->getNickname() + " QUIT :" + _params[0]);
-	server.removeClientFromAllChannels(executor); // FIXME: could be placed in server.removeClient
+	server.removeClientFromAllChannels(executor);
 	server.removeClient(executor);
 }

@@ -63,7 +63,6 @@ void ModeCommand::executeUserMode(Client *executor, Server &server)
 	}
 	// TODO: not explicitly required by subject !!
 }
-				// :salut!~t@46.231.218.157 MODE #UNBONTEST +i 
 
 /**
  * @brief Execute channel mode changes.

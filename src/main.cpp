@@ -15,14 +15,18 @@ int main(int argc, char **argv)
 		Debug::print(ERROR, ss.str());
 		return -1;
 	}
-	int port = atoi(argv[1]); // Needs to be replaced as atoi is not 'cpp like'
-	if (port < 1024 || port > 49151)
+	int port;
+{
+	std::istringstream iss(argv[1]);
+	iss >> port;
+	if (iss.fail() || port < 1024 || port > 49151)
 	{
 		std::stringstream ss;
 		ss << "Incorrect port: " << port << ". Port must be between 1024 and 49151.";
 		Debug::print(ERROR, ss.str());
 		return -1;
 	}
+}
 	std::string password(argv[2]);
 	Server server(port, password);
 	try 
