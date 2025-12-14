@@ -199,7 +199,8 @@ doc-full:
 	cd bonus/bot && cargo doc --target-dir ../../docs/bot
 
 doc-clean:
-	rm -rf docs/
+	rm -rf docs/irc_tester
+	rm -rf docs/bot
 
 # Aliases
 clear: clean

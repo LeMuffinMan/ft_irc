@@ -83,4 +83,5 @@ tests/irc_tester/target/
 .server.log
 bonus/bot/target/
 target/
-docs
+docs/irc_tester
+docs/bot
