@@ -1,4 +1,4 @@
-.PHONY : all clean fclean re bonus clean-lib clean-bin clean-obj debug debug-CXX debug-print test
+.PHONY : all clean fclean re bonus clean-lib clean-bin clean-obj debug debug-CXX debug-print test doc
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 DEPENDANCIES = -MMD -MP
@@ -187,6 +187,19 @@ else
 	@$(MAKE) $(NAME)
 endif
 	./tests/run.sh $(CLIENTS) $(LEAKS) $(STRESS) $(LOG) $(BEH)
+
+doc: 
+	$(MAKE) doc-clean
+	cd tests/irc_tester && cargo doc --no-deps --target-dir ../../docs/irc_tester
+	cd bonus/bot && cargo doc --no-deps --target-dir ../../docs/bot
+
+doc-full:
+	$(MAKE) doc-clean
+	cd tests/irc_tester && cargo doc --target-dir ../../docs/irc_tester
+	cd bonus/bot && cargo doc --target-dir ../../docs/bot
+
+doc-clean:
+	rm -rf docs/
 
 # Aliases
 clear: clean

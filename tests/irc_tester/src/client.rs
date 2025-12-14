@@ -1,3 +1,5 @@
+//! Our client structure is basicaly an input/output tcp connection
+//! Clients implementations are basic tools to operate tests
 use anyhow::Result;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -7,24 +9,15 @@ use tokio::{
     time::{Duration, sleep},
 };
 
-/**
-*
-* @Brief Our client structure is basicaly an input/output tcp connection
-* The write half is is wrapped in an `Arc<Mutex<...>>` to allow safe concurrent
-*  writes from multiple asynchronous tasks
-*
-*/
+
+/// The write half is is wrapped in an `Arc<Mutex<...>>` to allow safe concurrent
+/// writes from multiple asynchronous tasks
 pub struct Client {
     writer: Arc<Mutex<BufWriter<tokio::net::tcp::OwnedWriteHalf>>>,
     reader: tokio::io::BufReader<tokio::net::tcp::OwnedReadHalf>,
 }
-/**
-*
-* @Brief Clients implementations are basic tools to operate tests
-*
-* try_expect test to send tests, and expect specific answers from the server
-* authenticate
-*/
+
+/// try_expect test to send tests, and expect specific answers from the server
 impl Client {
     pub async fn try_expect(
         &mut self,
@@ -45,7 +38,7 @@ impl Client {
         Ok(())
     }
 
-    // expect a specific event
+    ///expect a specific event
     pub async fn expect(&mut self, expect: &str, error: &str, timeout_ms: u64) -> Result<()> {
         while let Some(line) = self.read_line_timeout(timeout_ms).await? {
             if line.starts_with("PING") {
@@ -60,7 +53,7 @@ impl Client {
         Ok(())
     }
 
-    //execute a regular authentification
+    ///execute a regular authentification
     pub async fn authenticate(&mut self, nick: String, timeout_ms: u64) -> Result<()> {
         self.send("PASS password\r\n", 0).await?;
         self.send(&format!("NICK {}\r\n", nick), 0).await?;
@@ -80,7 +73,7 @@ impl Client {
         Ok(())
     }
 
-    //initiate the tcp connection, and create a Client struct
+    ///initiate the tcp connection, and create a Client struct
     pub async fn connect(port: u16) -> Result<Self> {
         let stream = TcpStream::connect(("127.0.0.1", port)).await?;
         let (reader, writer) = stream.into_split();
@@ -90,7 +83,7 @@ impl Client {
         })
     }
 
-    //Send a msg to server using the writer and its mutex
+    ///Send a msg to server using the writer and its mutex
     pub async fn send(&self, msg: &str, delay_ms: u64) -> Result<()> {
         let mut writer = self.writer.lock().await;
         writer.write_all(msg.as_bytes()).await?;
@@ -102,7 +95,7 @@ impl Client {
         Ok(())
     }
 
-    //Collect answer from server
+    ///Collect answer from server
     pub async fn read_line_timeout(&mut self, timeout_ms: u64) -> Result<Option<String>> {
         let mut line = String::new();
 
@@ -126,14 +119,14 @@ impl Client {
         }
     }
 
-    //we execute a clean disconnection, informing the server
+    ///we execute a clean disconnection, informing the server
     pub async fn shutdown(&self) -> Result<()> {
         let mut writer = self.writer.lock().await;
         writer.shutdown().await?;
         Ok(())
     }
 
-    //send used for fragmented inputs
+    ///send used for fragmented inputs
     pub async fn send_raw(&self, data: &[u8]) -> Result<()> {
         let mut writer = self.writer.lock().await;
         writer.write_all(data).await?;

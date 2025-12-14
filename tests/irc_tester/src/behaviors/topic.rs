@@ -1,11 +1,7 @@
+//! Topic connection tests
 use crate::client::Client;
 use anyhow::Result;
 
-/**
-*
-* @Brief Topic connection tests
-*
-*/
 pub async fn topic_need_more_params(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("{}_topic_params", id);
     let mut client = Client::connect(port).await?;

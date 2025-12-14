@@ -1,11 +1,8 @@
+//! Pass Command tests
 use crate::client::Client;
 use anyhow::Result;
 
-/**
-*
-* @Brief Pass Command tests
-*
-*/
+
 pub async fn pass_already_registered(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("pass_already_registered_{}", id);
     let mut client = Client::connect(port).await?;

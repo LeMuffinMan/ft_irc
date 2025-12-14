@@ -1,15 +1,10 @@
+//! Ping Command tests
+//! Tests to verify the server behavior sending and answering pong, or
+//! expulsing inactives users
 use crate::client::Client;
 use anyhow::Result;
 use tokio::time::{Duration, timeout};
 
-/**
-*
-* @Brief Ping tests
-*
-* Tests to verify the server behavior sending and answering pong, or
-* expulsing inactives users
-*
-*/
 
 pub async fn legit_ignore_pong(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("stress_{}", id);

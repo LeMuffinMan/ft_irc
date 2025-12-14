@@ -1,11 +1,9 @@
+//! Kick command tests
 use crate::client::Client;
 use anyhow::Result;
 
-/**
-*
-* @Brief Kick Command tests
-*
-*/
+
+/// Kick Command tests
 pub async fn kick_not_registered(port: u16, _id: usize, timeout_ms: u64) -> Result<()> {
     let mut client = Client::connect(port).await?;
     client.send("PASS password\r\n", 0).await?;

@@ -1,3 +1,10 @@
+ //! irc server tester
+ //!
+ //! This asynchronous function launches multiple test clients in parallel
+ //! to validate server behavior and performance.
+ //!
+ //! Depending on the selected modes, it runs behavior tests and/or stress tests,
+ //! then stops all spawned tasks before exiting.
 mod behavior;
 mod behaviors;
 mod client;
@@ -9,18 +16,6 @@ use crate::controle_clients::*;
 use crate::stress_tests::*;
 use anyhow::Result;
 use std::env;
-
-/**
- *
- * @brief irc server tester
- *
- * This asynchronous function launches multiple test clients in parallel
- * to validate server behavior and performance.
- *
- * Depending on the selected modes, it runs behavior tests and/or stress tests,
- * then stops all spawned tasks before exiting.
- *
- */
 
 #[tokio::main]
 async fn main() -> Result<()> {

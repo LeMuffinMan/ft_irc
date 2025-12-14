@@ -1,11 +1,7 @@
+//! Privmsg Command tests
 use crate::client::Client;
 use anyhow::Result;
 
-/**
-*
-* @Brief Privmsg Command tests
-*
-*/
 
 pub async fn privmsg_no_such_nick(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("{}_privmsgnosuchnick", id);

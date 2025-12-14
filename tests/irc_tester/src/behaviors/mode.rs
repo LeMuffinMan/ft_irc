@@ -1,11 +1,6 @@
+//! Mode command tests
 use crate::client::Client;
 use anyhow::Result;
-
-/**
-*
-* @Brief Mode Command tests
-*
-*/
 
 pub async fn mode_need_more_params(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("{}_mode_more_params", id);

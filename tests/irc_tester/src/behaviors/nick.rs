@@ -1,11 +1,6 @@
+//! Nick command tests
 use crate::client::Client;
 use anyhow::Result;
-
-/**
-*
-* @Brief Nick Command tests
-*
-*/
 
 pub async fn nick_normal_claim_and_change(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("nick_change_{}", id);

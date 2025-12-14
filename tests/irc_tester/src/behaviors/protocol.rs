@@ -1,12 +1,7 @@
+//! Protocol connection tests
 use crate::client::Client;
 use anyhow::Result;
 use tokio::time::Duration;
-
-/**
-*
-* @Brief Protocol connection tests
-*
-*/
 
 pub async fn legit_disconnect(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("legit_disco_{}", id);
@@ -30,7 +25,7 @@ pub async fn fragmented_messages(port: u16, _debug: bool, id: usize) -> Result<(
         (&format!(" {}\r\n", nick), 100),
         ("USE", 80),
         ("R ", 80),
-        (&format!("{} 0 * ", user), 80),
+        (&format!("{} 0 /// ", user), 80),
         (&format!(":{}\r\n", user), 100),
     ];
 
@@ -59,7 +54,7 @@ pub async fn fragmented_messages(port: u16, _debug: bool, id: usize) -> Result<(
 pub async fn low_bandwidth(port: u16, _debug: bool, id: usize) -> Result<()> {
     let mut client = Client::connect(port).await?;
     let msg = &format!(
-        "PASS password\r\nNICK slow_{}\r\nUSER slow 0 * :slow user\r\n",
+        "PASS password\r\nNICK slow_{}\r\nUSER slow 0 /// :slow user\r\n",
         id
     );
 
