@@ -120,10 +120,12 @@ void Server::remove_inactive_clients()
 {
 	std::time_t now = std::time(NULL);
 	std::vector<int> to_erase;
-	for (clientsType::iterator it = this->clients.begin(); it != this->clients.end(); it++)
+	for (clientsType::iterator it = this->clients.begin(); it != this->clients.end();)
 	{
+		int fd = it->first;
 		Client *client = it->second;
 		now = std::time(NULL);
+		clientsType::iterator next_it = ++it;
 		if ((client->timeout > 0 && now > client->timeout) ||
 			(!client->isRegistered() && client->connection_time + 10 < now))
 		{
@@ -136,15 +138,17 @@ void Server::remove_inactive_clients()
 			}
 			else
 			{
-				if (clients.find(it->first) != clients.end() && clients[it->first]->_fd > 0) // fixed l'erreur sur timed out fd = -1
+				if (clients.find(fd) != clients.end() && clients[fd]->_fd > 0)
 				{
 					ss << "Unregistered client with fd: " << client->_fd << " got timed out";
 					Debug::print(INFO, ss.str());
 					this->reply(client, "timed out");
 				}
 			}
-			to_erase.push_back(it->first);
+			if (this->clients.find(fd) != this->clients.end())
+				to_erase.push_back(fd);
 		}
+		it = next_it;
 	}
 	for (std::vector<int>::iterator it = to_erase.begin(); it != to_erase.end(); it++)
 		removeClient(*it);
@@ -156,7 +160,7 @@ void Server::remove_inactive_clients()
  */
 void Server::check_clients_ping()
 {
-	for (clientsType::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
+	for (clientsType::iterator it = this->clients.begin(); it != this->clients.end();)
 	{
 		// if (!it->second)
 		// 	continue;
@@ -164,6 +168,7 @@ void Server::check_clients_ping()
 		(void)fd;
 		Client *client = it->second;
 
+		clientsType::iterator next_it = ++it;
 		std::time_t now = std::time(NULL);
 
 		if (client->isRegistered() && now - client->last_ping > PING_INTERVAL)
@@ -171,8 +176,13 @@ void Server::check_clients_ping()
 			std::stringstream ss;
 			ss << "PING :" << now;
 			this->reply(client, ss.str());
-			client->timeout = now + 3;
-			client->last_ping = now;
+			if (this->clients.find(fd) != this->clients.end())
+			{
+				client->timeout = now + 3;
+				client->last_ping = now;
+			}
+			it = next_it;
+
 			// ss.clear();
 			// ss << "[PING :" << now << "] sent to client " << fd;
 			// Debug::print(DEBUG, ss.str());

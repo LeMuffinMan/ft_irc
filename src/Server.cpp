@@ -503,8 +503,8 @@ int Server::RunServer()
 		}
 		handle_events(n, events);
 		deleteUnusedChannels();
-		// this->check_clients_ping();
-		// this->remove_inactive_clients();
+		// check_clients_ping();
+		// remove_inactive_clients();
 	}
 	close(this->_server_socket);
 	this->_server_socket = -1;
