@@ -14,12 +14,6 @@
 #include "ACommand.hpp"
 #include "CommandFactory.hpp"
 
-// #define USE_FULL_CLIENT
-// #define USE_TESTER
-// #ifdef USE_TESTER
-// #define USE_FULL_CLIENT
-// #endif
-
 Server::~Server()
 {
 	if (this->_server_socket != -1)
@@ -509,10 +503,8 @@ int Server::RunServer()
 		}
 		handle_events(n, events);
 		deleteUnusedChannels();
-// #ifdef USE_FULL_CLIENT
-		this->check_clients_ping();
-		this->remove_inactive_clients();
-// #endif
+		// this->check_clients_ping();
+		// this->remove_inactive_clients();
 	}
 	close(this->_server_socket);
 	this->_server_socket = -1;
