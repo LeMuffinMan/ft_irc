@@ -89,11 +89,11 @@ Using rust guarantees memory safety at compile time without loosing performances
 
 The crate Tokio gave us a layer to program asychronously.
 
-* Using make test will, by default, run all unit tests connection and advanced tests, without server log monitoring and with a maximum of 1000 clients / wave
-* Using make test LOG=1 activated server logs monitoring, if terminator is installed
-* Using make test CLIENTS=500 run tests with a maximum of 500 clients per wave
-* Using make test STRESS=1 skip the unit tests and runs only connection and advanced tests
-* Using make test BEH=1 will test each unit tests (behaviors)
+* Using `make test` will, by default, run all unit tests connection and advanced tests, without server log monitoring and with a maximum of 1000 clients / wave
+* Using `make test LOG=1` activated server logs monitoring, if terminator is installed
+* Using `make test CLIENTS=500` run tests with a maximum of 500 clients per wave
+* Using `make test STRESS=1` skip the unit tests and runs only connection and advanced tests
+* Using `make test BEH=1` will test each unit tests (behaviors)
 
 ## <a name="async-bots-en"> 🤖 Async bots ##
 

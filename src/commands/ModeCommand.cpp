@@ -102,7 +102,7 @@ void ModeCommand::executeChannelMode(Client *executor, Server &server)
 			continue;
 		if (_params[i][1] == 'o')
 		{
-			if (i + 1 >= _params.size())
+			if (i + 1 >= _paramSize)
 			{
 				server.reply(executor, ERR_NEEDMOREPARAMS(executor->getNickname(), "MODE"));
 				continue;
@@ -156,7 +156,7 @@ void ModeCommand::executeChannelMode(Client *executor, Server &server)
 		}
 		else if (_params[i][1] == 'k')
 		{
-			if (_paramSize < i + 1) // s'il n'y a pas de clé, on ne peut pas modifier
+			if (_paramSize <= i + 1) // s'il n'y a pas de clé, on ne peut pas modifier
 				continue;
 			ChannelModes modes = channel->getModes();
 			if (_params[i][0] == '+')
@@ -181,7 +181,7 @@ void ModeCommand::executeChannelMode(Client *executor, Server &server)
 			ChannelModes modes = channel->getModes();
 			if (_params[i][0] == '+')
 			{
-				if (_paramSize < i + 1) // s'il n'y a pas de limite, on ne peut pas modifier
+				if (_paramSize <= i + 1) // s'il n'y a pas de limite, on ne peut pas modifier
 					continue;
 				server.replyChannel(channel, RPL_CHANNELMODEIS(executor->getNickname(), _params[0], "+l", _params[i + 1]));
 				modes.is_limited = true;

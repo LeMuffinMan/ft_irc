@@ -321,7 +321,11 @@ int Server::read_client_fd(int fd)
 	{
 		this->clients[fd]->rbuf.append(buf, &buf[r]);
 		// std::stringstream ss;
-		// ss << "Received " << r << " bytes from fd " << fd << " [" << this->clients[fd]->rbuf << "]";
+		// std::string str(buf, &buf[r]);
+		// buf[r] = '\0';
+		// if (str.rfind("\r\n") != std::string::npos)
+		// 	str.erase(str.size()-2, 2);
+		// ss << "Received " << r << " bytes from fd " << fd << " [" << str << "]";
 		// Debug::print(DEBUG, ss.str());
 		return 1;
 	}
