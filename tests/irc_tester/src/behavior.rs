@@ -129,7 +129,7 @@ impl BehaviorHandler for ClientBehavior {
             NickNoNicknameGiven => |p, id, t| Box::pin(nick_no_nickname_given(p, id, t)),
             NickAlreadyInUse => |p, id, t| Box::pin(nick_already_in_use(p, id, t)),
 
-            WrongPassword => |p, _id, _t| Box::pin(normal_connection_wrong_password(p, false)),
+            WrongPassword => |p, _id, t| Box::pin(normal_connection_wrong_password(p, t)),
             PassNotFirst => |p, id, t| Box::pin(pass_not_first(p, id, t)),
             PassAlreadyRregistered => |p, id, t| Box::pin(pass_already_registered(p, id, t)),
             PassNeedMoreParams => |p, id, t| Box::pin(pass_need_more_params(p, id, t)),

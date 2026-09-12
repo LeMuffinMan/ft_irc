@@ -17,27 +17,33 @@ use crate::stress_tests::*;
 use anyhow::Result;
 use std::env;
 
+/// Behaviour tests: a reply slower than this is a failure, not a wait.
+const REPLY_TIMEOUT_MS: u64 = 2000;
+
+/// Stress waves deliberately saturate the server, so give replies more room
+/// before calling them missing.
+const STRESS_TIMEOUT_MS: u64 = 10_000;
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let port = 6667;
-    let timeout = 0;
     let (num_clients, stress_mode, beh_mode) = parse();
 
-    let controle_handle = tokio::spawn(reserved_nick_client(port, timeout));
-    let no_mdp_chan_handle = tokio::spawn(no_mdp_chan_client(port, timeout));
-    let mdp_chan_handle = tokio::spawn(mdp_chan_client(port, timeout));
-    let invite_chan_handle = tokio::spawn(invite_chan_client(port, timeout));
-    let privmsg_client_nick_handle = tokio::spawn(privmsg_client_nick(port, timeout));
-    let privmsg_client_chan_handle = tokio::spawn(privmsg_client_chan(port, timeout));
+    let controle_handle = tokio::spawn(reserved_nick_client(port, REPLY_TIMEOUT_MS));
+    let no_mdp_chan_handle = tokio::spawn(no_mdp_chan_client(port, REPLY_TIMEOUT_MS));
+    let mdp_chan_handle = tokio::spawn(mdp_chan_client(port, REPLY_TIMEOUT_MS));
+    let invite_chan_handle = tokio::spawn(invite_chan_client(port, REPLY_TIMEOUT_MS));
+    let privmsg_client_nick_handle = tokio::spawn(privmsg_client_nick(port, REPLY_TIMEOUT_MS));
+    let privmsg_client_chan_handle = tokio::spawn(privmsg_client_chan(port, REPLY_TIMEOUT_MS));
 
     let _ = tokio::time::sleep(std::time::Duration::from_millis(500)).await;
 
     if stress_mode == 0 {
-        let _ = test_behaviors(port, 0).await;
+        let _ = test_behaviors(port, REPLY_TIMEOUT_MS).await;
     }
     if beh_mode == 0 {
-        connection_stress_test(port, num_clients, timeout).await?;
-        advanced_stress_test(port, num_clients, timeout).await?;
+        connection_stress_test(port, num_clients, STRESS_TIMEOUT_MS).await?;
+        advanced_stress_test(port, num_clients, STRESS_TIMEOUT_MS).await?;
     }
 
     controle_handle.abort();

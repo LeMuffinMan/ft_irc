@@ -33,14 +33,14 @@ pub async fn pass_need_more_params(port: u16, _id: usize, timeout_ms: u64) -> Re
     Ok(())
 }
 
-pub async fn normal_connection_wrong_password(port: u16, _debug: bool) -> Result<()> {
+pub async fn normal_connection_wrong_password(port: u16, timeout_ms: u64) -> Result<()> {
     let mut client = Client::connect(port).await?;
     client
         .try_expect(
             "PASS incorrect_password\r\n",
             "Password incorrect",
             "Expected 'Invalid password' in server response ",
-            0,
+            timeout_ms,
         )
         .await?;
     client.shutdown().await?;

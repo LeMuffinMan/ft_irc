@@ -10,6 +10,13 @@ use tokio::{
 };
 
 
+/// Deadline applied to a read when the caller does not impose one.
+///
+/// Every read must have a deadline: a server that never answers has to make
+/// the test fail. A blocking read turns a missing reply into a suite that
+/// never terminates, which is how six dead PING/PONG tests stayed invisible.
+pub const DEFAULT_TIMEOUT_MS: u64 = 2000;
+
 /// The write half is is wrapped in an `Arc<Mutex<...>>` to allow safe concurrent
 /// writes from multiple asynchronous tasks
 pub struct Client {
@@ -45,12 +52,9 @@ impl Client {
     /// tests that exist to prove the server is still answering must not rely
     /// on them.
     pub async fn expect_reply(&mut self, expect: &str, error: &str, timeout_ms: u64) -> Result<()> {
-        // A crashed server closes the socket (read returns 0, so `None`), a
-        // hung one never answers: both must fail, neither may block the suite.
-        let deadline = if timeout_ms == 0 { 2000 } else { timeout_ms };
         loop {
             let line = self
-                .read_line_timeout(deadline)
+                .read_line_timeout(timeout_ms)
                 .await?
                 .ok_or_else(|| anyhow::anyhow!("{} | no reply (server closed or timed out)", error))?;
             if line.starts_with("PING") {
@@ -125,15 +129,11 @@ impl Client {
     ///Collect answer from server
     pub async fn read_line_timeout(&mut self, timeout_ms: u64) -> Result<Option<String>> {
         let mut line = String::new();
-
-        if timeout_ms == 0 {
-            let n = self.reader.read_line(&mut line).await?;
-            if n > 0 {
-                return Ok(Some(line));
-            } else {
-                return Ok(None);
-            }
-        }
+        let timeout_ms = if timeout_ms == 0 {
+            DEFAULT_TIMEOUT_MS
+        } else {
+            timeout_ms
+        };
 
         match tokio::time::timeout(
             Duration::from_millis(timeout_ms),
