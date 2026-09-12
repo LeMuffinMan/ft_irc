@@ -40,7 +40,6 @@ Server::Server(int port, std::string password) : _port(port), _password(password
 /**
  * @brief Initialize the server socket.
  * This function creates, binds, and listens on a server socket for incoming client connections.
- * It supports both IPv4 and IPv6 addresses.
  * getaddrinfo is used to obtain the address information,
  * it tries each address in a list until it finds one that works.
  *
@@ -53,7 +52,7 @@ int Server::init_socket(int port)
 	struct addrinfo *result, *rp;
 
 	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_UNSPEC;	 /* Allow IPv4 or IPv6 */
+	hints.ai_family = AF_INET;	 /* IPv4 only: new_client() accepts into a sockaddr_in */
 	hints.ai_socktype = SOCK_STREAM; /* Stream socket */
 	hints.ai_flags = AI_PASSIVE;	 /* For wildcard IP address */
 	hints.ai_protocol = 0;			 /* Any protocol */

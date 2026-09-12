@@ -49,7 +49,6 @@ bool Server::reply(Client *client, std::string message)
 			else if (error == EPIPE)
 			{
 				Debug::print(WARNING, "SIGPIPE received while sending message to client " + safe_nick(client->getNickname()));
-				removeClient(client);
 				return false;
 			}
 		}
@@ -59,7 +58,6 @@ bool Server::reply(Client *client, std::string message)
 			std::stringstream ss;
 			ss << "Disconnected: send error on fd(" << client->_fd << ") with errno(" << error << ")";
 			Debug::print(ERROR, ss.str());
-			removeClient(client);
 			return false;
 		}
 	}
