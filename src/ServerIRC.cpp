@@ -51,6 +51,13 @@ bool Server::reply(Client *client, std::string message)
 				Debug::print(WARNING, "SIGPIPE received while sending message to client " + safe_nick(client->getNickname()));
 				return false;
 			}
+			else
+			{
+				std::stringstream ss;
+				ss << "Send error on fd(" << client->_fd << ") with errno(" << error << ")";
+				Debug::print(WARNING, ss.str());
+				return false;
+			}
 		}
 		else // n == 0
 		{
