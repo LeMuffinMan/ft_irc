@@ -22,9 +22,8 @@ bool Server::reply(Client *client, std::string message)
 		Debug::print(ERROR, "No client given");
 		return false;
 	}
-	if (client->hasTriggeredEPOLLOUT)
-		disable_epollout(client->_fd);
 	std::string &wbuf = client->wbuf;
+	bool was_pending = !wbuf.empty();
 	if (!message.empty())
 		wbuf.append(message).append("\r\n");
 	while (!wbuf.empty())
@@ -68,6 +67,8 @@ bool Server::reply(Client *client, std::string message)
 			return false;
 		}
 	}
+	if (was_pending)
+		disable_epollout(client->_fd);
 	return true;
 }
 
