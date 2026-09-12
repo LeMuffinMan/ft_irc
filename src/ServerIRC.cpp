@@ -150,7 +150,8 @@ void Server::remove_inactive_clients()
 			}
 			else
 			{
-				if (clients.find(fd) != clients.end() && clients[fd]->_fd > 0)
+				clientsType::iterator found = clients.find(fd);
+				if (found != clients.end() && found->second->_fd > 0)
 				{
 					ss << "Unregistered client with fd: " << client->_fd << " got timed out";
 					Debug::print(INFO, ss.str());

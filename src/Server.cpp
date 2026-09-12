@@ -273,11 +273,14 @@ void Server::client_quited(int fd) {
 
 void Server::removeClient(int fd)
 {
-	removeClientFromAllChannels(this->clients[fd]);
+	clientsType::iterator it = this->clients.find(fd);
+	if (it == this->clients.end())
+		return;
+	removeClientFromAllChannels(it->second);
 	epoll_ctl(this->_epfd, EPOLL_CTL_DEL, fd, NULL);
 	close(fd);
-	delete this->clients[fd];
-	this->clients.erase(fd);
+	delete it->second;
+	this->clients.erase(it);
 	// this->clients[fd]->printClientInfo();
 }
 
@@ -304,21 +307,26 @@ int Server::read_client_fd(int fd)
 {
 	char buf[4096];
 
+	clientsType::iterator it = this->clients.find(fd);
+	if (it == this->clients.end())
+		return -1;
+	Client *client = it->second;
+
 	ssize_t r = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
 
 	if (r >= 512)
 	{
-		this->reply(this->clients[fd], "Buffer limit reached, only 512 bytes including \\r\\n allowed");
+		this->reply(client, "Buffer limit reached, only 512 bytes including \\r\\n allowed");
 		std::stringstream ss;
 		ss << "Message " << r << " bytes long from " << fd << " ignored";
 		Debug::print(INFO, ss.str());
-		this->clients[fd]->rbuf.clear();
+		client->rbuf.clear();
 		return 0;
 	}
 
 	if (r > 0)
 	{
-		this->clients[fd]->rbuf.append(buf, &buf[r]);
+		client->rbuf.append(buf, &buf[r]);
 		// std::stringstream ss;
 		// std::string str(buf, &buf[r]);
 		// buf[r] = '\0';
@@ -350,20 +358,22 @@ int Server::read_client_fd(int fd)
  */
 void Server::is_authentification_complete(int fd)
 {
-	if (clients.find(fd) != clients.end() &&
-		!clients[fd]->isRegistered() &&
-		clients[fd]->isPasswordCorrect() == true &&
-		clients[fd]->getNickname() != "" &&
-		clients[fd]->getUsername() != "")
+	clientsType::iterator it = this->clients.find(fd);
+	if (it == this->clients.end())
+		return;
+	Client *client = it->second;
+	if (!client->isRegistered() &&
+		client->isPasswordCorrect() == true &&
+		client->getNickname() != "" &&
+		client->getUsername() != "")
 	{
-		Client *client = this->clients[fd];
 		std::stringstream ss;
 		ss << client->getNickname() << "!~" << client->getUsername() << "@" << client->getIp();
 		client->setHost(ss.str());
 		ss.str("");
 		this->reply(client, RPL_WELCOME(client->getNickname(), client->getHost()));
 		client->setRegistered();
-		ss << clients[fd]->getHost() << " successfully connected";
+		ss << client->getHost() << " successfully connected";
 		Debug::print(DEBUG, ss.str());
 		// client.printClientIRCInfo();
 	}
@@ -378,19 +388,21 @@ void Server::is_authentification_complete(int fd)
  */
 void Server::interpret_msg(int fd)
 {
-	if (this->clients.find(fd) == this->clients.end())
+	clientsType::iterator it = this->clients.find(fd);
+	if (it == this->clients.end())
 		return;
+	Client *client = it->second;
 	size_t pos;
-	while ((pos = this->clients[fd]->rbuf.find("\r\n")) != std::string::npos)
+	while ((pos = client->rbuf.find("\r\n")) != std::string::npos)
 	{
-		std::string line = this->clients[fd]->rbuf.substr(0, pos);
-		this->clients[fd]->rbuf.erase(0, pos + 2);
+		std::string line = client->rbuf.substr(0, pos);
+		client->rbuf.erase(0, pos + 2);
 		if (line.empty())
 			continue;
 		ACommand *cmd = CommandFactory::findAndCreateCommand(line);
 		if (cmd) // valid command found
 		{
-			cmd->execute(this->clients[fd], *this);
+			cmd->execute(client, *this);
 			delete cmd;
 			// this->clients[fd]->printClientInfo();
 		}
@@ -442,7 +454,10 @@ void Server::handle_events(int n, epoll_event events[MAX_EVENTS])
 			// EPOLLOUT : We set that flag when we couldn't send all data to client in one try
 			if (evs & EPOLLOUT)
 			{
-				if (!this->reply(this->clients[fd], ""))
+				clientsType::iterator it = this->clients.find(fd);
+				if (it == this->clients.end())
+					continue;
+				if (!this->reply(it->second, ""))
 					continue;
 			}
 			// EPOLLIN : There is data to read in the associated fd
