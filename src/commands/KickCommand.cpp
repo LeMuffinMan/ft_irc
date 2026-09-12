@@ -57,7 +57,7 @@ void KickCommand::execute(Client* executor, Server& server)
 		Channel* chan = server.getChannel(chans[i]);
 		if (!chan || (chans[i][0] != '#' && chans[i][0] != '&' && chans[i].size() < 2))
 		{
-			server.reply(executor, ERR_NOSUCHCHANNEL(executor->getNickname(), _params[i]));
+			server.reply(executor, ERR_NOSUCHCHANNEL(executor->getNickname(), chans[i]));
 			continue;
 		}
 		if (!chan->isClientInChannel(executor))
@@ -67,7 +67,7 @@ void KickCommand::execute(Client* executor, Server& server)
 		}
 		if (!chan->isClientOPChannel(executor)) 
 		{
-			server.reply(executor, ERR_CHANOPRIVSNEEDED(executor->getNickname(), _params[i]));
+			server.reply(executor, ERR_CHANOPRIVSNEEDED(executor->getNickname(), chans[i]));
 			continue;
 		}
 		Client* target = server.getClient(users[i]);
