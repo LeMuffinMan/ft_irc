@@ -313,6 +313,7 @@ int Server::read_client_fd(int fd)
 	Client *client = it->second;
 
 	ssize_t r = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
+	int error = errno;
 
 	if (r >= 512)
 	{
@@ -343,6 +344,8 @@ int Server::read_client_fd(int fd)
 	}
 	else
 	{
+		if (error == EAGAIN || error == EWOULDBLOCK)
+			return 0;
 		perror("recv");
 		client_quited(fd);
 		return -1;
@@ -446,7 +449,7 @@ void Server::handle_events(int n, epoll_event events[MAX_EVENTS])
 			// EPOLLHUP : fd closed by client : the socket is dead
 			// EPOLLERR= error condition happened on the associated fd
 			// EPOLLRDHUP :  client closed fd but the socket is still alive
-			if (evs & (EPOLLHUP | EPOLLERR) || evs & EPOLLRDHUP) 
+			if (evs & (EPOLLHUP | EPOLLERR))
 			{
 				this->client_quited(fd);
 				continue;
@@ -461,11 +464,14 @@ void Server::handle_events(int n, epoll_event events[MAX_EVENTS])
 					continue;
 			}
 			// EPOLLIN : There is data to read in the associated fd
-			if (evs & EPOLLIN)
+			if (evs & (EPOLLIN | EPOLLRDHUP))
 			{
-				int result = this->read_client_fd(fd);
-				if (result == 1)
+				while (this->read_client_fd(fd) == 1)
+				{
 					interpret_msg(fd);
+					if (this->clients.find(fd) == this->clients.end())
+						break;
+				}
 			}
 		}
 	}
