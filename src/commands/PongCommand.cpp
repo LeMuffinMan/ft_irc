@@ -18,8 +18,11 @@ PongCommand::PongCommand(std::vector<std::string> params)
  */
 void PongCommand::execute(Client *executor, Server &server)
 {
-	(void)server;
-
+	if (_params.empty())
+	{
+		server.reply(executor, ERR_NOORIGIN(executor->getNickname()));
+		return;
+	}
 	if (executor->last_ping != std::atol(_params[0].c_str()))
 	{
 		server.reply(executor, "Invalid pong");

@@ -28,6 +28,7 @@ pub enum ClientBehavior {
     FragmentedMessages,
     LowBandwidth,
     TooLongMessage,
+    PongNoOrigin,
 
     //nick
     NickNormalClaimAndChange,
@@ -108,6 +109,7 @@ impl BehaviorHandler for ClientBehavior {
             LowBandwidth => |p, id, _| Box::pin(low_bandwidth(p, false, id)),
             LegitDisconnect => |p, id, t| Box::pin(legit_disconnect(p, id, t)),
             TooLongMessage => |p, _id, t| Box::pin(too_long_message(p, t)),
+            PongNoOrigin => |p, id, t| Box::pin(pong_no_origin(p, id, t)),
 
             NickNormalClaimAndChange => |p, id, t| Box::pin(nick_normal_claim_and_change(p, id, t)),
             NickNoNicknameGiven => |p, id, t| Box::pin(nick_no_nickname_given(p, id, t)),
