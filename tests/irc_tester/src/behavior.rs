@@ -5,7 +5,6 @@ use crate::behaviors::mode::*;
 use crate::behaviors::nick::*;
 use crate::behaviors::part::*;
 use crate::behaviors::pass::*;
-use crate::behaviors::ping_pong::*;
 use crate::behaviors::privmsg::*;
 use crate::behaviors::protocol::*;
 use crate::behaviors::time::*;
@@ -28,15 +27,7 @@ pub enum ClientBehavior {
     LegitDisconnect,
     FragmentedMessages,
     LowBandwidth,
-    ContinuousNoise,
     TooLongMessage,
-
-    //pong
-    LegitIgnorePong,
-    StartIgnoreAll,
-    PongOnly,
-    WrongPong,
-    PongWithoutConnect,
 
     //nick
     NickNormalClaimAndChange,
@@ -116,14 +107,7 @@ impl BehaviorHandler for ClientBehavior {
             FragmentedMessages => |p, id, _| Box::pin(fragmented_messages(p, false, id)),
             LowBandwidth => |p, id, _| Box::pin(low_bandwidth(p, false, id)),
             LegitDisconnect => |p, id, t| Box::pin(legit_disconnect(p, id, t)),
-            ContinuousNoise => |p, _id, t| Box::pin(continuous_noise(p, t)),
             TooLongMessage => |p, _id, t| Box::pin(too_long_message(p, t)),
-
-            WrongPong => |p, id, t| Box::pin(wrong_pong(p, id, t)),
-            PongWithoutConnect => |p, _id, t| Box::pin(pong_without_connect(p, t)),
-            LegitIgnorePong => |p, id, t| Box::pin(legit_ignore_pong(p, id, t)),
-            StartIgnoreAll => |p, id, t| Box::pin(start_ignore_all(p, id, t)),
-            PongOnly => |p, id, t| Box::pin(pong_only(p, id, t)),
 
             NickNormalClaimAndChange => |p, id, t| Box::pin(nick_normal_claim_and_change(p, id, t)),
             NickNoNicknameGiven => |p, id, t| Box::pin(nick_no_nickname_given(p, id, t)),

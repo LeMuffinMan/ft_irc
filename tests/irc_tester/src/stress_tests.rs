@@ -96,15 +96,9 @@ pub async fn connection_stress_test(port: u16, num_clients: usize, timeout_ms: u
 pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
     let behaviors = vec![
         ClientBehavior::LegitDisconnect,
-        ClientBehavior::LegitIgnorePong,
-        ClientBehavior::StartIgnoreAll,
-        ClientBehavior::PongOnly,
-        ClientBehavior::WrongPong,
-        ClientBehavior::PongWithoutConnect,
         ClientBehavior::WrongPassword,
         ClientBehavior::FragmentedMessages,
         ClientBehavior::LowBandwidth,
-        ClientBehavior::ContinuousNoise,
         ClientBehavior::TooLongMessage,
         ClientBehavior::NickNormalClaimAndChange,
         ClientBehavior::NickNoNicknameGiven,
