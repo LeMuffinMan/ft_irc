@@ -47,7 +47,6 @@ INC_CMDS = \
 	JoinCommand.hpp \
 	NickCommand.hpp \
 	UserCommand.hpp \
-	PongCommand.hpp \
 	PrivmsgCommand.hpp \
 	KickCommand.hpp \
 	ModeCommand.hpp \
@@ -79,7 +78,6 @@ SRC_CMDS = \
 	PassCommand.cpp \
 	NickCommand.cpp \
 	UserCommand.cpp \
-	PongCommand.cpp \
 	PrivmsgCommand.cpp \
 	KickCommand.cpp \
 	ModeCommand.cpp \

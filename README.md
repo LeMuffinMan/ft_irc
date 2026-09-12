@@ -80,7 +80,6 @@ A Client doesn't have any permission to execute anything, the server does it for
 
 ### Bonus ###
 * TIME
-* PONG
 
 ## <a name="tester-en"> 🧪 Tester ##
 

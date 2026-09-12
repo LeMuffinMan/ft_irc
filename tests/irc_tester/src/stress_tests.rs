@@ -100,7 +100,7 @@ pub async fn test_behaviors(port: u16, timeout_ms: u64) -> Result<()> {
         ClientBehavior::FragmentedMessages,
         ClientBehavior::LowBandwidth,
         ClientBehavior::TooLongMessage,
-        ClientBehavior::PongNoOrigin,
+        ClientBehavior::PongNoCrash,
         ClientBehavior::NickNormalClaimAndChange,
         ClientBehavior::NickNoNicknameGiven,
         ClientBehavior::NickAlreadyInUse,
@@ -218,7 +218,7 @@ pub async fn advanced_stress_test(port: u16, num_clients: usize, timeout_ms: u64
         ClientBehavior::TimeWithParams,
         ClientBehavior::TimeCheckTimeZone,
         ClientBehavior::TimeNotRegistered,
-        ClientBehavior::PongNoOrigin,
+        ClientBehavior::PongNoCrash,
     ];
 
     let mut handles = vec![];

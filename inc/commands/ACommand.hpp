@@ -21,7 +21,6 @@ enum command_type
 	PASS,
 	JOIN,
 	PRIVATE_MESSAGE,
-	PONG,
 	PART,
 	QUIT,
 	TIME,

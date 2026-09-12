@@ -8,7 +8,6 @@
 #include "NickCommand.hpp"
 #include "KickCommand.hpp"
 #include "UserCommand.hpp"
-#include "PongCommand.hpp"
 #include "PrivmsgCommand.hpp"
 #include "ModeCommand.hpp"
 #include "PartCommand.hpp"
@@ -100,7 +99,6 @@ command_type CommandFactory::findType(const std::string &command_name)
 	if (command_name == "PASS") return PASS;
 	if (command_name == "JOIN") return JOIN;
 	if (command_name == "PRIVMSG") return PRIVATE_MESSAGE;
-	if (command_name == "PONG") return PONG;
 	if (command_name == "PART") return PART;
 	if (command_name == "QUIT") return QUIT;
 	if (command_name == "TIME") return TIME;
@@ -135,8 +133,6 @@ ACommand *CommandFactory::createCommand(const std::string &command, const std::v
 		return new PassCommand(params);
 	case PRIVATE_MESSAGE:
 		return new PrivmsgCommand(params);
-	case PONG:
-		return new PongCommand(params);
 	case MODE:
 		return new ModeCommand(params);
 	case PART:
