@@ -10,11 +10,6 @@ use tokio::{
 };
 
 
-/// Deadline applied to a read when the caller does not impose one.
-///
-/// Every read must have a deadline: a server that never answers has to make
-/// the test fail. A blocking read turns a missing reply into a suite that
-/// never terminates, which is how six dead PING/PONG tests stayed invisible.
 pub const DEFAULT_TIMEOUT_MS: u64 = 2000;
 
 /// The write half is is wrapped in an `Arc<Mutex<...>>` to allow safe concurrent
@@ -45,12 +40,6 @@ impl Client {
         Ok(())
     }
 
-    /// Strict variant of `expect`: the absence of a reply is a failure.
-    ///
-    /// `try_expect` and `expect` both return `Ok(())` when the server sends
-    /// nothing back, so a server that died mid-test reports green. Regression
-    /// tests that exist to prove the server is still answering must not rely
-    /// on them.
     pub async fn expect_reply(&mut self, expect: &str, error: &str, timeout_ms: u64) -> Result<()> {
         loop {
             let line = self

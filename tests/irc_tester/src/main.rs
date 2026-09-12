@@ -17,11 +17,8 @@ use crate::stress_tests::*;
 use anyhow::Result;
 use std::env;
 
-/// Behaviour tests: a reply slower than this is a failure, not a wait.
 const REPLY_TIMEOUT_MS: u64 = 2000;
 
-/// Stress waves deliberately saturate the server, so give replies more room
-/// before calling them missing.
 const STRESS_TIMEOUT_MS: u64 = 10_000;
 
 #[tokio::main]
@@ -38,8 +35,12 @@ async fn main() -> Result<()> {
 
     let _ = tokio::time::sleep(std::time::Duration::from_millis(500)).await;
 
+    let mut failed = false;
     if stress_mode == 0 {
-        let _ = test_behaviors(port, REPLY_TIMEOUT_MS).await;
+        if let Err(e) = test_behaviors(port, REPLY_TIMEOUT_MS).await {
+            eprintln!("behaviour tests failed: {e}");
+            failed = true;
+        }
     }
     if beh_mode == 0 {
         connection_stress_test(port, num_clients, STRESS_TIMEOUT_MS).await?;
@@ -53,6 +54,9 @@ async fn main() -> Result<()> {
     privmsg_client_chan_handle.abort();
     privmsg_client_nick_handle.abort();
 
+    if failed {
+        std::process::exit(1);
+    }
     Ok(())
 }
 

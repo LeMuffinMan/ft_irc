@@ -163,16 +163,6 @@ pub async fn kick_priviledges(port: u16, id: usize, timeout_ms: u64) -> Result<(
     Ok(())
 }
 
-/// Regression test: `KICK` over several channels at once.
-///
-/// The command loop iterated over the comma-separated channel list but
-/// indexed the raw parameter vector with the same index, reading past its
-/// end from the third channel on. One command from any registered client
-/// killed the server.
-///
-/// The test asserts each channel is refused *individually* — echoing the
-/// whole list back was the visible symptom of the same mistake — then checks
-/// the server is still answering, which is what the crash actually broke.
 pub async fn kick_multi_channel(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let nick = format!("kick_multi_chan_{}", id);
     let mut client = Client::connect(port).await?;
@@ -195,8 +185,6 @@ pub async fn kick_multi_channel(port: u16, id: usize, timeout_ms: u64) -> Result
             .await?;
     }
 
-    // The crash killed the connection, so the only assertion that really
-    // guards against it is: the server still answers afterwards.
     client.send("PASS password\r\n", 0).await?;
     client
         .expect_reply(

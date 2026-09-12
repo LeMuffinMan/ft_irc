@@ -150,7 +150,7 @@ $(P_OBJ)%.o: $(P_SRC)%.cpp $(INCS)
 clean:
 	rm -rfd $(P_OBJ)
 	rm -rfd $(P_DEPS)
-	rm -rf .server_output.log
+	rm -rf .server.log
 # 	rm -rfd $(OBJS)
 # 	rm -rfd $(DEPS)
 

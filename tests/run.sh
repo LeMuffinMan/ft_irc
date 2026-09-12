@@ -69,7 +69,7 @@ log "Building Rust tester..."
     cargo build --release
 ) || exit 1
 
-TERMINATOR_PID=0
+TERMINATOR_PID=
 if command -v terminator &>/dev/null && [ "$4" = 1 ]; then
     terminator --title "IRC Server Log" -e "tail -f .server.log" 2> /dev/null &
     TERMINATOR_PID=$!
@@ -79,9 +79,16 @@ START_TIME=$(date +%s)
 log "Starting Rust tester..."
 
 "$CLIENT_DIR/target/release/irc_tester" "$1" "$3" "$5"
+TESTER_RC=$?
 
-echo "Killing server PID: $SERVER_PID"
-kill $SERVER_PID
+if kill -0 "$SERVER_PID" 2>/dev/null; then
+    SERVER_DIED=0
+    echo "Killing server PID: $SERVER_PID"
+    kill "$SERVER_PID"
+else
+    SERVER_DIED=1
+    echo -e "${RED}Server died during the run (PID $SERVER_PID)${NC}"
+fi
 
 END_TIME=$(date +%s)
 ELAPSED=$((END_TIME - START_TIME))
@@ -93,8 +100,6 @@ log "============== Server log =============="
 # verbose mode
 ERRORS_TOTAL=$(grep -c "ERROR" .server.log)
 ERRORS_UNIQUE=$(grep "ERROR" .server.log | sort | uniq | wc -l)
-PINGS=$(grep -c "PING" .server.log)
-PONGS=$(grep -c "PONG" .server.log)
 CONNECTIONS=$(grep -c "New client" .server.log)
 REGISTRATIONS=$(grep -c "Welcome to the Internet Relay Network" .server.log)
 TIMEDOUT=$(grep -c "timed out" .server.log)
@@ -107,9 +112,9 @@ printf "%-25s : %5s\n" "Time elapsed": "${ELAPSED}s"
 printf "%-25s : %5d (%d/s)\n" "Events" "${EVENTS}" "$EVENTS_PER_SECS"
 echo
 printf "%-25s : %5d (unique: %d)\n" "Errors" "$ERRORS_TOTAL" "$ERRORS_UNIQUE"
-if [[ $errors_unique -gt 0 ]]; then
-    grep "ERROR" .server.log |  awk '{$1=""; sub(/^ /, ""); print}' | sort | uniq -c | while read count msg; do
-        printf "%s x %5d\n" "$MSG" "$COUNT" 
+if [[ $ERRORS_UNIQUE -gt 0 ]]; then
+    grep "ERROR" .server.log | awk '{$1=""; sub(/^ /, ""); print}' | sort | uniq -c | while read -r count msg; do
+        printf "%5d x %s\n" "$count" "$msg"
     done
 fi
 printf "%-25s : %5d (%d/s)\n" "Connections" "$CONNECTIONS" "$((CONNECTIONS / ELAPSED))"
@@ -121,3 +126,14 @@ if [[ -n "$TERMINATOR_PID" ]]; then
     echo "Killing log watcher (terminator) PID: $TERMINATOR_PID"
     kill "$TERMINATOR_PID" 2>/dev/null || true
 fi
+
+if [[ $SERVER_DIED -eq 1 ]]; then
+    log "${RED}FAILURE: the server did not survive the run${NC}"
+    exit 1
+fi
+if [[ $TESTER_RC -ne 0 ]]; then
+    log "${RED}FAILURE: tester exited with $TESTER_RC${NC}"
+    exit "$TESTER_RC"
+fi
+log "${GREEN}SUCCESS${NC}"
+exit 0

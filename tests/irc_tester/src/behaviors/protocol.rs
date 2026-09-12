@@ -99,13 +99,6 @@ pub async fn too_long_message(port: u16, timeout_ms: u64) -> Result<()> {
     Err(anyhow::anyhow!("Server closed connection without error"))
 }
 
-/// Regression test: a bare `PONG`, sent without registering, must not kill
-/// the server.
-///
-/// `PongCommand::execute` read `_params[0]` before checking the parameter
-/// list was non-empty, and no check gated the command on registration: any
-/// stranger able to reach the port took the server down in five bytes,
-/// without knowing the password.
 pub async fn pong_no_origin(port: u16, id: usize, timeout_ms: u64) -> Result<()> {
     let mut stranger = Client::connect(port).await?;
     stranger.send("PONG\r\n", 0).await?;
@@ -118,7 +111,6 @@ pub async fn pong_no_origin(port: u16, id: usize, timeout_ms: u64) -> Result<()>
         .await?;
     stranger.shutdown().await?;
 
-    // A fresh connection proves the server survived, not just this socket.
     let mut client = Client::connect(port).await?;
     client
         .authenticate(format!("pong_no_origin_{}", id), timeout_ms)
