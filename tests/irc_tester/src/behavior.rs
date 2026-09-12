@@ -1,19 +1,3 @@
-//! Handler trait
-//!
-//! To decouple the list of client behaviors from the execution logic,
-//! we useda a handler-based abstraction.
-//!
-//! Each ClientBehavior variant represents a specific test scenario
-//!
-//! A behavior is associated with a handler function through the
-//! `BehaviorHandler` trait. The handler is a function pointer returning
-//! an asynchronous task (`Future`) executing the corresponding scenario.
-//!
-//! This design allows:
-//! - clean separation between behavior definition and execution
-//! - easy addition of new behaviors without modifying the execution engine
-//! - dynamic dispatch of asynchronous test scenarios
-//!
 use crate::behaviors::invite::*;
 use crate::behaviors::join::*;
 use crate::behaviors::kick::*;
@@ -32,12 +16,6 @@ use anyhow::Result;
 use std::future::Future;
 use std::pin::Pin;
 
-
-
-/// The Handler type defines a uniform signature for all behavior handlers:
-/// (port, client_id, timeout) -> Future<Result<()>>.
-///
-/// Each test are detailed in behaviors folder
 pub type Handler = fn(u16, usize, u64) -> Pin<Box<dyn Future<Output = Result<()>> + Send>>;
 
 pub trait BehaviorHandler {
@@ -98,6 +76,7 @@ pub enum ClientBehavior {
     KickNeedMoreParams,
     KickNotRegistered,
     KickPriv,
+    KickMultiChannel,
 
     //join
     JoinNeedMoreParams,
@@ -203,6 +182,7 @@ impl BehaviorHandler for ClientBehavior {
             TimeNotRegistered => |p, id, t| Box::pin(time_not_registered(p, id, t)),
 
             KickPriv => |p, id, t| Box::pin(kick_priviledges(p, id, t)),
+            KickMultiChannel => |p, id, t| Box::pin(kick_multi_channel(p, id, t)),
             InviteModeIJoin => |p, id, t| Box::pin(invite_mode_i_join(p, id, t)),
         }
     }

@@ -38,6 +38,33 @@ impl Client {
         Ok(())
     }
 
+    /// Strict variant of `expect`: the absence of a reply is a failure.
+    ///
+    /// `try_expect` and `expect` both return `Ok(())` when the server sends
+    /// nothing back, so a server that died mid-test reports green. Regression
+    /// tests that exist to prove the server is still answering must not rely
+    /// on them.
+    pub async fn expect_reply(&mut self, expect: &str, error: &str, timeout_ms: u64) -> Result<()> {
+        // A crashed server closes the socket (read returns 0, so `None`), a
+        // hung one never answers: both must fail, neither may block the suite.
+        let deadline = if timeout_ms == 0 { 2000 } else { timeout_ms };
+        loop {
+            let line = self
+                .read_line_timeout(deadline)
+                .await?
+                .ok_or_else(|| anyhow::anyhow!("{} | no reply (server closed or timed out)", error))?;
+            if line.starts_with("PING") {
+                let resp = line.replace("PING", "PONG");
+                self.send(&resp, 0).await?;
+                continue;
+            }
+            if !line.contains(expect) {
+                return Err(anyhow::anyhow!("{} | Received [{}]", error, line));
+            }
+            return Ok(());
+        }
+    }
+
     ///expect a specific event
     pub async fn expect(&mut self, expect: &str, error: &str, timeout_ms: u64) -> Result<()> {
         while let Some(line) = self.read_line_timeout(timeout_ms).await? {
